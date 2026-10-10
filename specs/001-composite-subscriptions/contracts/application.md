@@ -1,6 +1,6 @@
 # Application, payment and interface contracts
 
-**Proposed, not present endpoints/functions.** Implementation must retain existing observable legacy contracts and add explicit composite dispatch. G-A/G-P/G-C and RX-01 under E-001/E-002 in [research.md](../research.md) remain blocking for dependent work. This file defines inputs/results, not controller implementation.
+**Proposed, not present endpoints/functions.** Implementation must retain existing observable legacy contracts and add explicit composite dispatch. G-A/G-P and RX-01 under E-001/E-002 in [research.md](../research.md) remain blocking for dependent work. G-C is closed using GC-MAN-001 owner-reported evidence for the selected informational encoding/import/same-URL refresh plus PR-001's explicit removal of automatic-selection investigation/validation. Its dependent renderer is unblocked by G-C; no automatic-selection testing is claimed or deferred. Broader E-003 release evidence is not passed. This file defines inputs/results, not controller implementation.
 
 ## Application boundary
 

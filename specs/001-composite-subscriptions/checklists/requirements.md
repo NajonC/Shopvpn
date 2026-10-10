@@ -43,7 +43,7 @@
 - [x] Six-node multi-panel fixture and all five required clients retained; initial A-only/five-choice deployment is not a replacement or maximum.
 - [x] Test/campaign holds, successful-fulfillment boundary, ordinary resets, permanent recipients and trial conversion remain distinct.
 - [x] Native existing-session/best-effort policies preserve verification, honest uncertainty, retained cleanup and required controlled evidence.
-- [x] E-001–E-005 explicitly retained as unverified launch research/validation; no acceptance test is represented as passed.
+- [x] E-001–E-005 retain all remaining launch research/validation. PR-001 removes informational-entry automatic-selection investigation/validation; GC-MAN-001 is limited owner-reported evidence, not full E-003 acceptance.
 - [x] Protected source documents/constitution/CONTEXT/skill/templates unchanged; no application changes, services, live experiments, runtime/secret/backup reads, commit or push.
 
 ## Notes
@@ -78,6 +78,8 @@
 
 **Outstanding planning work**: Schema/compatibility and meter/billing-boundary representation, verified method-specific conversion/rounding, routing verification and export details, endpoint/hosting prerequisites, worker/coordination/retry/maintenance design, retention/upgrade/backup/restore/rollback and supported load. None of those mechanisms is selected here.
 
-**Outstanding evidence**: All E-001–E-005 controlled panel/client/accounting/enforcement/payment/capacity/recovery checks. Timings and compatibility are accepted targets, not measured achievements. Future contradictory evidence requires explicit resolution under governance; no generic exception is granted.
+**Outstanding evidence**: Remaining E-001–E-005 controlled panel/client/accounting/enforcement/payment/capacity/recovery checks. GC-MAN-001 supplies owner-reported informational import/display and same-URL refresh evidence. G-C closes on that report plus PR-001's requirement change; automatic-selection investigation/validation is removed and is not outstanding work. Full compatibility and timing acceptance remain unverified. Future contradictory evidence requires explicit resolution under governance; no generic exception is granted.
 
-Items marked incomplete would require spec updates before clarification/planning. No incomplete quality item remains; implementation and release validation remain entirely unperformed.
+Items marked incomplete would require spec updates before clarification/planning. No incomplete quality item remains; implementation and full release validation remain unperformed; the limited owner-reported evidence is separately recorded.
+
+**PR-001 focused revalidation — 2026-10-10:** Checked the explicit owner refinement against [spec PR-001](../spec.md#pr-001--informational-entry-selection-refinement-2026-10-10), FR-050/EC-11/SC-008/E-003 and the affected PC-077/PC-080/R05/D05/S04 mappings. Manual/automatic selection and failed attempts are accepted; no client skipping/failover/resumption guarantee or automatic-selection investigation/validation remains in current requirements, planning gates or release guidance. Import/display, same-URL refresh, real-node functionality, secrecy and all unrelated checks remain. Historical accepted-decision wording and the constitution are preserved. G-C closure depends on both GC-MAN-001 and PR-001, with no claim that automatic-selection testing occurred. Checkbox markers remain unchanged; this is a documentation review, not runtime validation.
