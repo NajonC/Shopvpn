@@ -14,7 +14,7 @@
 
 Constitution 1.0.0 governs. [spec.md](spec.md), accepted PC-001–PC-122 and [reference-coverage.md](reference-coverage.md) are the contract. The original REQUIREMENTS/ACCEPTANCE/DECISIONS/STATUS/UPSTREAM_REVIEW/INDEPENDENT_REVIEW were consulted as compatibility and risk inputs. Earlier OPEN labels, P0–P6 packages, old absolute checkout links and baseline `6966958` do not select the current design. No source/contract amendment or exception was inferred. [plan.md](plan.md) records the Constitution Check performed before research and repeated after design.
 
-Classifications: **observed** means current source inspection; **owner-reported manual** means a result supplied by the owner and not reproduced by the agent; **proposed** means selected design to implement later; **inference** means reasoned consequence of evidence; **unverified** means a deployed or controlled property not established here. Source coverage is reused without editing the ledger; mapping is not a test result.
+Classifications: **observed** means current source inspection; **owner-reported manual** means a result supplied by the owner and not reproduced by the agent; **proposed** means selected design to implement later; **inference** means reasoned consequence of evidence; **unverified** means a deployed or controlled property not established here. The current source-coverage ledger incorporates PR-001; mapping is not a test result.
 
 ## Current entry points and reusable mechanisms
 

@@ -2,7 +2,7 @@
 
 **Current status:** Planning artifacts with separately identified owner-reported manual evidence GC-MAN-001. No agent application/services/imports, dependencies, runtime databases/backups/secrets, live endpoints or integration experiments were authorized. G-C is closed using the information encoding/import/same-URL refresh evidence plus PR-001's explicit removal of automatic-selection investigation/validation; no such testing is claimed or deferred. G-A accounting evidence, G-P method-specific financial evidence and RX-01 remote-execution safety under the existing E-001/E-002 provider capability gate remain unresolved. The workflow is not complete; these commands are not evidence of feasibility or passing tests.
 
-Read [plan.md](plan.md), [research.md](research.md), [data-model.md](data-model.md) and [contracts/](contracts/) together with unchanged spec/source ledger. All nine journeys/full launch scope remain required, not selected by priority. No tasks or Antigravity worktree are created.
+Read [plan.md](plan.md), [research.md](research.md), [data-model.md](data-model.md) and [contracts/](contracts/) together with the current specification and source-coverage ledger, including PR-001. All nine journeys/full launch scope remain required, not selected by priority. No tasks or Antigravity worktree are created.
 
 ## Commands available now: source/documentation review only
 
