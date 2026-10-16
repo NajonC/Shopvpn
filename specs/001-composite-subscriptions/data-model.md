@@ -36,7 +36,7 @@ Independent persistent restrictions are `customer_disabled`, `owner_suspended` w
 
 `desired_access` requires verified entitled service/current generation, unexpired and unexhausted terms, no applicable independent access restriction, and no final cancellation started. A fulfilled service in `cancel_pending` with an authorized renewal still uses its existing entitlement and restrictions: pending cancellation alone neither disables access nor invalidates its current URL. Expiry, exhaustion, customer disable, owner/reporting suspension or recovery uncertainty can still restrict it; continued access is not unconditional. Publication separately requires verified ownership/token/complete generation and no initial-delivery, replacement or recovery publication block; owner suspension is status-only, while ordinary expiry/exhaustion/customer/reporting disable retains the complete current list. Final cancellation revokes the token. Do not gate publication on `lifecycle == fulfilled` alone or reject every `cancel_pending` service.
 
-`confirmed_access` aggregates per-child evidence, not a request status: `unknown`, `partial`, `confirmed_eligible`, `confirmed_fresh_auth_denied`. Under RD-10, a `confirmed_*` value requires that no uncertain request for the child is still in its quarantine, that a read-back after the latest write matches, and runtime evidence where required. It is not proof that no late request exists. A later sweep divergence is recorded against it and repaired, never hidden. Native existing-session exposure is separate and never implied stopped by fresh-auth denial.
+`confirmed_access` aggregates per-child evidence, not a request status: `unknown`, `partial`, `confirmed_eligible`, `confirmed_fresh_auth_denied`. Under RD-10, a `confirmed_*` value requires that no uncertain request for the child that could undo it is still in its quarantine, that a read-back after the latest write matches, and runtime evidence where required. A request carrying the same desired state cannot undo it, nor can an access-reducing request undo `confirmed_fresh_auth_denied` (RX-D8). It is not proof that no late request exists. A later sweep divergence is recorded against it and repaired, never hidden. Native existing-session exposure is separate and never implied stopped by fresh-auth denial.
 
 ### 4. URL identity and configuration generation
 
@@ -58,8 +58,8 @@ Unique canonical remote identity per physical authority; generated names use opa
 
 **`composite_cleanup_obligations`**: retired/current failed identity, responsible main-store actor/domain, operation/reason, desired fresh-auth denial/removal, confirmed runtime/absence evidence, meter finalization/exposure gap, next observation/retry, escalation/status. Refund/local terminal status never erases it. Native sessions may keep emitting after fresh-auth denial; retain meter/exposure evidence as long as unresolved. Under RD-10, terminal revocation works in three steps:
 1. disable at once and record final traffic;
-2. delete only after the quarantine and a no-growth settle period P, batched per panel;
-3. record traffic after deletion as unmetered exposure on this obligation. Compaction preserves final totals/epochs/gaps/period allocations and original identifying obligations. No fixed raw-sample retention duration is presumed.
+2. delete after the quarantine and either a no-growth settle period P or a maximum wait M from the disable, whichever comes first (RX-D9), batched per panel;
+3. record traffic after deletion as unmetered exposure on this obligation, including whether the meter was still growing at deletion. Compaction preserves final totals/epochs/gaps/period allocations and original identifying obligations. No fixed raw-sample retention duration is presumed.
 
 ### 6. Meters, observations, deltas and gaps (PR-002; G-A closed)
 
@@ -119,13 +119,13 @@ For new operation-based handling, `users.test_used` projects fulfilled ordinary 
 - `queued` → `dispatched`.
 - A timeout or crash makes it `uncertain`, with `quarantine_until` measured from when Shopvpn closed the request's connection.
 - At quarantine end a read-back reconciles it to `confirmed` or to a repair write.
-- `confirmed` requires no uncertain request for the child still in quarantine, a matching read-back after the latest write, and runtime evidence where required. It is not proof that no late request exists.
-- A retry of the same desired state waits for the quarantine and read-back. A changed access-reducing desired state is dispatched immediately. An access-restoring change after an uncertain access-reducing request waits for its quarantine (configurable restore wait). Observed absence alone never authorizes replay.
+- `confirmed` requires no uncertain request for the child that could undo the desired state still in quarantine (RX-D8), a matching read-back after the latest write, and runtime evidence where required. It is not proof that no late request exists.
+- An access-reducing desired state is dispatched immediately. After an uncertain access-reducing request, a read-back follows at once and the state is re-sent if not yet applied (RX-D7). A retry of an uncertain create or access-restoring request waits for the quarantine and read-back. An access-restoring change after an uncertain access-reducing request waits for its quarantine (configurable restore wait). Observed absence alone never authorizes replay.
 - `manual_hold` retains unresolved work after automatic recovery is exhausted.
 
 *Superseded 2026-10-06 statuses:* `execution_hold`, and `confirmed`/`safe_to_retry` requiring proof that no prior request can still act.
 
-**RX-01 under RD-10 (owner decisions RX-OWN-001, 2026-10-15):** detect-and-repair replaces the original predicate for composite mutations. It accepts that a late request can temporarily reverse an accepted access state until the continuous sweep repairs it (approved PR-003).
+**RX-01 under RD-10 (owner decisions RX-OWN-001, 2026-10-15; amended by [RX-OWN-004](research.md#rx-own-004--rd-10-mechanism-amendments), 2026-10-16):** detect-and-repair replaces the original predicate for composite mutations. It accepts that a late request can temporarily reverse an accepted access state until the continuous sweep repairs it (approved PR-003).
 
 **`composite_drift_sweeps` / `composite_divergences`** (proposed):
 - Each sweep run records physical panel and inbound, start/end, outcome (`consistent`, `diverged` or `unknown`) and timeout.
