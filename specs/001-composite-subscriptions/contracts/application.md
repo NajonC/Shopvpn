@@ -42,7 +42,7 @@ Proposed `/api/composite/...` routes in existing `admin_panel/server.py`, with b
 
 | Proposed route | Contract |
 | --- | --- |
-| `GET/POST/PATCH /api/composite/plans` | Owner catalog/test plan configuration with finite exact units, immutable versioning/prepared node binding and selected methods. Changes affect new offers only; no sold-term/node rewrite. |
+| `GET/POST/PATCH /api/composite/plans` | Owner catalog/test plan configuration with finite exact units, immutable versioning/prepared node binding and selected methods. A method can be selected only when its G-P contract is accepted (tasks.md T215). Changes affect new offers only; no sold-term/node rewrite. |
 | `GET /api/composite/subscriptions/{id}` | Relevant current state, child discrepancies, usage qualification, financial/coupon/test/campaign/cleanup obligations and actionable progress; secrets restricted to necessary authorized delivery/setup. No general history browser. |
 | `POST /api/composite/actions/preview` then `/confirm` | Single/bulk owner suspend/resume/permanent cancel; exact subscription/customer set, action/reason/version digest and signed/session-bound preview key. Changed set requires new preview. Per-member accepted result; completed results not rolled back. |
 | `POST /api/composite/replacements/preview` then `/confirm` | Owner-prepared equivalent old-to-new bindings, active/inactive eligibility, original terms/current uncertainty, emergency authorization separately explicit. Publish each subscription independently, same URL/fresh moved identities; sales/claims/unfunded checkout behavior specified. No arbitrary topology editor. |
@@ -69,7 +69,7 @@ verify_receipt(persisted_attempt, notification_hint) -> VerifiedReceipt | Eviden
 
 `VerifiedReceipt`: actual globally scoped transaction/charge reference, merchant/tenant/customer/checkout/attempt linkage, exact native amount/currency and immutable original conversion evidence, authenticated verification source/time; manual evidence additionally owner actor/reason/reference. Repeated hints are not distinct receipts. No missing/unparseable/malformed/nonfinite amount, default99% match, excess acceptance, currency mismatch or unknown beneficiary settlement. Provider-unit rounding is explicit quote equality, not a fuzzy percentage.
 
-`EvidenceFailure`: definite rejection versus uncertain/unavailable, sanitized missing field/reason and safe requery/reference. Generic unverified webhook success cannot settle. Independent server verification can authenticate receipt even when notification is only a hint. Actually enabled methods must be inventoried and safely bound; this planning document does not declare any existing method certified or silently disabled.
+`EvidenceFailure`: definite rejection versus uncertain/unavailable, sanitized missing field/reason and safe requery/reference. Generic unverified webhook success cannot settle. Independent server verification can authenticate receipt even when notification is only a hint. Actually enabled methods must be inventoried (tasks.md T208). A method is bound to composite plans only where its G-P contract is accepted; methods excluded at launch by owner decision [GP-OWN-001](../research.md#gp-own-001--payment-methods-for-composite-plans-at-launch-2026-10-22) are recorded in the inventory but not offered. This planning document does not declare any existing method certified or silently disabled.
 
 ## Required interface regressions
 

@@ -11,7 +11,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 
 **Generated**: 2026-10-19 at HEAD `a1358db`, on explicit owner request. plan.md's line "`tasks.md` is deliberately not generated" is superseded by that request. No other artifact was changed.
 
-**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that.
+**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that. Later on 2026-10-22, after `/speckit-analyze`: T082 split into part A (as soon as authorized; gates T097) and part B (after T096 and T099); T255 adds rule precedence and API-created clients; T099, T107 and T215 clarified. Owner decisions on the analyze findings: RD03-OWN-001 (provider checks also build first, test after), RD05-OWN-002 (the panel API is the only source of connection fields; address-only changes use the equivalent move: T085, T096, T103, T113, T116, T181, T183) and the GP-D2 wording (OQ-2).
 
 **Planning status at generation**: PROVISIONAL / ERROR, only because gate **G-P** (exact configured payment-method contracts; E-005) is open. G-C closed on 2026-10-10, G-A on 2026-10-14 and RX-01 on 2026-10-17. The plan rules out only *unconditional* task generation, so this list is **conditional**:
 
@@ -35,16 +35,18 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 | D3: restart loss of "about one collection interval" | Up to four collection intervals (20 s) per restart, absorbed by the store and recorded explicitly, never a usage gap | GA-OWN-004 D12 |
 | V-RX-01(b) must run over direct TLS to close RX-01 | The workstation-route result is accepted for closure. A bot-host direct-TLS re-run is required before composite mutations reach production panels, after the three harness fixes | RX-OWN-005 RX-D13 |
 | PC-077/PC-080 per-client validation of automatic selection | Removed, not deferred | PR-001 |
-| V-CAN-03 "RX-01 execution hold" | Read as an RD-10 uncertain request in quarantine, or a panel stall | RD-10 |
+| V-CAN-03 "RX-01 execution hold" | Read as an RD-10 uncertain request in quarantine, or a panel stall | RD-10; quickstart V-CAN-03 reworded 2026-10-22 |
 | 3x-UI default `restartXrayOnClientDisable` = on | Must be off on every composite panel. Verified before binding and continuously by the sweep | RX-D2; spec Assumptions (PR-003) |
 | RD-05 "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior" | Routing bindings and strict export are implemented now. The anchored-namespace, unrelated-user, six-node egress and export-field checks run after implementation (T082, T255, T257) | research.md RD05-OWN-001 (owner decision 2026-10-21, on RD05-MAN-001); OQ-3 |
+| E-001 ledger "First validate exact disposable deployment API/TLS/canonical identity/mutation scope …" before dependent implementation | Provider operations (T095) are built first. T082 part A runs as soon as it is authorized, and only T097 waits on it | research.md RD03-OWN-001 (owner decision 2026-10-22) |
+| RD-05 and data-model.md `composite_plan_nodes`: an owner-selected endpoint descriptor verified against API fields | The 3x-UI API is the only source of connection fields, with the address and port from the inbound's External Proxy entry; the owner picks only where the panel offers several values. A later panel change is an FR-041 discrepancy; an address-only change is an equivalent move to the same inbound | research.md RD05-OWN-002 (owner decisions 2026-10-22) |
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel: different files and no dependency on an incomplete task.
 - **[Story]**: User story label (US1–US9). Used only in the user-story phases.
 - **Gate: G-P (method)**: blocked until that method's G-P evidence task passes and the owner accepts its contract record.
-- **Gate: E-001 probe (T082)**: depends on the result of the pre-implementation E-001 capability probe.
+- **Gate: E-001 probe (T082)**: depends on the result of part A of the E-001 capability probe.
 - **Requires authorization**: needs explicit owner execution authorization and disposable non-production resources. Never run against production panels, payments or customers, and never offline.
 - Offline tests run under `--network=deny` with synthetic data only. Each implementation task names the tests it must pass (`Tests: T…`).
 
@@ -452,20 +454,23 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 **Independent Test**: Against `tests/_harness/fake_threexui.py`, the offline equivalents of V-RX-01(i)–(p) and V-NOT-01/04/05/06 pass, and the legacy provider contracts (T019) still pass.
 
-### Early evidence (pre-implementation)
+### E-001 capability probe (lab evidence)
 
-- [ ] T082 Run the E-001 pre-implementation capability probe. **Requires authorization**: disposable standalone 3x-UI v3.9.0 / Xray-core v26.9.30 panels with `restartXrayOnClientDisable` off, direct TLS, synthetic clients only; never production. Record the results as a new E-001 entry in the evidence ledger of `specs/001-composite-subscriptions/research.md`, following RX-MAN-001 (contracts/provider.md; quickstart "Earliest feasibility checks" item 1; OQ-3; OQ-4). Establish:
-  - creation with explicit authentication, inactive creation, and canonical lookup;
-  - the full mutation scope, including the inbound filter;
-  - absolute updates that preserve unrelated fields and users;
-  - the periodic-traffic-reset field and its scope, and the semantics of zero native quota/expiry;
-  - an anchored authenticated-email route namespace matching owner-prepared rules, with actual egress and unrelated users preserved (RD-05; checked after implementation under RD05-OWN-001);
-  - the exact export fields for the four fixture protocols;
-  - candidate `confirm_runtime_state` mechanisms
+- [ ] T082 Run the E-001 capability probe in two parts. **Requires authorization**: disposable standalone 3x-UI v3.9.0 / Xray-core v26.9.30 panels with `restartXrayOnClientDisable` off, direct TLS, synthetic clients only; never production. Record the results in `specs/001-composite-subscriptions/research.md` as named entries beside the decisions they support (provider capabilities beside RD-03, routing and export beside RD-05), each linked from the E-001 ledger row, following RX-MAN-001 (contracts/provider.md; quickstart "Earliest feasibility checks" item 1; OQ-3; OQ-4).
+  - **Part A, as soon as it is authorized** (research.md RD03-OWN-001). Establish:
+    - creation with explicit authentication, inactive creation, and canonical lookup;
+    - the full mutation scope, including the inbound filter;
+    - absolute updates that preserve unrelated fields and users;
+    - the periodic-traffic-reset field and its scope, and the semantics of zero native quota/expiry;
+    - a read-only way to fetch the panel's routing rules with the admin-scope token (used by T099);
+    - candidate `confirm_runtime_state` mechanisms
+  - **Part B, after T096 and T099** (RD05-OWN-001). Once T099 fixes the composite prefix, the owner rewrites the lab rules to it (for example `regexp:^cmp1_[a-z0-9]+_us$`), and the quickstart item 1 "Routing and export quick check" runs. Establish:
+    - an anchored authenticated-email route namespace matching owner-prepared rules, for clients created through the panel API, with actual egress and unrelated users preserved (RD-05);
+    - the exact export fields for the four fixture protocols, including the External Proxy address and port (RD05-OWN-002), compared with T096's descriptors
 
-  Only T097 waits on this task. The other items check the Phase 4 provider work against a real panel and are repeated at release (T255, T257).
+  Only T097 waits on this task (part A; RD03-OWN-001). The other items check the Phase 4 provider work against a real panel and are repeated at release (T255, T257).
 
-  Owner-reported routing evidence RD05-MAN-001 and the owner's build-first decision RD05-OWN-001 (2026-10-21) are recorded in research.md under RD-05. Still open in this task: rules using an anchored, versioned composite prefix (for example `regexp:^cmp1_[a-z0-9]+_us$`) instead of a bare suffix, rewritten by the owner once T099 fixes the prefix.
+  Owner-reported routing evidence RD05-MAN-001 and the owner's build-first decision RD05-OWN-001 (2026-10-21) are recorded in research.md under RD-05.
 
 ### Tests (write first)
 
@@ -483,7 +488,8 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - `apply_child_state`: absolute fields from a fresh canonical merge, unrelated users untouched;
   - `observe_meter`: strict nonnegative, non-boolean integers, receipt time, and an explicit no-observation outcome;
   - `observe_inbound_clients`: a failed, timed-out or malformed read is `unknown`;
-  - `revoke_child`, `export_node` and `confirm_runtime_state`.
+  - `revoke_child` and `confirm_runtime_state`;
+  - `export_node`: every connection field comes from the panel read (RD05-OWN-002). No External Proxy entry, several values without an owner pick, or a pick that no longer exists fails readiness. A panel value that differs from the saved descriptor is reported as a mismatch and never adopted silently.
   Composite paths never call the reset, bulk-reset or update-traffic endpoints
 - [ ] T086 [P] Write `tests/integration/test_rx01_detect_and_repair.py`: offline equivalents of V-RX-01(i)–(p) using the fake panel and fake clock (RD-10; PR-003; FR-085; SC-007). Check that:
   - an access-reducing state is dispatched immediately, and a timed-out access cut is read back and re-sent at once (RX-D7);
@@ -537,7 +543,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Inbound-filtered absolute writes from a fresh canonical read.
   - Strict meter parsing.
   - No reset, bulk or update-traffic calls
-- [ ] T096 Implement `export_node` in `panel_providers/threexui_provider.py`: one strict descriptor per logical node for VLESS REALITY, VLESS WS-CDN, Trojan gRPC and VMess TCP-TLS, carrying every field listed in contracts/provider.md "Physical routing and export". A missing field fails explicitly; there is no first-link fallback and no invented default (FR-049). Tests: T085. The fields v3.9.0 actually returns are checked after implementation (T082; T257). Fence lifted 2026-10-21 (OQ-3).
+- [ ] T096 Implement `export_node` in `panel_providers/threexui_provider.py`: one strict descriptor per logical node for VLESS REALITY, VLESS WS-CDN, Trojan gRPC and VMess TCP-TLS, carrying every field listed in contracts/provider.md "Physical routing and export". A missing field fails explicitly; there is no first-link fallback and no invented default (FR-049). Every connection field comes from the 3x-UI API, with the address and port from the inbound's External Proxy entry; the owner's node setup adds only a pick where the panel offers several values (research.md RD05-OWN-002). Tests: T085. The fields v3.9.0 actually returns are checked after implementation (T082 part B; T257). Fence lifted 2026-10-21 (OQ-3).
 - [ ] T097 Implement `confirm_runtime_state` in `panel_providers/threexui_provider.py` using the mechanism selected from T082. Until a mechanism is selected, it returns an explicit unsupported/pending outcome, so fresh-authentication denial or availability is never claimed from API acceptance alone (FR-037; FR-056; FR-060; constitution VII). Tests: T085. **Gate: E-001 probe (T082); OQ-4**
 - [ ] T098 Implement physical panel registration and the capability manifest in `composite/lifecycle.py`, with the owner route `POST /api/composite/panels` in `admin_panel/server.py` (FR-004; FR-033; contracts/provider.md manifest). Tests: T083, T087.
   - Verify the TLS identity and the admin token scope.
@@ -546,9 +552,9 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Record collector cadence 5 s, `restart_loss_bound` 20 s, restart-evidence availability, periodic-reset absence and `inbound_client_read`.
   - Map aliases only on verified physical ownership; ambiguous aliases are held.
   - Any absent or contradictory capability blocks binding and sales
-- [ ] T099 Implement prepared bindings in `composite/lifecycle.py` (FR-004; RD-05). Deactivation keeps the management references. Tests: T085. Routing mechanism: RD05-MAN-001 (research.md RD-05); the anchored namespace is checked after implementation (T082), and six-node egress and unrelated-user preservation again at release (T255). Fence lifted 2026-10-21 (OQ-3).
+- [ ] T099 Implement prepared bindings in `composite/lifecycle.py` (FR-004; RD-05). Deactivation keeps the management references. Tests: T085. Routing mechanism: RD05-MAN-001 (research.md RD-05); the anchored namespace is checked after implementation (T082 part B), and six-node egress and unrelated-user preservation again at release (T255). Fence lifted 2026-10-21 (OQ-3).
   - Panel-qualified inbound; protocol, transport and security fingerprint; intended egress key.
-  - A versioned anchored authenticated-email route namespace, validated against owner-prepared rules that Shopvpn never writes.
+  - A versioned anchored authenticated-email route namespace, validated against owner-prepared rules that Shopvpn never writes. Shopvpn reads those rules through the panel API with the admin-scope token (T094), using the read confirmed in T082 part A.
   - Readiness and egress evidence, and an owner activation audit
 - [ ] T100 Implement the worker's remote lanes in `composite/worker.py` (plan.md "Worker lifecycle"; FR-085). Tests: T086, T090.
   - Per-panel fair queues, the per-panel OS mutation lock, reserved capacity for urgent restrictions, and bounded concurrent reads.
@@ -563,11 +569,12 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Retries of uncertain creates and access-restoring requests are gated by Q; the restore wait is configurable, default 30 s.
   - Confirmation follows RX-D8.
   - The owner values are configuration with defaults: Q = S = restore wait = 30 s; T = 10 s × 3; R = 3; N/W = 3 per hour; P = 2 min; M = 30 min
-- [ ] T103 Implement the continuous sweep in `composite/lifecycle.py`, scheduled by `composite/worker.py` (RD-10 items 5–7; RX-D12; FR-041; FR-085). Tests: T086.
+- [ ] T103 Implement the continuous sweep in `composite/lifecycle.py`, scheduled by `composite/worker.py` (RD-10 items 5–7; RX-D12; FR-041; FR-085). Tests: T086; descriptor comparison T085.
   - Every S, read each composite inbound with `observe_inbound_clients`.
   - Compare every owned identity, including inactive and cleanup-pending ones, and flag deleted identities that reappear.
   - Repair mismatches and record `composite_divergences` with their exposure. A failed read is `unknown`.
   - Repeated divergence opens an FR-041 discrepancy; repair failures and stalls escalate.
+  - At the T104 cadence, compare each bound node's connection fields with its saved descriptor. A difference opens an FR-041 discrepancy and never changes published links (RD05-OWN-002 RD05-D5).
   - Never restart anything automatically
 - [ ] T104 Implement continuous re-verification of `restartXrayOnClientDisable` in `composite/lifecycle.py`, at a lower cadence than the sweep (RX-D2; RX-MAN-001 finding 4). A value of on, or an unreadable setting, is recorded with its time on the panel, blocks new composite binding and raises FR-041 drift with owner attention. Existing subscriptions stay managed. Tests: T087
 - [ ] T105 Implement terminal revocation in `composite/lifecycle.py` (RX-D9; FR-022; constitution II). Tests: T088.
@@ -580,8 +587,8 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Chain, epoch, delta and gap writes in one transaction, with alias deduplication.
   - Restart-loss annotations from `server/status` `appStats.uptime` where available (D12)
 - [ ] T107 Implement the status projection in `composite/service.py` for customer, owner and support views (FR-007; FR-085). Tests: T086.
-  - Per child and per subscription: `requested`, `partial`, `uncertain`, `confirmed` or `diverged`.
-  - Kept separate: stale observations, desired state, pending action, uncertain requests in quarantine, sweep repairs, the confirmed remote result and delivery
+  - Per subscription: the restriction state `requested`, `partial` or `confirmed` (data-model.md state transitions). Per child: `confirmed_access` (`unknown`, `partial`, `confirmed_eligible`, `confirmed_fresh_auth_denied`) and the RD-10 request status (`queued`, `dispatched`, `uncertain`, `confirmed`, `manual_hold`).
+  - Kept separate: stale observations, desired state, pending action, uncertain requests in quarantine, recorded divergences and sweep repairs, the confirmed remote result and delivery
 - [ ] T108 Implement the N-01 delivery engine in `composite/notifications.py` (contracts/operations.md N-01; FR-085). A notification failure never blocks money, access or accounting. Tests: T091.
   - Logical notice keys, and immutable original due, target and miss records.
   - An attempt is reserved before dispatch; opportunities, backoff and retry-after.
@@ -620,7 +627,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - buyers with reseller or discount status buy as ordinary customers, without reseller credit;
   - unsupported channels are refused;
   - the callback grammar fits Telegram's size limit and collides with no prefix in the T028 snapshot
-- [ ] T113 [P] [US1] Write `tests/unit/test_composite_plans.py` (FR-001; FR-002; FR-003; FR-008): finite positive bytes; paid duration exactly 2,592,000 s; a positive base price; any positive node count (the six-node fixture and the A-only five); immutable versions; edits affecting only new offers; sold terms surviving edits
+- [ ] T113 [P] [US1] Write `tests/unit/test_composite_plans.py` (FR-001; FR-002; FR-003; FR-008): finite positive bytes; paid duration exactly 2,592,000 s; a positive base price; any positive node count (the six-node fixture and the A-only five); immutable versions; edits affecting only new offers; sold terms surviving edits; node connection fields taken from the panel read, with an owner pick required only where the panel offers several values (RD05-OWN-002)
 - [ ] T114 [P] [US1] Write `tests/integration/test_initial_cancellation.py`: offline V-CAN-04 (FR-026; AS-01.6):
   - cancellation at 12:14 blocks delivery immediately, even if children become ready later;
   - the final stage starts at the earlier of a clean outcome or 12:15;
@@ -636,7 +643,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Implementation for User Story 1
 
-- [ ] T116 [US1] Implement the owner plan routes `GET/POST/PATCH /api/composite/plans` in `admin_panel/server.py`, backed by `composite/service.py`: immutable plan versions, prepared node bindings, ordered node remarks and egress, finite exact units and selected payment-method restrictions (FR-002; FR-003; FR-004; FR-008). Tests: T113
+- [ ] T116 [US1] Implement the owner plan routes `GET/POST/PATCH /api/composite/plans` in `admin_panel/server.py`, backed by `composite/service.py`: immutable plan versions, prepared node bindings, ordered node remarks and egress, finite exact units and selected payment-method restrictions (FR-002; FR-003; FR-004; FR-008). Node connection fields are read from the panel when a node is saved, never typed in; the owner picks only where the panel offers several values (research.md RD05-OWN-002). Tests: T113
 - [ ] T117 [P] [US1] Add composite plan and panel-registration screens to `admin_panel/static/app.js`. They render only the validation results and previews the server returns; behavior is covered by the T113 route tests (FR-002; FR-004)
 - [ ] T118 [US1] Implement the Telegram catalog and checkout adapter (FR-003; FR-005; FR-006; FR-010; FR-025; NG-05). Tests: T112.
   - `keyboards.py`: the `cmp:` namespace, with opaque references and confirmation nonces, grammar frozen against T028.
@@ -965,6 +972,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - [ ] T181 [P] [US7] Write `tests/integration/test_move_batches.py` (FR-065–FR-071):
   - the preview shows the exact subscriptions, customers and old-to-new mapping, with inactive members visible;
   - only moved children get fresh secrets; unmoved credentials and the token stay unchanged;
+  - an address-only move to the same inbound (RD05-OWN-002 RD05-D5) gives fresh secrets and the new address on the same token;
   - each subscription switches only when its moved set is ready; one failure never blocks or rolls back the others, and a retry never re-moves completed members;
   - inactive subscriptions move inactive, owner-suspended ones stay status-only, cancelled ones are cleanup-only and recovery-held ones are ineligible;
   - emergency cutover removes old meters from current-serving freshness while their exposure stays tracked, and it cannot bypass leak repair;
@@ -979,6 +987,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Prepare and verify replacement readiness and trustworthy metering.
   - Publish the changed descriptors on the same token only when the set is complete.
   - Keep unmoved children, history and cooldown, and send old identities through terminal revocation.
+  - The target may be the same inbound with a new address: an address-only change (RD05-OWN-002 RD05-D5). New secrets are issued as in any move.
   - Changing a management API address alone is not a move
 - [ ] T184 [US7] Implement explicit emergency cutover in `composite/lifecycle.py` and `composite/accounting.py` (FR-066; D8). Tests: T181.
   - Requires the old management API to be unreachable, and owner review of the last confirmed usage.
@@ -1159,9 +1168,9 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Telegram: composite review callbacks in `handlers_admin.py`, owner-only, not gated by `admin_only` staff permission.
   - Web: composite dispatch in the existing approve/reject route in `admin_panel/server.py`, with a review view in `admin_panel/static/app.js`.
   - Both interfaces run one settlement transaction and one audit record; delegated staff are refused; approval never implies availability
-- [ ] T215 Keep automatic card-to-card and every method outside the six candidate groups unavailable to composite plans, per owner decision GP-OWN-001 in research.md (OQ-1, OQ-2; FR-010; FR-011). Legacy use of those methods is unchanged. Tests: new cases in `tests/contract/test_payment_adapter_contract.py` and `tests/integration/test_catalog_telegram.py`. **Gate: none**: it enforces an exclusion and needs no method evidence.
+- [ ] T215 Keep automatic card-to-card and every method outside the six candidate groups unavailable to composite plans, per owner decision GP-OWN-001 in research.md (OQ-1, OQ-2; FR-010; FR-011). Legacy use of those methods is unchanged. Tests: new cases in `tests/contract/test_payment_adapter_contract.py` and `tests/integration/test_catalog_telegram.py`. **Gate: none**: it enforces an exclusion and needs no method evidence. Depends on T075, T116 and T118, not on T208.
   - The T075 registry holds no contract for them, so it refuses quotes and attempts.
-  - The composite plan routes in `admin_panel/server.py` (T116) refuse to select them as composite payment methods.
+  - The composite plan routes in `admin_panel/server.py` (T116) do not list them, and refuse them if submitted.
   - The composite checkout in `handlers_user.py` (T118) never offers them.
   - Adding one later needs its own Phase 14-style group (GP-OWN-001 GP-D2)
 
@@ -1333,6 +1342,8 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - no periodic reset on composite children, and no remote reset at renewal;
   - aliases and attachments, and repeated uncertain creation reconciling to the same owner;
   - unrelated users, shared configuration, listeners and outbounds unchanged;
+  - rule precedence: with the owner's other routing rules in place, the anchored composite rules and those rules each still select their intended outbound (RD05-MAN-001 "not established");
+  - clients created through the panel API, as Shopvpn creates them, route like the UI-created clients of RD05-MAN-001 (RD05-D2);
   - `restartXrayOnClientDisable` off, with drift detection exercised
 - [ ] T256 Run the full E-002 campaign, recording the results in `specs/001-composite-subscriptions/evidence/E-002.md` (FR-036–FR-039; FR-053–FR-060; FR-085; SC-004; SC-007). **Requires authorization**. Measure:
   - fresh-authentication denial within 60 s of the actual quota crossing or expiry, including detection;
@@ -1395,9 +1406,9 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - **Phase 1 (Setup)** has no dependencies.
 - **Phase 2 (Foundational)** depends on Phase 1. Run 2A characterization first: every task that modifies a legacy file names the characterization task it depends on. Then 2B (schema), then 2C (types, authority, guards), then 2D (control, worker, CLI). Phase 2 blocks all later phases.
 - **Phase 3 (Finance core)** depends on 2B and 2C. **G-P does not block it.**
-- **Phase 4 (Remote and accounting core)** depends on 2B and 2D. T082 is evidence that needs authorization; only T097 waits for its results (and for OQ-4).
+- **Phase 4 (Remote and accounting core)** depends on 2B and 2D. T082 is evidence that needs authorization: part A can run as soon as it is authorized, and only T097 waits for its results (and for OQ-4); part B runs after T096 and T099.
 - **Phases 5–13 (US1–US9)** depend on Phases 2–4; stories that move money also depend on Phase 3.
-- **Phase 14 (Payment bindings)** depends on T069 and T075–T077 (Phase 3) and on T208. Each group's evidence task gates the rest of that group, and the groups are independent of each other. The card-to-card receipt flow also needs T118. A group can start as soon as its evidence is available, alongside story work.
+- **Phase 14 (Payment bindings)** depends on T069 and T075–T077 (Phase 3) and on T208, except T215, which depends only on T075, T116 and T118. Each group's evidence task gates the rest of that group, and the groups are independent of each other. The card-to-card receipt flow also needs T118. A group can start as soon as its evidence is available, alongside story work.
 - **Phase 15 (Polish)** depends on the stories being released.
 - **Phase 16 (Release acceptance)** depends on implementation of the stories it checks, on Phase 14 for E-005 and V-RCP-01, and on explicit authorization. T250 must pass before any composite mutation reaches a production panel.
 
@@ -1406,7 +1417,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 | Fence | Tasks | Lifted by |
 | --- | --- | --- |
 | G-P per method | T208–T214, T216–T236 | An owner-accepted evidence record per method: T208 (inventory), then T209, T216, T220, T224, T228 and T232. T215 is not gated (GP-OWN-001) |
-| E-001 probe | T097 | T082's candidate mechanisms, plus OQ-4 (runtime confirmation). Lifted for T096, T099 and T120 on 2026-10-21 (OQ-3) |
+| E-001 probe | T097 | T082 part A's candidate mechanisms, plus OQ-4 (runtime confirmation). Lifted for T096, T099 and T120 on 2026-10-21 (OQ-3) |
 | Requires authorization | T082, T208, T209, T216, T220, T224, T228, T232, T246–T248, T250–T264 | Explicit owner execution authorization for each run, on disposable non-production resources |
 | Before production composite mutations | T250; T264 production checks | RX-D13 re-run passed; production panels verified read-only |
 
@@ -1549,7 +1560,7 @@ Task: "T233 tests/contract/test_method_generic_gateway.py"  # after T232
 ### MVP first (validation increment, not a release)
 
 1. Complete Phase 1 (Setup) and Phase 2 (Foundational, characterization first).
-2. Complete Phase 3 (Finance core) and Phase 4 (Remote and accounting core). Request authorization for T082 early: T097 waits on it, and it checks the Phase 4 provider work against a real panel.
+2. Complete Phase 3 (Finance core) and Phase 4 (Remote and accounting core). Request authorization for T082 part A early: T097 waits on it, and it checks the Phase 4 provider work against a real panel. Part B follows T096 and T099.
 3. Complete Phase 5 (US1).
 4. **Stop and validate**: run the US1 tests and the full characterization suite offline. US1 then works with wallet-only and zero-price funding.
 
@@ -1685,7 +1696,7 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 ## Open questions (not resolvable from the documents)
 
 - **OQ-1 — Automatic card-to-card (SMS forwarder). Resolved 2026-10-22: not offered for composite plans at launch** (research.md GP-OWN-001 GP-D1). In the source, the automatic mode matches a forwarded SMS to a pending invoice by amount only, with no bank reference, while FR-011 requires a unique transaction reference. Manual card-to-card (FR-014) stays a candidate. T215 enforces the exclusion.
-- **OQ-2 — Enabled methods outside the six candidates. Resolved 2026-10-22: excluded from composite plans through plan payment restrictions** (research.md GP-OWN-001 GP-D2; FR-010; PC-092). This covers Zarinpal, Aqayepardakht, Telegram Stars, BluPal, Noapay and Plisio/crypto. T208 still records which are enabled, and T215 enforces the exclusion. Any of them can be added later with its own Phase 14-style group before 001's release, or as a small follow-up feature after it.
+- **OQ-2 — Enabled methods outside the six candidates. Resolved 2026-10-22: not offered for composite plans, because no G-P contract is bound for them** (research.md GP-OWN-001 GP-D2; FR-010; PC-092). Plan settings do not list them, so they cannot be ticked by mistake; once a method's own group is accepted, it becomes selectable. No spec change is needed: PC-092 already treats an integration Shopvpn cannot verify as no permission to grant service. This covers Zarinpal, Aqayepardakht, Telegram Stars, BluPal, Noapay and Plisio/crypto. T208 still records which are enabled, and T215 enforces the exclusion. Any of them can be added later with its own Phase 14-style group before 001's release, or as a small follow-up feature after it.
 - **OQ-3 — Is RD-05's routing/export check still a pre-implementation gate? Resolved 2026-10-21: no.** RD-05 says "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior", while plan.md's status lines name only G-P as blocking. These tasks first fenced T096, T099 and T120 behind T082. The owner then confirmed in a lab, on the deployed versions, that Xray `user` regex rules route clients to the matching outbound without a restart and that clients matching no rule keep their normal route (RD05-MAN-001) and chose to implement first and test after (RD05-OWN-001); both are recorded in research.md under RD-05. The fence is lifted for those three tasks; the remaining checks run after implementation (T082, T255, T257). research.md RD-05 and the E-001 ledger row now mark the old gate as lifted (2026-10-22).
 - **OQ-4 — Which runtime evidence confirms fresh-authentication state?** contracts/provider.md keeps `confirm_runtime_state` as "still an E-001 capability", to "fail explicitly and keep pending" if no safe runtime proof exists. No document selects the production mechanism, for example an active authentication probe from the manager host or a panel runtime read. Until one is selected, nothing that needs runtime proof can be reported as confirmed:
   - leak-replacement success (FR-056);

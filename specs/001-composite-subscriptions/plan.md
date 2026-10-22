@@ -135,6 +135,9 @@ specs/001-composite-subscriptions/
 ├── research.md                     decisions and E-001–E-005 gates
 ├── data-model.md                   proposed entities/invariants/transitions
 ├── quickstart.md                   present vs future validation
+├── tasks.md                        dependency-ordered tasks (generated 2026-10-19)
+├── implementation-review.md        implementation review/Constitution Check (created by tasks.md T005)
+├── evidence/                       release evidence, one file per check (created by tasks.md T005)
 └── contracts/
     ├── application.md              commands, authority, UI/payment contracts
     ├── provider.md                 optional provider/worker/accounting contracts
@@ -142,7 +145,7 @@ specs/001-composite-subscriptions/
     └── operations.md               migration/maintenance/recovery contracts
 ```
 
-`tasks.md` is deliberately not generated. Historical P0–P6 packages are not the task structure.
+`tasks.md` is deliberately not generated *(superseded 2026-10-19: generated on explicit owner request)*. Historical P0–P6 packages are not the task structure.
 
 ### Source Code (repository root)
 
@@ -168,7 +171,7 @@ tests/                                                proposed isolated suites
 
 ## Upgrade, deployment and recovery design
 
-1. Later implementation first characterizes risky affected paths and resolves G-P. RX-01 under E-001/E-002 is closed (V-RX-01(a)–(h) passed, RX-MAN-001; RD-10 values set, RX-OWN-005); V-RX-01(b) is re-run from the bot host before composite mutations reach production panels (RX-D13). Every composite panel is verified to run `restartXrayOnClientDisable` off (RX-D2); G-A is closed (PR-002 approved; V-GA-01–V-GA-04 passed, GA-MAN-002, under the GA-OWN-004 restart-loss bound). G-C is closed on GC-MAN-001 plus PR-001; no automatic-selection validation remains. A tested release identifies revision/runtime/dependencies/schema/capability manifests and peer trust. Include secret/runtime/backup exclusions in affected source-control/update handling; `update.sh` staging/pushing all files cannot be the feature release procedure.
+1. Later implementation first characterizes risky affected paths; G-P blocks only each method's payment bindings (tasks.md Phase 14), not adapter-independent work. RX-01 under E-001/E-002 is closed (V-RX-01(a)–(h) passed, RX-MAN-001; RD-10 values set, RX-OWN-005); V-RX-01(b) is re-run from the bot host before composite mutations reach production panels (RX-D13). Every composite panel is verified to run `restartXrayOnClientDisable` off (RX-D2); G-A is closed (PR-002 approved; V-GA-01–V-GA-04 passed, GA-MAN-002, under the GA-OWN-004 restart-loss bound). G-C is closed on GC-MAN-001 plus PR-001; no automatic-selection validation remains. A tested release identifies revision/runtime/dependencies/schema/capability manifests and peer trust. Include secret/runtime/backup exclusions in affected source-control/update handling; `update.sh` staging/pushing all files cannot be the feature release procedure.
 2. Ship compatibility guards and additive schema changes with issuance disabled. Stop admission and quiesce all affected DB/FSM writers, including bot reconciler/purge/cache loops, both APIs, notifier and future worker/subscription server; verify closure before replacement/migration. Capture/validate a protected complete pre-upgrade recovery set. Migrate main then enumerate every registry tenant including inactive/no-live-bot; apply compatible additive discriminator/guard metadata, preserving all legacy data. Fail visibly, retain prior set and refuse partial enablement.
 3. Rerun migrations on historical/current/feature synthetic schemas; check FKs, indexes, entity/effect/count invariants and required fields, owner preservation and version range. A migration transaction never calls nested committing helpers/unsafe executescript. Reseller composites remain forbidden; no composite child synthesis from old services. A new process refuses unsupported future schema. Old binaries are fenced while composites or new financial obligations exist.
 4. Prepare owner panels/routes/TLS/capability registration, external keys and public HTTPS/domain; start worker/public process in guarded state. Check lock singleton, restore epoch, queue/reconciliation health, secret-free logs and public invalid-token behavior; then bot/admin health and all controlled release gates. Enable owner-validated catalog only after evidence passes. A-only live five-choice setup never replaces six-node acceptance.
@@ -205,7 +208,7 @@ No constitutional violation or exception is proposed. New worker and download pr
 
 ## Review outcome and stopping point
 
-Planning artifacts remain provisional. The 2026-10-04 structural checks were historical planning checks, not semantic or implementation acceptance. The focused 2026-10-06 revision corrects cancellation phases, RX-01 barrier criteria, N-01/B-01 delivery policies and legacy receipt fallback references within the eight allowed files. Focused scenarios and FR/SC mappings are proposed validation, not executed tests. Resolve RX-01 provider execution safety and each G-P payment binding before their dependent work. G-C is closed using GC-MAN-001 encoding/import/refresh evidence and PR-001's explicit requirement change; G-A was later closed on 2026-10-14 (GA-MAN-002, GA-OWN-004; V-GA-05/V-GA-06 remain release acceptance); no new evidence resolves the other gates. Full E-001–E-005 release evidence remains required. No planning workflow rerun, application/test execution, tasks generation, commit/push or worktree creation is part of this revision.
+Planning artifacts remain provisional. The 2026-10-04 structural checks were historical planning checks, not semantic or implementation acceptance. The focused 2026-10-06 revision corrects cancellation phases, RX-01 barrier criteria, N-01/B-01 delivery policies and legacy receipt fallback references within the eight allowed files. Focused scenarios and FR/SC mappings are proposed validation, not executed tests. Resolve each G-P payment binding before its dependent work; RX-01 provider execution safety closed on 2026-10-17. G-C is closed using GC-MAN-001 encoding/import/refresh evidence and PR-001's explicit requirement change; G-A was later closed on 2026-10-14 (GA-MAN-002, GA-OWN-004; V-GA-05/V-GA-06 remain release acceptance); no new evidence resolves the other gates. Full E-001–E-005 release evidence remains required. No planning workflow rerun, application/test execution, tasks generation, commit/push or worktree creation is part of this revision.
 
 **N-01 follow-up, 2026-10-06:** Repaired automatic known-unsent resumption/catch-up after temporary blocks/outages without erasing original targets or operational escalation clocks. Five total automatic network attempts persist across 300-second opportunities; accepted/uncertain sends cannot rearm. V-NOT-02–V-NOT-06 are proposed, not executed. Only N-01 and directly affected references changed in this follow-up; the original pre-research Constitution Check and prior unrelated edits are preserved. Post-design II/VII remain provisional, with delivery performance and all existing capability gates unverified.
 
