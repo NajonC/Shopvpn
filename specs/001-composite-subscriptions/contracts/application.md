@@ -42,7 +42,7 @@ Proposed `/api/composite/...` routes in existing `admin_panel/server.py`, with b
 
 | Proposed route | Contract |
 | --- | --- |
-| `GET/POST/PATCH /api/composite/plans` | Owner catalog/test plan configuration with finite exact units, immutable versioning/prepared node binding and selected methods. A method can be selected only when its G-P contract is accepted (tasks.md T215). Changes affect new offers only; no sold-term/node rewrite. |
+| `GET/POST/PATCH /api/composite/plans` | Owner catalog/test plan configuration with finite exact units, immutable versioning/prepared node binding and selected methods. A method can be selected only when its G-P contract is accepted in the payment registry (tasks.md T075, T116, T215). Changes affect new offers only; no sold-term/node rewrite. |
 | `GET /api/composite/subscriptions/{id}` | Relevant current state, child discrepancies, usage qualification, financial/coupon/test/campaign/cleanup obligations and actionable progress; secrets restricted to necessary authorized delivery/setup. No general history browser. |
 | `POST /api/composite/actions/preview` then `/confirm` | Single/bulk owner suspend/resume/permanent cancel; exact subscription/customer set, action/reason/version digest and signed/session-bound preview key. Changed set requires new preview. Per-member accepted result; completed results not rolled back. |
 | `POST /api/composite/replacements/preview` then `/confirm` | Owner-prepared equivalent old-to-new bindings, active/inactive eligibility, original terms/current uncertainty, emergency authorization separately explicit. Publish each subscription independently, same URL/fresh moved identities; sales/claims/unfunded checkout behavior specified. No arbitrary topology editor. |
