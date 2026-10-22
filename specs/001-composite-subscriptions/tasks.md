@@ -11,7 +11,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 
 **Generated**: 2026-10-19 at HEAD `a1358db`, on explicit owner request. plan.md's line "`tasks.md` is deliberately not generated" is superseded by that request. No other artifact was changed.
 
-**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted.
+**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that.
 
 **Planning status at generation**: PROVISIONAL / ERROR, only because gate **G-P** (exact configured payment-method contracts; E-005) is open. G-C closed on 2026-10-10, G-A on 2026-10-14 and RX-01 on 2026-10-17. The plan rules out only *unconditional* task generation, so this list is **conditional**:
 
@@ -37,7 +37,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 | PC-077/PC-080 per-client validation of automatic selection | Removed, not deferred | PR-001 |
 | V-CAN-03 "RX-01 execution hold" | Read as an RD-10 uncertain request in quarantine, or a panel stall | RD-10 |
 | 3x-UI default `restartXrayOnClientDisable` = on | Must be off on every composite panel. Verified before binding and continuously by the sweep | RX-D2; spec Assumptions (PR-003) |
-| RD-05 "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior" | Routing bindings and strict export are implemented now. The anchored-namespace, unrelated-user, six-node egress and export-field checks run after implementation (T082, T255, T257) | Owner decision 2026-10-21 on RD05-MAN-001 (OQ-3) |
+| RD-05 "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior" | Routing bindings and strict export are implemented now. The anchored-namespace, unrelated-user, six-node egress and export-field checks run after implementation (T082, T255, T257) | research.md RD05-OWN-001 (owner decision 2026-10-21, on RD05-MAN-001); OQ-3 |
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -53,7 +53,11 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 - Single brownfield Python project at the repository root. Existing modules stay adapters and change only within the affected scope.
 - New domain package `composite/` (plan.md "Source Code"). Helper modules not named in plan.md: `composite/secrets.py`, `composite/audit.py`, `composite/payment_methods/` and `panel_providers/threexui_composite_client.py`.
 - Tests: `tests/characterization/`, `tests/unit/`, `tests/contract/`, `tests/integration/`, `tests/acceptance/` and the harness in `tests/_harness/`.
-- Release evidence: `specs/001-composite-subscriptions/evidence/` (new and redacted; raw logs stay outside the repository; see OQ-5). Implementation review: `specs/001-composite-subscriptions/implementation-review.md` (new).
+- Evidence location (OQ-5 rule; raw logs always stay outside the repository):
+  - evidence that closes a research gate or drives a design decision (T082, the G-P evidence tasks) goes in `specs/001-composite-subscriptions/research.md`, following GA-MAN-002/RX-MAN-001;
+  - release evidence that the implementation works (Phase 16) goes in `specs/001-composite-subscriptions/evidence/`, one redacted file per check, linked from the matching E-001–E-005 ledger row in research.md;
+  - the implementation review and Constitution Check go in `specs/001-composite-subscriptions/implementation-review.md`, linked from plan.md;
+  - tasks.md holds pointers only.
 
 ---
 
@@ -65,7 +69,11 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 - [ ] T002 [P] Create the test tree `tests/__init__.py`, `tests/conftest.py`, `tests/characterization/`, `tests/unit/`, `tests/contract/`, `tests/integration/`, `tests/acceptance/` and `tests/_harness/`. Add `tests/README.md` stating the rule: synthetic data only, no production credentials, no production services (constitution VI; FR-086)
 - [ ] T003 [P] Add a dev-only `requirements-dev.txt` (pytest, pytest-asyncio), recording the tested versions when they are first installed in an isolated virtualenv. Leave runtime `requirements.txt` unchanged (plan.md Technical Context: no new runtime framework)
 - [ ] T004 [P] Extend `.gitignore` so secrets and runtime state cannot be committed (constitution III/IV known gap). Add the relevant exclusions from `_.gitignore.txt` plus runtime databases (`*.db`, `*.db-wal`, `*.db-shm`), backup archives, `.env` and key files, lab roots and evidence scratch
-- [ ] T005 [P] Create `specs/001-composite-subscriptions/evidence/README.md` defining the release-evidence record (spec "All future validation must retain…"; FR-086): implementation revision, versions and configuration, fixture, expected and observed results, pass/fail/not-run, redaction and cleanup. Raw logs stay outside the repository
+- [ ] T005 [P] Set up the evidence locations under the OQ-5 rule (spec "All future validation must retain…"; FR-086; constitution Governance "feature plan or linked review"):
+  - create `specs/001-composite-subscriptions/evidence/README.md` defining the release-evidence record: implementation revision, versions and configuration, fixture, expected and observed results, pass/fail/not-run, redaction and cleanup, and the rule that each passing record is linked from its E-001–E-005 ledger row in research.md;
+  - create `specs/001-composite-subscriptions/implementation-review.md` with empty sections for characterization exceptions, intended behavior differences, the Constitution Check and the release go/no-go;
+  - add one link to `implementation-review.md` from `specs/001-composite-subscriptions/plan.md`, without restructuring plan.md;
+  - raw logs stay outside the repository
 - [ ] T006 Implement the `--network=deny` pytest plugin in `tests/_harness/network_guard.py` and register it from `tests/conftest.py` (quickstart "Proposed post-implementation commands"). It fails any test that opens a non-loopback socket or selects a database or service path outside a `mktemp` lab root
 - [ ] T007 [P] Implement a controllable clock in `tests/_harness/clock.py`: a UTC epoch-millisecond wall clock and a separate monotonic clock, with injectable regression and large drift (plan.md "Worker lifecycle")
 - [ ] T008 [P] Implement synthetic fixture factories in `tests/_harness/fixtures.py`, following the spec FR-002 fixture table:
@@ -446,23 +454,18 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Early evidence (pre-implementation)
 
-- [ ] T082 Run the E-001 pre-implementation capability probe. **Requires authorization**: disposable standalone 3x-UI v3.9.0 / Xray-core v26.9.30 panels with `restartXrayOnClientDisable` off, direct TLS, synthetic clients only; never production. Record the results in `specs/001-composite-subscriptions/evidence/E-001-capability-probe.md` (contracts/provider.md; quickstart "Earliest feasibility checks" item 1; OQ-3; OQ-4). Establish:
+- [ ] T082 Run the E-001 pre-implementation capability probe. **Requires authorization**: disposable standalone 3x-UI v3.9.0 / Xray-core v26.9.30 panels with `restartXrayOnClientDisable` off, direct TLS, synthetic clients only; never production. Record the results as a new E-001 entry in the evidence ledger of `specs/001-composite-subscriptions/research.md`, following RX-MAN-001 (contracts/provider.md; quickstart "Earliest feasibility checks" item 1; OQ-3; OQ-4). Establish:
   - creation with explicit authentication, inactive creation, and canonical lookup;
   - the full mutation scope, including the inbound filter;
   - absolute updates that preserve unrelated fields and users;
   - the periodic-traffic-reset field and its scope, and the semantics of zero native quota/expiry;
-  - an anchored authenticated-email route namespace matching owner-prepared rules, with actual egress and unrelated users preserved (the RD-05 gate);
+  - an anchored authenticated-email route namespace matching owner-prepared rules, with actual egress and unrelated users preserved (RD-05; checked after implementation under RD05-OWN-001);
   - the exact export fields for the four fixture protocols;
   - candidate `confirm_runtime_state` mechanisms
 
   Only T097 waits on this task. The other items check the Phase 4 provider work against a real panel and are repeated at release (T255, T257).
 
-  **RD05-MAN-001 (owner-reported, 2026-10-21; not reproduced by the agent).** On the owner's lab panel running the deployed versions (3x-UI v3.9.0 / Xray-core v26.9.30), with exactly two outbounds and two owner-written routing rules of the form `{"type": "field", "user": ["regexp:.*_us$"], "outboundTag": "US"}` (and the `_de` equivalent):
-  - multiple clients whose emails ended in `_us` or `_de` exited through the matching outbound;
-  - clients added while the panel was running were routed correctly without restarting the panel;
-  - clients that matched no rule kept their normal route (unrelated-user preservation).
-
-  The clients were added through the panel UI. The owner accepts creation through the panel API, which Shopvpn will use, as equivalent; T255 exercises that path. Still open in this task: an anchored, versioned composite prefix (for example `regexp:^cmp1_[a-z0-9]+_us$`) instead of a bare suffix.
+  Owner-reported routing evidence RD05-MAN-001 and the owner's build-first decision RD05-OWN-001 (2026-10-21) are recorded in research.md under RD-05. Still open in this task: rules using an anchored, versioned composite prefix (for example `regexp:^cmp1_[a-z0-9]+_us$`) instead of a bare suffix, rewritten by the owner once T099 fixes the prefix.
 
 ### Tests (write first)
 
@@ -543,7 +546,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Record collector cadence 5 s, `restart_loss_bound` 20 s, restart-evidence availability, periodic-reset absence and `inbound_client_read`.
   - Map aliases only on verified physical ownership; ambiguous aliases are held.
   - Any absent or contradictory capability blocks binding and sales
-- [ ] T099 Implement prepared bindings in `composite/lifecycle.py` (FR-004; RD-05). Deactivation keeps the management references. Tests: T085. Routing mechanism: RD05-MAN-001 (T082); the anchored namespace is checked after implementation (T082), and six-node egress and unrelated-user preservation again at release (T255). Fence lifted 2026-10-21 (OQ-3).
+- [ ] T099 Implement prepared bindings in `composite/lifecycle.py` (FR-004; RD-05). Deactivation keeps the management references. Tests: T085. Routing mechanism: RD05-MAN-001 (research.md RD-05); the anchored namespace is checked after implementation (T082), and six-node egress and unrelated-user preservation again at release (T255). Fence lifted 2026-10-21 (OQ-3).
   - Panel-qualified inbound; protocol, transport and security fingerprint; intended egress key.
   - A versioned anchored authenticated-email route namespace, validated against owner-prepared rules that Shopvpn never writes.
   - Readiness and egress evidence, and an owner activation audit
@@ -1113,8 +1116,8 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 **Purpose**: Bind each candidate configured method to the Phase 3 adapter interface (T075) and lift the registry fence for that method only.
 
 **⛔ Gate G-P / E-005** (RD-07: "dependent method settlement is blocked until its exact contract is verified"):
-- Every task in this phase carries **Gate: G-P (method)**.
-- Each group starts with its evidence task. That task produces `specs/001-composite-subscriptions/evidence/G-P-<method>.md`, recording:
+- Every task in this phase carries **Gate: G-P (method)**, except T215, which only enforces the GP-OWN-001 exclusions.
+- Each group starts with its evidence task. That task adds a G-P entry for the method under RD-07 in `specs/001-composite-subscriptions/research.md` (OQ-5 rule: gate-closing evidence goes in research.md, raw logs outside the repository), recording:
   - the native amount, currency and scale;
   - the merchant namespace and the transaction/charge reference, with its uniqueness and reuse rules;
   - quoted charges and fees; conversion and rounding evidence; the full original wallet-equivalent invoice value;
@@ -1127,7 +1130,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Shared inventory
 
-- [ ] T208 Produce the secret-redacted inventory of enabled methods for the main store, plus plan-level method restrictions, in `specs/001-composite-subscriptions/evidence/G-P-inventory.md` (E-005; FR-010; RD-07). **Gate: G-P (inventory)**; **Requires authorization**. Any enabled method outside the six candidate groups below is listed for an owner decision (OQ-2); it is neither bound nor silently dropped. Inventory:
+- [ ] T208 Produce the secret-redacted inventory of enabled methods for the main store, plus plan-level method restrictions, as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md` (E-005; FR-010; RD-07). **Gate: G-P (inventory)**; **Requires authorization**. An enabled method outside the six candidate groups is recorded and stays unavailable to composite plans under owner decision GP-OWN-001 (OQ-1, OQ-2; enforced by T215); it is neither bound nor silently dropped. Inventory:
   - manual card-to-card (`card_to_card_enabled`) and automatic card-to-card (`card_to_card_auto_enabled`, SMS forwarder);
   - Aban;
   - the extra gateways `zarinpal`, `aqayepardakht`, `tetra98`, `cubepay`, `nowpayments` and `tgstars`;
@@ -1135,7 +1138,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Group A — Card-to-card (manual; FR-014; V-RCP-01)
 
-- [ ] T209 G-P evidence for manual card-to-card: an owner-manual contract record in `specs/001-composite-subscriptions/evidence/G-P-card-to-card.md`, using test cards or a non-production setup and no customer money (FR-013; FR-014; PC-093). **Gate: G-P (card-to-card)**; **Requires authorization**. Record:
+- [ ] T209 G-P evidence for manual card-to-card: an owner-manual contract record as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md`, using test cards or a non-production setup and no customer money (FR-013; FR-014; PC-093). **Gate: G-P (card-to-card)**; **Requires authorization**. Record:
   - the native unit (Toman or Rial, through `card_to_card_payment.normalize_amount`/`rial_to_toman`);
   - whether the `create_invoice` random offset applies in manual mode;
   - the merchant namespace (card or account);
@@ -1156,11 +1159,15 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Telegram: composite review callbacks in `handlers_admin.py`, owner-only, not gated by `admin_only` staff permission.
   - Web: composite dispatch in the existing approve/reject route in `admin_panel/server.py`, with a review view in `admin_panel/static/app.js`.
   - Both interfaces run one settlement transaction and one audit record; delegated staff are refused; approval never implies availability
-- [ ] T215 Conditional: bind the automatic SMS-forwarder card mode only if T208 shows `card_to_card_auto_enabled` and the owner decides it is a composite method (OQ-1). Produce its own G-P evidence and adapter covering `miniapp/server.py` `/api/webhooks/sms-forwarder` and `card_to_card_payment.match_and_complete`: authenticated sender and device, exact offset amount, unique SMS/bank reference, and no tolerance (FR-011; constitution III). **Gate: G-P (card-to-card automatic)**; **Requires authorization** for its evidence
+- [ ] T215 Keep automatic card-to-card and every method outside the six candidate groups unavailable to composite plans, per owner decision GP-OWN-001 in research.md (OQ-1, OQ-2; FR-010; FR-011). Legacy use of those methods is unchanged. Tests: new cases in `tests/contract/test_payment_adapter_contract.py` and `tests/integration/test_catalog_telegram.py`. **Gate: none**: it enforces an exclusion and needs no method evidence.
+  - The T075 registry holds no contract for them, so it refuses quotes and attempts.
+  - The composite plan routes in `admin_panel/server.py` (T116) refuse to select them as composite payment methods.
+  - The composite checkout in `handlers_user.py` (T118) never offers them.
+  - Adding one later needs its own Phase 14-style group (GP-OWN-001 GP-D2)
 
 ### Group B — NOWPayments
 
-- [ ] T216 G-P evidence for NOWPayments in `specs/001-composite-subscriptions/evidence/G-P-nowpayments.md`, using a sandbox or non-production account (FR-011; FR-013; FR-018). **Gate: G-P (NOWPayments)**; **Requires authorization**. Record:
+- [ ] T216 G-P evidence for NOWPayments as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md`, using a sandbox or non-production account (FR-011; FR-013; FR-018). **Gate: G-P (NOWPayments)**; **Requires authorization**. Record:
   - the USD price, derived from Toman with the configured crypto rate and recorded as an exact Decimal;
   - the invoice versus `payment_id` identity, and partial or over payments (`nowpayments_classify`);
   - server-side `payment_status` verification;
@@ -1172,7 +1179,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Group C — Tetra (tetra98)
 
-- [ ] T220 G-P evidence for Tetra98 in `specs/001-composite-subscriptions/evidence/G-P-tetra98.md` (FR-011; FR-013). **Gate: G-P (Tetra98)**; **Requires authorization**. Record:
+- [ ] T220 G-P evidence for Tetra98 as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md` (FR-011; FR-013). **Gate: G-P (Tetra98)**; **Requires authorization**. Record:
   - `tetra98_create` with `amount_toman` and the `authority` identity;
   - which fields `tetra98_verify` returns, in particular whether it confirms the amount and a payment reference;
   - the `/api/pay-return/tetra98` callback, the requery behavior, and fees
@@ -1182,7 +1189,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Group D — CubePay (fee included in invoice cost)
 
-- [ ] T224 G-P evidence for CubePay in `specs/001-composite-subscriptions/evidence/G-P-cubepay.md` (FR-013; FR-018). **Gate: G-P (CubePay)**; **Requires authorization**. Record:
+- [ ] T224 G-P evidence for CubePay as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md` (FR-013; FR-018). **Gate: G-P (CubePay)**; **Requires authorization**. Record:
   - the `cubepay_payable_toman` fee semantics (`cubepay_fee` up to 100 is a percentage; above that, a fixed Toman amount);
   - the ×10 `expected_rial` used by `cubepay_verify`;
   - that the fee is part of the quoted invoice cost; the authority and reference identity; and the callback
@@ -1195,7 +1202,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Group E — Aban (Toman × 10 = Rial)
 
-- [ ] T228 G-P evidence for Aban in `specs/001-composite-subscriptions/evidence/G-P-abangateway.md` (FR-011; FR-013). **Gate: G-P (Aban)**; **Requires authorization**. Record:
+- [ ] T228 G-P evidence for Aban as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md` (FR-011; FR-013). **Gate: G-P (Aban)**; **Requires authorization**. Record:
   - `abangateway_payment.toman_to_rial` (× 10) and `rial_to_toman`;
   - the `create_invoice`, `get_invoice` and `verify_invoice` fields, and the `AbanGatewayAlreadyVerified` and `AbanGatewayNotYetPaid` semantics;
   - the webhook body (`extract_invoice_id_from_webhook`); the merchant and API-key source; and fees
@@ -1208,7 +1215,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Group F — Generic/custom gateway (only where server-side verification is possible)
 
-- [ ] T232 G-P evidence per configured custom gateway key in `specs/001-composite-subscriptions/evidence/G-P-generic-gateway.md`. **Gate: G-P (generic gateway)**; **Requires authorization**. A gateway without exact server-side verification is recorded as ineligible for composite plans and reported to the owner (RD-07; FR-011). Record, per gateway:
+- [ ] T232 G-P evidence per configured custom gateway key as a G-P entry under RD-07 in `specs/001-composite-subscriptions/research.md`. **Gate: G-P (generic gateway)**; **Requires authorization**. A gateway without exact server-side verification is recorded as ineligible for composite plans and reported to the owner (RD-07; FR-011). Record, per gateway:
   - whether a server-side verify request exists that returns an exact amount (`amount_path`), currency and transaction reference;
   - the webhook authentication mode;
   - the `custom_gateway_payment.compute_send_amount` unit (IRT, IRR or USD multiplier) and its rounding
@@ -1270,7 +1277,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 **Rules for every task here**:
 - **Requires authorization**: explicit owner execution authorization, and disposable non-production resources with test credentials. No production panel serving customers, no real customer money and no production data.
-- Every result is recorded in `specs/001-composite-subscriptions/evidence/` in the T005 format: revision, versions, configuration, expected, observed, pass/fail/not-run, redaction and cleanup.
+- Every result is recorded in `specs/001-composite-subscriptions/evidence/` in the T005 format: revision, versions, configuration, expected, observed, pass/fail/not-run, redaction and cleanup. Each passing record is linked from its E-001–E-005 ledger row in research.md.
 - Abort if a check touches an unrelated user, listener or outbound.
 - A failure is reported to the owner for explicit resolution. It is never absorbed by silently changing values or reducing scope.
 - Unexecuted checks stay recorded as **not run**.
@@ -1398,9 +1405,9 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 | Fence | Tasks | Lifted by |
 | --- | --- | --- |
-| G-P per method | T208–T236 | An owner-accepted evidence record per method: T208 (inventory), then T209, T216, T220, T224, T228 and T232; T215 also needs OQ-1 answered |
+| G-P per method | T208–T214, T216–T236 | An owner-accepted evidence record per method: T208 (inventory), then T209, T216, T220, T224, T228 and T232. T215 is not gated (GP-OWN-001) |
 | E-001 probe | T097 | T082's candidate mechanisms, plus OQ-4 (runtime confirmation). Lifted for T096, T099 and T120 on 2026-10-21 (OQ-3) |
-| Requires authorization | T082, T208, T209, T215 (evidence), T216, T220, T224, T228, T232, T246–T248, T250–T264 | Explicit owner execution authorization for each run, on disposable non-production resources |
+| Requires authorization | T082, T208, T209, T216, T220, T224, T228, T232, T246–T248, T250–T264 | Explicit owner execution authorization for each run, on disposable non-production resources |
 | Before production composite mutations | T250; T264 production checks | RX-D13 re-run passed; production panels verified read-only |
 
 ### User Story Dependencies
@@ -1583,7 +1590,7 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 | FR-007 | T107, T111, T125, T126, T139 |
 | FR-008 | T037, T063, T074, T113, T116, T125 |
 | FR-009 | T059, T070, T262 |
-| FR-010 | T063, T074, T112, T118, T208, T262 |
+| FR-010 | T063, T074, T112, T118, T208, T215, T262 |
 | FR-011 | T016, T023, T033, T039, T060, T064, T069, T071, T076, T210, T211, T215–T217, T219–T221, T223, T227–T229, T231–T233, T236, T262 |
 | FR-012 | T063, T074, T262 |
 | FR-013 | T064, T069, T075, T209, T210, T212, T216, T218, T220, T222, T224–T226, T228, T230, T235, T262 |
@@ -1677,15 +1684,15 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 
 ## Open questions (not resolvable from the documents)
 
-- **OQ-1 — Automatic card-to-card (SMS forwarder).** This request names card-to-card as the manual FR-014 method. The source also has an automatic mode (`card_to_card_auto_enabled`, `miniapp/server.py` `/api/webhooks/sms-forwarder`, `card_to_card_payment.match_and_complete`, random invoice offsets). FR-010 uses the existing enabled methods, and RD-07 forbids silently dropping an accepted enabled method, but no document says whether the automatic mode is a composite candidate. T215 waits on the owner's answer, after T208.
-- **OQ-2 — Enabled methods outside the six candidates.** The source also registers Zarinpal, Aqayepardakht, Telegram Stars (`tgstars`), BluPal, Noapay and Plisio/crypto. If T208 finds any of them enabled for the main store: should composite plans exclude them through plan method restrictions, which FR-010 and PC-092 allow? Or does each need its own binding group? No binding is generated for them until this is decided.
-- **OQ-3 — Is RD-05's routing/export check still a pre-implementation gate? Resolved 2026-10-21: no.** RD-05 says "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior", while plan.md's status lines name only G-P as blocking. These tasks first fenced T096, T099 and T120 behind T082. The owner then confirmed in a lab, on the deployed versions, that Xray `user` regex rules route clients to the matching outbound without a restart and that clients matching no rule keep their normal route (RD05-MAN-001, under T082) and chose to implement first and test after. The fence is lifted for those three tasks; the remaining checks run after implementation (T082, T255, T257). research.md RD-05 still carries the old gate wording; /speckit-analyze should reconcile it.
+- **OQ-1 — Automatic card-to-card (SMS forwarder). Resolved 2026-10-22: not offered for composite plans at launch** (research.md GP-OWN-001 GP-D1). In the source, the automatic mode matches a forwarded SMS to a pending invoice by amount only, with no bank reference, while FR-011 requires a unique transaction reference. Manual card-to-card (FR-014) stays a candidate. T215 enforces the exclusion.
+- **OQ-2 — Enabled methods outside the six candidates. Resolved 2026-10-22: excluded from composite plans through plan payment restrictions** (research.md GP-OWN-001 GP-D2; FR-010; PC-092). This covers Zarinpal, Aqayepardakht, Telegram Stars, BluPal, Noapay and Plisio/crypto. T208 still records which are enabled, and T215 enforces the exclusion. Any of them can be added later with its own Phase 14-style group before 001's release, or as a small follow-up feature after it.
+- **OQ-3 — Is RD-05's routing/export check still a pre-implementation gate? Resolved 2026-10-21: no.** RD-05 says "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior", while plan.md's status lines name only G-P as blocking. These tasks first fenced T096, T099 and T120 behind T082. The owner then confirmed in a lab, on the deployed versions, that Xray `user` regex rules route clients to the matching outbound without a restart and that clients matching no rule keep their normal route (RD05-MAN-001) and chose to implement first and test after (RD05-OWN-001); both are recorded in research.md under RD-05. The fence is lifted for those three tasks; the remaining checks run after implementation (T082, T255, T257). research.md RD-05 and the E-001 ledger row now mark the old gate as lifted (2026-10-22).
 - **OQ-4 — Which runtime evidence confirms fresh-authentication state?** contracts/provider.md keeps `confirm_runtime_state` as "still an E-001 capability", to "fail explicitly and keep pending" if no safe runtime proof exists. No document selects the production mechanism, for example an active authentication probe from the manager host or a panel runtime read. Until one is selected, nothing that needs runtime proof can be reported as confirmed:
   - leak-replacement success (FR-056);
   - final-cancellation completion (FR-060);
   - verified cutoff (FR-037; SC-004).
   T082 collects the candidates; choosing one is a technical/owner decision. T097 is fenced on it.
-- **OQ-5 — Where release evidence lives.** Earlier lab evidence (GA-MAN-002, RX-MAN-001) was summarized in research.md, with raw logs kept off the repository. These tasks instead create `specs/001-composite-subscriptions/evidence/` and `specs/001-composite-subscriptions/implementation-review.md`. Confirm this location before T005; if research.md is preferred, the tasks only need their paths changed.
+- **OQ-5 — Where release evidence lives. Resolved 2026-10-22.** Spec Kit 1.0.10 has no convention for evidence or review files: its scripts recognize only spec, plan, tasks, research, data-model, quickstart, contracts and checklists, and `checklists/` tests requirement quality, not implementation. The owner chose this rule: evidence that closes a research gate or drives a design decision goes in research.md (as GC-MAN-001, GA-MAN-002, RX-MAN-001 and RD05-MAN-001 do); release evidence that the implementation works goes in `evidence/`, one file per check, linked from the E-001–E-005 ledger; the implementation review and Constitution Check go in `implementation-review.md`, linked from plan.md because the constitution requires a "feature plan or linked review"; tasks.md keeps pointers only. RD05-MAN-001 was moved from T082 to research.md RD-05 accordingly, and T005, T082, the G-P evidence tasks and the Phase 16 rules follow the rule.
 
 ---
 
