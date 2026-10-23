@@ -11,7 +11,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 
 **Generated**: 2026-10-19 at HEAD `a1358db`, on explicit owner request. plan.md's line "`tasks.md` is deliberately not generated" is superseded by that request. No other artifact was changed.
 
-**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that. Later on 2026-10-22, after `/speckit-analyze`: T082 split into part A (as soon as authorized; gates T097) and part B (after T096 and T099); T255 adds rule precedence and API-created clients; T099, T107 and T215 clarified. Owner decisions on the analyze findings: RD03-OWN-001 (provider checks also build first, test after), RD05-OWN-002 (the panel API is the only source of connection fields; address-only changes use the equivalent move: T085, T096, T103, T113, T116, T181, T183) and the GP-D2 wording (OQ-2). Second `/speckit-analyze` run, same day: T099 no longer waits on T082 part A; subscription-level `uncertain` added to T107; zero-value safety in T095/T085 and the part A repeats in T255; manual card-to-card kept off the automatic invoice path (T212, T215); method list limited to accepted contracts (T113, T116); panel setup reads go through the worker (T098, T116); External Proxy setup in T099 and T240; test pointers fixed (T086, T103, T113). Owner decisions RD05-D6–D8: old identity disabled at publication on a same-inbound move (T181, T183); an open discrepancy blocks new generations (T086, T120, T162, T166); renewal matching ignores the address (T143, T144, T186). 2026-10-23, third `/speckit-analyze` run: RD05-D7 clarified (in-progress purchases keep their 15-minute deadline, T111; the block ends per subscription when its own move publishes, T162); test case for subscription-level `uncertain` (T086); rules-table row for plan.md:203 names T082 part A. Later on 2026-10-23, fourth `/speckit-analyze` run: each new generation is checked against the descriptor it will publish, so a same-inbound move is not blocked by the discrepancy it resolves; the move target descriptor, each subscription's current descriptor and the discrepancy's closure are defined (T086, T103, T120, T181–T183; data-model.md); new checkouts and test claims are refused while their node has an open discrepancy (T063, T074, T112, T118, T152, T155); the owner's pick is checked on the plan node, not the binding (T099, T113, T116, T240); the leak-release case moved to T181 so US5 stays independent of US7; renewal during a discrepancy (T143, T147) and an accepted test claim during one (T152) tested; release check of the change path (T255); Phase 15 dependency wording. Owner decision RD05-D9 (research.md): any connection value, not only the address, changes through the same equivalent move and is not part of the renewal-matching signature (T143, T144, T181, T183, T186, T240).
+**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that. Later on 2026-10-22, after `/speckit-analyze`: T082 split into part A (as soon as authorized; gates T097) and part B (after T096 and T099); T255 adds rule precedence and API-created clients; T099, T107 and T215 clarified. Owner decisions on the analyze findings: RD03-OWN-001 (provider checks also build first, test after), RD05-OWN-002 (the panel API is the only source of connection fields; address-only changes use the equivalent move: T085, T096, T103, T113, T116, T181, T183) and the GP-D2 wording (OQ-2). Second `/speckit-analyze` run, same day: T099 no longer waits on T082 part A; subscription-level `uncertain` added to T107; zero-value safety in T095/T085 and the part A repeats in T255; manual card-to-card kept off the automatic invoice path (T212, T215); method list limited to accepted contracts (T113, T116); panel setup reads go through the worker (T098, T116); External Proxy setup in T099 and T240; test pointers fixed (T086, T103, T113). Owner decisions RD05-D6–D8: old identity disabled at publication on a same-inbound move (T181, T183); an open discrepancy blocks new generations (T086, T120, T162, T166); renewal matching ignores the address (T143, T144, T186). 2026-10-23, third `/speckit-analyze` run: RD05-D7 clarified (in-progress purchases keep their 15-minute deadline, T111; the block ends per subscription when its own move publishes, T162); test case for subscription-level `uncertain` (T086); rules-table row for plan.md:203 names T082 part A. Later on 2026-10-23, fourth `/speckit-analyze` run: each new generation is checked against the descriptor it will publish, so a same-inbound move is not blocked by the discrepancy it resolves; the move target descriptor, each subscription's current descriptor and the discrepancy's closure are defined (T086, T103, T120, T181–T183; data-model.md); new checkouts and test claims are refused while their node has an open discrepancy (T063, T074, T112, T118, T152, T155); the owner's pick is checked on the plan node, not the binding (T099, T113, T116, T240); the leak-release case moved to T181 so US5 stays independent of US7; renewal during a discrepancy (T143, T147) and an accepted test claim during one (T152) tested; release check of the change path (T255); Phase 15 dependency wording. Owner decision RD05-D9 (research.md): any connection value, not only the address, changes through the same equivalent move and is not part of the renewal-matching signature (T143, T144, T181, T183, T186, T240). 2026-10-23, fifth `/speckit-analyze` run: unfunded initial checkouts on an affected plan version are rejected when its discrepancy opens, as at cutover (T065, T079, T086, T103, T111, T186; FR-071, FR-017); a move of a subscription with a pending leak replacement goes through that replacement (T166, T181, T183); refusals apply only to affected plan versions, so a new version on the same binding still sells (T063, T074, T103, T112, T118, T152, T155); the schema tasks carry the current descriptor, the move target descriptor and the discrepancy record (T037, T040).
 
 **Planning status at generation**: PROVISIONAL / ERROR, only because gate **G-P** (exact configured payment-method contracts; E-005) is open. G-C closed on 2026-10-10, G-A on 2026-10-14 and RX-01 on 2026-10-17. The plan rules out only *unconditional* task generation, so this list is **conditional**:
 
@@ -40,7 +40,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 | RD-05 "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior" | Routing bindings and strict export are implemented now. The anchored-namespace, unrelated-user, six-node egress and export-field checks run after implementation (T082, T255, T257) | research.md RD05-OWN-001 (owner decision 2026-10-21, on RD05-MAN-001); OQ-3 |
 | E-001 ledger "First validate exact disposable deployment API/TLS/canonical identity/mutation scope …" before dependent implementation | Provider operations (T095) are built first. T082 part A runs as soon as it is authorized, and only T097 waits on it | research.md RD03-OWN-001 (owner decision 2026-10-22) |
 | plan.md:203 "G-P and RX-01 (V-RX-01(a)–(h)) probes precede work that they could invalidate … later full acceptance checks cannot retroactively justify an unverified early design" | Only G-P, and T082 part A for T097, still precede the work they could invalidate. The RX-01 probes ran; routing, export and provider operations are built first and checked before release (T082, T255, T257) | research.md RD05-OWN-001, RD03-OWN-001; RX-MAN-001 |
-| RD-05 and data-model.md `composite_plan_nodes`: an owner-selected endpoint descriptor verified against API fields | The 3x-UI API is the only source of connection fields, with the address and port from the inbound's External Proxy entry; the owner picks only where the panel offers several values. A later panel change is an FR-041 discrepancy: no new generation that would publish the old values is built, and new checkouts and test claims on that plan version are refused, until it is resolved. A change of the address or of any other connection value is an equivalent move to the same inbound; the move's generation is checked against its target descriptor, and the old identity is disabled at publication. Connection values are not part of the renewal-matching signature | research.md RD05-OWN-002 (owner decisions 2026-10-22; RD05-D9 2026-10-23) |
+| RD-05 and data-model.md `composite_plan_nodes`: an owner-selected endpoint descriptor verified against API fields | The 3x-UI API is the only source of connection fields, with the address and port from the inbound's External Proxy entry; the owner picks only where the panel offers several values. A later panel change is an FR-041 discrepancy: until it is resolved, no new generation that would publish the old values is built and new checkouts and test claims on that plan version are refused; when it opens, that version's unfunded initial checkouts are rejected as at cutover (FR-071; FR-017). A change of the address or of any other connection value is an equivalent move to the same inbound; the move's generation is checked against its target descriptor, and the old identity is disabled at publication. Connection values are not part of the renewal-matching signature | research.md RD05-OWN-002 (owner decisions 2026-10-22; RD05-D9 2026-10-23); FR-071 |
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -225,7 +225,8 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `composite_subscriptions`:
     - `lifecycle` values `preparing`, `fulfilled`, `cancel_pending`, `cancelled`, `failed_unfulfilled`;
     - independent restriction columns `customer_disabled`, `owner_suspended`, `reporting_suspended`, `recovery_hold_case`, `replacement_delivery_block`, `initial_delivery_block`;
-    - `cancel_accepted_at`; `cancel_wait_kind` (`authorized_renewal`, `initial_provisioning` or none); `cancel_final_started_at`.
+    - `cancel_accepted_at`; `cancel_wait_kind` (`authorized_renewal`, `initial_provisioning` or none); `cancel_final_started_at`;
+    - the current descriptor per logical node: set from the offer node at sale, replaced by the move's target descriptor when that subscription's move publishes, and unchanged by renewal (data-model.md §3; research.md RD05-OWN-002).
   - `composite_tokens`: unique SHA-256 digest; status `candidate`, `current`, `revoked`, `superseded`; tombstones retained.
   - `composite_config_generations`: state `preparing`, `complete_verified`, `published`, `retired`, `blocked_uncertain`; one current published generation
 - [ ] T038 Add the data-model §5–§7 DDL to `composite/migrations.py` (FR-033–FR-035; FR-043; FR-079). Tests: T034.
@@ -245,7 +246,8 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `composite_operations`.
   - `composite_remote_work` and `composite_remote_attempts`: status `queued`, `dispatched`, `uncertain`, `confirmed`, `manual_hold`; `quarantine_until`.
   - `composite_drift_sweeps` (outcome `consistent`, `diverged`, `unknown`) and `composite_divergences`.
-  - `composite_batches` and `composite_batch_members`; `composite_audit_events`; `composite_notifications` with the N-01 fields.
+  - A descriptor-discrepancy record (data-model §10): the binding, each in-use descriptor that differs from the panel, the observed values, the detection time, and the closure time and reason.
+  - `composite_batches` and `composite_batch_members`, each move member storing per logical node its target binding and the target descriptor read at preview, with the owner's pick (data-model §10); `composite_audit_events`; `composite_notifications` with the N-01 fields.
   - `composite_processing_control`, `composite_recovery_points`, `composite_recovery_cases` and `composite_recovery_evidence`
 - [ ] T041 Implement the upgrade-time reconciliation of `users.test_used` in `composite/migrations.py`, run with admissions quiesced (data-model §9; FR-027; FR-083). Preserve every prior count. Classify demonstrably pending legacy attempts into identity-based `ordinary_test` holds without counting them twice. Hold any unresolved remainder rather than subtracting it or assuming success. Tests: T034
 
@@ -357,7 +359,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - quantity is one, and a repeated confirmation key returns the same checkout;
   - an open renewal is returned with no second order, debit or coupon hold (AS-03.4), while a terminal checkout does not block a new one;
   - full-wallet and validated zero-price checkouts become `authorized` with the original deadline;
-  - an initial checkout for a plan version whose node has an open descriptor discrepancy is refused with an explanation, before any offer, debit, coupon hold or clock, while a renewal or conversion is not refused for that reason (FR-071; research.md RD05-OWN-002 RD05-D7, RD05-D8)
+  - an initial checkout for a plan version affected by an open descriptor discrepancy (T103) is refused with an explanation, before any offer, debit, coupon hold or clock, while a renewal or conversion is not refused for that reason, and a new plan version saved with the panel's current values on the same binding is accepted while that discrepancy is still open (FR-071; research.md RD05-OWN-002 RD05-D5, RD05-D7, RD05-D8)
 - [ ] T064 [P] Write `tests/integration/test_receipt_settlement.py` (FR-011; FR-013; FR-014; EC-01; SC-002):
   - unique receipt binding; a repeated hint returns the earlier outcome;
   - the same reference on another checkout or a top-up fails or returns the original binding;
@@ -365,12 +367,13 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - mismatched or unparseable evidence becomes `mismatch_hold`;
   - a client success flag, a receipt upload alone, a missing amount, 99 % acceptance and unbounded excess never settle;
   - an indeterminate commit is resolved by an effect query before any retry
-- [ ] T065 [P] Write `tests/integration/test_unpayable_and_unfunded.py` (FR-016; FR-017; EC-02). AS-01.5:
+- [ ] T065 [P] Write `tests/integration/test_unpayable_and_unfunded.py` (FR-016; FR-017; FR-071; EC-02). AS-01.5:
   - a retained quote survives disabled new invoices while a valid issued attempt or a legitimate manual review remains;
   - a configuration or restriction change that leaves no permitted path rejects the quote, restores the actual wallet funding within 60 s (fake clock) and releases the coupon once;
   - a temporary outage, verification uncertainty or one expired invoice does not reject it;
   - customer cancellation, owner rejection and owner-suspension or cutover rejection are terminal;
-  - later valid money credits the full original quoted invoice value once, within 60 s, without fulfillment or reopening
+  - later valid money credits the full original quoted invoice value once, within 60 s, without fulfillment or reopening;
+  - a discrepancy-opened rejection (T079): an initial checkout confirmed before its plan version's descriptor discrepancy opened and not yet `authorized` is rejected when it opens, the wallet restored within 60 s and the coupon released once; a payment verified afterwards becomes one full `terminal_late_credit` within 60 s, with no fulfillment; a payment verified at the same moment resolves to one transaction order; an `authorized` checkout is not rejected and keeps its deadline (research.md RD05-OWN-002 RD05-D7)
 - [ ] T066 [P] Write `tests/integration/test_zero_price.py` (FR-021):
   - a validated zero-price initial purchase, renewal or conversion is authorized with no debit, no external request and no fabricated receipt;
   - it retains the zero amount and the discount evidence, and its 15-minute deadline starts at validated confirmation;
@@ -404,7 +407,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
 - [ ] T073 Implement the shared coupon reservation guard over `resource_reservations` in `composite/finance.py`, and route the legacy coupon increment in `handlers_user.py:_buy_start` and the coupon helpers in `database.py` through it (FR-020; data-model §9). Tests: T062; characterization T013
 - [ ] T074 Implement `confirm_checkout` in `composite/service.py` for `initial`, `renewal` and `conversion` (FR-008; FR-010; FR-012; FR-015; FR-021). Tests: T063, T066.
   - Validate the principal, offer, ownership, price, eligibility and capacity, and enforce the partial unique open-renewal index.
-  - Refuse an initial checkout for a plan version whose node has an open descriptor discrepancy, before any offer, debit, coupon hold or clock, and explain that the plan is temporarily unavailable. New sales wait for the plan version the owner activates with the new values (research.md RD05-OWN-002 RD05-D5, RD05-D7; FR-071 refusal rules). Renewal and conversion build no new generation and are not refused for this reason (RD05-D8).
+  - Refuse an initial checkout for a plan version affected by an open descriptor discrepancy (T103), before any offer, debit, coupon hold or clock, and explain that the plan is temporarily unavailable. New sales wait for the plan version the owner activates with the new values (research.md RD05-OWN-002 RD05-D5, RD05-D7; FR-071 refusal rules). Renewal and conversion build no new generation and are not refused for this reason (RD05-D8).
   - Atomically create the immutable offer, the compatibility order, the coupon hold, a conditional wallet debit (wallet first, up to the store price) and durable work.
   - Full-wallet and zero-price checkouts become `authorized` with the original deadline.
   - An existing open renewal returns its progress instead
@@ -426,10 +429,11 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - The refund is the actual original wallet contribution plus the full original verified invoice value in wallet units (30 + 73 = 103), at the original conversion only.
   - Coupon release is atomic with refund settlement.
   - Settlement is independent of remote cleanup and notifications
-- [ ] T079 Implement `cancel_unfunded_checkout`, owner rejection and the unpayable evaluator in `composite/service.py` (FR-016; FR-017). Tests: T065.
+- [ ] T079 Implement `cancel_unfunded_checkout`, owner rejection and the unpayable evaluator in `composite/service.py` (FR-016; FR-017; FR-071). Tests: T065.
   - The evaluator runs on configuration and payment-restriction change events.
   - Valid issued attempts and legitimate manual reviews count as funding paths; temporary outages and a single invoice's expiry are ignored.
   - When loss of every path is established: reject, restore the wallet within 60 s and release the coupon once.
+  - When a descriptor discrepancy opens, the durable work T103 records with it rejects every initial checkout on an affected plan version that is not yet `authorized` (`quoted`, `awaiting_payment` or `manual_review`), as a cutover rejection: restore the wallet within 60 s, release the coupon once and tell the customer the plan is temporarily unavailable. Later valid money follows T080. Authorized checkouts keep their deadline (research.md RD05-OWN-002 RD05-D7).
   - A race with authorization resolves to a single transaction order
 - [ ] T080 Implement late and extra credits in `composite/finance.py` (FR-017; FR-019). Tests: T061, T064.
   - Later valid money on a terminal checkout becomes a `terminal_late_credit` of the full original quoted value, once.
@@ -505,7 +509,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - 3 consecutive writes missing T = 10 s raise a panel-stall escalation, and nothing is restarted automatically;
   - the quarantine is per client, and there is one writer per physical panel;
   - the budget is five attempts, with 1/2/4/8/15 s backoff after a definite no-effect failure;
-  - panel connection values that differ from a descriptor still in use open an FR-041 discrepancy and leave published links unchanged (RD05-OWN-002 RD05-D5). A new generation that would publish the old values is refused, while one built from a descriptor that matches the panel (a move's target descriptor) is not (RD05-D7). The discrepancy closes when the old value is put back, or when no unmoved subscription and no plan version on sale still uses the old values;
+  - panel connection values that differ from a descriptor still in use open an FR-041 discrepancy and leave published links unchanged (RD05-OWN-002 RD05-D5). A new generation that would publish the old values is refused, while one built from a descriptor that matches the panel (a move's target descriptor) is not (RD05-D7). The discrepancy closes when the old value is put back, or when no unmoved subscription and no plan version on sale still uses the old values. Opening it records the T079 rejection work for the affected plan versions only, not for a newer version saved with the panel's current values;
   - a child with an uncertain request that could undo the state shows the subscription as `uncertain` in the customer, owner and support views, distinct from `requested`, `partial` and `confirmed` (FR-007; T107);
   - the worked check holds: 0 → 15 → 45 → about 46 s, within 60 s
 - [ ] T087 [P] Write `tests/integration/test_restart_setting_verification.py` (RX-D2; RX-MAN-001 finding 4): binding is refused when `restartXrayOnClientDisable` is on or unreadable. The sweep's lower-cadence re-verification detects a settings reset that turns it back on, blocks new composite binding and opens FR-041 drift, while existing subscriptions stay managed
@@ -581,7 +585,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Compare every owned identity, including inactive and cleanup-pending ones, and flag deleted identities that reappear.
   - Repair mismatches and record `composite_divergences` with their exposure. A failed read is `unknown`.
   - Repeated divergence opens an FR-041 discrepancy; repair failures and stalls escalate.
-  - At the T104 cadence, compare the panel's connection values with every descriptor still in use: the nodes of each plan version on sale, each subscription's current descriptor and each pending move's target descriptor (data-model.md). A difference opens an FR-041 discrepancy and never changes published links (RD05-OWN-002 RD05-D5). The discrepancy closes when the panel value is put back, or when no unmoved subscription and no plan version on sale still uses the old values.
+  - At the T104 cadence, compare the panel's connection values with every descriptor still in use: the nodes of each plan version on sale, each subscription's current descriptor and each pending move's target descriptor (data-model.md). A difference opens an FR-041 discrepancy and never changes published links (RD05-OWN-002 RD05-D5). A plan version is affected when one of its saved node descriptors is a descriptor the discrepancy records; a newer version saved with the panel's current values on the same binding is not affected. In the same transaction that opens the discrepancy, record durable work for the T079 rejection of unfunded initial checkouts on the affected plan versions (FR-071). The discrepancy closes when the panel value is put back, or when no unmoved subscription and no plan version on sale still uses the old values.
   - Never restart anything automatically
 - [ ] T104 Implement continuous re-verification of `restartXrayOnClientDisable` in `composite/lifecycle.py`, at a lower cadence than the sweep (RX-D2; RX-MAN-001 finding 4). A value of on, or an unreadable setting, is recorded with its time on the panel, blocks new composite binding and raises FR-041 drift with owner attention. Existing subscriptions stay managed. Tests: T087
 - [ ] T105 Implement terminal revocation in `composite/lifecycle.py` (RX-D9; FR-022; constitution II). Tests: T088.
@@ -627,14 +631,14 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - five of six nodes ready stays pending;
   - a crash at every fulfillment boundary; a local persistence failure is never reported as fulfillment;
   - a restart keeps the original 15-minute deadline;
-  - a purchase accepted before its node's descriptor discrepancy opened keeps its original 15-minute deadline and, if the discrepancy is not resolved in time, is cancelled and refunded as usual (FR-024; research.md RD05-OWN-002 RD05-D7);
+  - a purchase authorized (fully verified, full-wallet or zero-price) before its node's descriptor discrepancy opened keeps its original 15-minute deadline and, if the discrepancy is not resolved in time, is cancelled and refunded as usual (FR-024; research.md RD05-OWN-002 RD05-D7);
   - payment, provisioning, availability, notification and cleanup outcomes stay distinguishable in the customer and owner status views (T107)
 - [ ] T112 [P] [US1] Write `tests/integration/test_catalog_telegram.py` (FR-003; FR-005; FR-006; FR-010; FR-025):
   - `cmp:` callbacks take the actor from `call.from_user.id`;
   - the preview shows nodes, GiB with the binary-unit explanation, "30 days", base price, reductions, total, invoice cost and fee boundary, refund destination and the no-unused-service-refund notice;
   - buyers with reseller or discount status buy as ordinary customers, without reseller credit;
   - unsupported channels are refused;
-  - a plan version whose node has an open descriptor discrepancy is shown as temporarily unavailable, and its checkout is refused before any debit, coupon hold or clock (FR-071; research.md RD05-OWN-002 RD05-D7);
+  - a plan version affected by an open descriptor discrepancy (T103) is shown as temporarily unavailable, and its checkout is refused before any debit, coupon hold or clock (FR-071; research.md RD05-OWN-002 RD05-D7);
   - the callback grammar fits Telegram's size limit and collides with no prefix in the T028 snapshot
 - [ ] T113 [P] [US1] Write `tests/unit/test_composite_plans.py`, plus route cases for T116 in `tests/integration/test_composite_plan_routes.py` (FR-001; FR-002; FR-003; FR-008; FR-010): finite positive bytes; paid duration exactly 2,592,000 s; a positive base price; any positive node count (the six-node fixture and the A-only five); immutable versions; edits affecting only new offers; sold terms surviving edits; node connection fields taken from the panel read, with an owner pick required only where the panel offers several values and refused when it no longer exists on the panel (RD05-OWN-002 RD05-D4); the routes list and accept only methods with an accepted contract in the T075 registry, and hand panel reads to the worker
 - [ ] T114 [P] [US1] Write `tests/integration/test_initial_cancellation.py`: offline V-CAN-04 (FR-026; AS-01.6):
@@ -658,7 +662,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - `keyboards.py`: the `cmp:` namespace, with opaque references and confirmation nonces, grammar frozen against T028.
   - `states.py`: draft references only.
   - `handlers_user.py`: dispatch composite before the inventory, naming, single-panel and referral logic in `_buy_start`; show the T070 preview; call `confirm_checkout`.
-  - A plan version whose node has an open descriptor discrepancy is shown as temporarily unavailable and cannot be checked out; `confirm_checkout` (T074) refuses it again if the discrepancy opens after the preview (research.md RD05-OWN-002 RD05-D7; FR-071).
+  - A plan version affected by an open descriptor discrepancy (T103) is shown as temporarily unavailable and cannot be checked out; `confirm_checkout` (T074) refuses it again if the discrepancy opens after the preview (research.md RD05-OWN-002 RD05-D7; FR-071).
   - No purchase referral reward
 - [ ] T119 [US1] Implement initial fulfillment orchestration in `composite/lifecycle.py` (FR-001; FR-022; FR-023; RD-09 "Other periods"). Tests: T111.
   - Allocate child identities, secrets, route emails and meter links transactionally before any call.
@@ -826,7 +830,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - confirmed failure releases ordinary eligibility and the place once;
   - an unknown outcome keeps the holds past the deadline, forbids late delivery and alerts the owner;
   - a retry after release gets no priority;
-  - a new claim on a test plan whose node has an open descriptor discrepancy is refused before any eligibility or campaign hold (FR-071; research.md RD05-OWN-002 RD05-D7);
+  - a new claim on a test plan version affected by an open descriptor discrepancy (T103) is refused before any eligibility or campaign hold, while a claim on a new test plan version saved with the panel's current values is accepted (FR-071; research.md RD05-OWN-002 RD05-D5, RD05-D7);
   - a claim accepted before its node's discrepancy opened keeps its 15-minute deadline; if the discrepancy is not resolved in time, nothing is delivered late, confirmed failure releases ordinary eligibility and the place once, and an unknown remote outcome keeps the holds (RD05-D7);
   - 150 fulfilled closes the campaign permanently
 - [ ] T153 [P] [US4] Write `tests/integration/test_test_eligibility_shared.py` (FR-027; FR-031):
@@ -841,7 +845,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - A finite allowance with explicit MiB labels and a positive whole-hour duration; defaults 209,715,200 bytes / 3,600 s.
   - Enable and disable alongside legacy plans.
   - Edits never change tests already issued
-- [ ] T155 [US4] Replace counter-only test reservation with shared, operation-based reservations (FR-027; FR-030; data-model §9). Route `database.py` `try_reserve_test_slot`/`release_test_slot` (affected scope) and `claim_test` in `composite/service.py` through `resource_reservations`, carrying identity, acceptance sequence and the unchanged 15-minute deadline. `claim_test` refuses a test plan whose node has an open descriptor discrepancy before reserving anything (research.md RD05-OWN-002 RD05-D7; FR-071). Tests: T152, T153; characterization T017
+- [ ] T155 [US4] Replace counter-only test reservation with shared, operation-based reservations (FR-027; FR-030; data-model §9). Route `database.py` `try_reserve_test_slot`/`release_test_slot` (affected scope) and `claim_test` in `composite/service.py` through `resource_reservations`, carrying identity, acceptance sequence and the unchanged 15-minute deadline. `claim_test` refuses a test plan version affected by an open descriptor discrepancy (T103) before reserving anything (research.md RD05-OWN-002 RD05-D7; FR-071). Tests: T152, T153; characterization T017
 - [ ] T156 [US4] Extend `btn_test` in `handlers_user.py` (FR-027). Tests: T153.
   - Zero active plans keeps the legacy fallback; one eligible plan is selected directly; several plans show options.
   - Disabled behavior is unchanged.
@@ -901,7 +905,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - [ ] T166 [US5] Implement leak replacement in `composite/service.py` and `composite/lifecycle.py` (FR-055; FR-056; FR-057). Tests: T162.
   - On acceptance, revoke the token and set `replacement_delivery_block` immediately.
   - Preallocate replacement identities with fresh UUIDs or Trojan passwords, and revoke every old credential at once.
-  - Publish the new token only after old fresh authentication is confirmed denied and the new set is fully ready and retrievable. A node whose panel values differ from the subscription's current descriptor is not ready (T120; research.md RD05-OWN-002 RD05-D7); the replacement is re-evaluated when that subscription's move publishes (T183).
+  - Publish the new token only after old fresh authentication is confirmed denied and the new set is fully ready and retrievable. A node whose panel values differ from the subscription's current descriptor is not ready (T120; research.md RD05-OWN-002 RD05-D7); the replacement is re-evaluated when that subscription's move publishes. A move of a subscription with a pending replacement goes through this replacement, which does the publishing (T183).
   - Start the 86,400 s cooldown at success.
   - Explain re-import and the existing-session limitation
 - [ ] T167 [US5] Implement the owner leak-replacement override, `POST /api/composite/subscriptions/{id}/leak-replacement`, in `admin_panel/server.py` (FR-057). Tests: T162.
@@ -991,6 +995,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - a move to the same inbound after an address-only change, and another after a change of a different connection value such as the SNI (RD05-OWN-002 RD05-D5, RD05-D9), gives fresh secrets and the new values on the same token. The old client is disabled at publication and its secret is refused on that inbound; it is deleted only after its final usage is read (RD05-D6). Only the old plan version stops selling (RD05-D8);
   - such a move publishes while the discrepancy on the old values is still open: its generation is checked against the target descriptor saved at preview, not the old one (T120; RD05-D7). The subscription's current descriptor becomes the target at publication. The discrepancy closes once the last affected subscription has moved and the old plan version no longer sells;
   - a leak replacement pending on that discrepancy (T162) proceeds when that subscription's own move publishes; confirming the move batch alone does not release it, and the old values are never used (RD05-D7);
+  - a subscription with a pending leak replacement in the batch is moved through that replacement: nothing is published on its revoked token; the move's fresh identities for the moved nodes replace the replacement's unpublished ones, which are revoked; one new token is published once old fresh authentication is denied and the set is ready against the target descriptor; afterwards no client of that subscription is enabled outside its published generation, and the replacement's original 60-second target, 15-minute escalation and cooldown rule are unchanged (FR-055–FR-057);
   - each subscription switches only when its moved set is ready; one failure never blocks or rolls back the others, and a retry never re-moves completed members;
   - inactive subscriptions move inactive, owner-suspended ones stay status-only, cancelled ones are cleanup-only and recovery-held ones are ineligible;
   - emergency cutover removes old meters from current-serving freshness while their exposure stays tracked, and it cannot bypass leak repair;
@@ -1004,6 +1009,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Preallocate fresh identities for the moved children.
   - Prepare and verify replacement readiness and trustworthy metering. Readiness and the T120 check compare the move's generation with the target descriptor saved at preview (T182), never with the old descriptor (research.md RD05-OWN-002 RD05-D7).
   - Publish the changed descriptors on the same token only when the set is complete. At publication the subscription's current descriptor becomes the target descriptor, and a leak replacement pending on a discrepancy for that subscription (T166) is re-evaluated; confirming the batch alone releases nothing.
+  - A subscription with a pending leak replacement (T166) is moved through that replacement, so the two never compete (FR-055; FR-057). Nothing is published on its revoked token. The move's fresh identities for the moved nodes become the replacement's new identities for those nodes, and the replacement's earlier unpublished identities for them go through terminal revocation (T105). The replacement then publishes its new token under its own gates (FR-056), checked against the target descriptor. That publication is this subscription's move publication: its current descriptor changes then, and the replacement keeps its original clocks.
   - Keep unmoved children, history and cooldown, and send old identities through terminal revocation.
   - The target may be the same inbound with new connection values: a new address or any other connection value (RD05-OWN-002 RD05-D5, RD05-D9). New secrets and fresh client names are issued as in any move. The old identity is disabled when the new list is published and deleted after the RX-D9 wait, never before its final usage is read (RD05-D6).
   - Changing a management API address alone is not a move
@@ -1017,7 +1023,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Cancelled subscriptions are cleanup-only.
   - Recovery-held cases stay ineligible
 - [ ] T186 [US7] Implement catalog and checkout behavior at cutover in `composite/service.py` (FR-071; AS-07.3). Tests: T181.
-  - Stop new offers and claims on the old topology. For a same-inbound change of connection values, that means the old plan version (research.md RD05-OWN-002 RD05-D8, RD05-D9); its sales are already refused while the discrepancy is open (T074, T118, T155).
+  - Stop new offers and claims on the old topology. For a same-inbound change of connection values, that means the old plan version (research.md RD05-OWN-002 RD05-D8, RD05-D9); its sales are already refused while the discrepancy is open (T074, T118, T155), and its unfunded initial checkouts were rejected when it opened (T079).
   - Reject affected unfunded quotes through T079, with wallet and coupon release and the late-credit rules.
   - Block renewal funding while the subscription's move is pending.
   - Authorized work keeps its terms and deadlines.
@@ -1454,7 +1460,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - **US4 (P1)**: reuses the US1 orchestration (T119–T121).
 - **US5 (P1)**: needs Phase 4 (RX-01 engine, terminal revocation). Testable on seeded subscriptions. T169 calls T150 (US3).
 - **US6 (P1)**: completes the US1 endpoint (T122) and builds on the generation builder (T120).
-- **US7 (P1)**: needs US1 (T119, T120), T105 and T079, and US5's T166 for the leak-release case at publication (T181, T183). US5 does not depend on US7.
+- **US7 (P1)**: needs US1 (T119, T120), T105 and T079, and US5's T166 for moving a subscription with a pending leak replacement (T181, T183). US5 does not depend on US7.
 - **US8 (P1)**: needs T055 and T081. Its reconciliation coverage grows as other stories land.
 - **US9 (P2)**: needs the period commits (T121, T147) and N-01 (T108).
 
@@ -1671,9 +1677,9 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 | FR-052 | T057, T115, T122, T175, T178, T179, T237, T257 |
 | FR-053 | T043, T165, T256 |
 | FR-054 | T109, T165, T256 |
-| FR-055 | T162, T166, T256 |
-| FR-056 | T097, T162, T166, T256 |
-| FR-057 | T109, T162, T166, T167, T256 |
+| FR-055 | T162, T166, T181, T183, T256 |
+| FR-056 | T097, T162, T166, T181, T183, T256 |
+| FR-057 | T109, T162, T166, T167, T181, T183, T256 |
 | FR-058 | T161, T168, T251, T256 |
 | FR-059 | T161, T168, T251, T256 |
 | FR-060 | T097, T109, T161, T168, T251, T256 |
@@ -1687,7 +1693,7 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 | FR-068 | T109, T181, T188, T259 |
 | FR-069 | T181, T187 |
 | FR-070 | T181, T185 |
-| FR-071 | T063, T074, T112, T118, T152, T155, T181, T186, T255 |
+| FR-071 | T063, T065, T074, T079, T103, T112, T118, T152, T155, T181, T186, T255 |
 | FR-072 | T067, T081, T109, T111, T193, T200, T260 |
 | FR-073 | T190, T193, T198, T199, T260 |
 | FR-074 | T068, T072, T157, T193, T199, T260 |
