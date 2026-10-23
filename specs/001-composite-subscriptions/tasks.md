@@ -11,7 +11,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 
 **Generated**: 2026-10-19 at HEAD `a1358db`, on explicit owner request. plan.md's line "`tasks.md` is deliberately not generated" is superseded by that request. No other artifact was changed.
 
-**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that. Later on 2026-10-22, after `/speckit-analyze`: T082 split into part A (as soon as authorized; gates T097) and part B (after T096 and T099); T255 adds rule precedence and API-created clients; T099, T107 and T215 clarified. Owner decisions on the analyze findings: RD03-OWN-001 (provider checks also build first, test after), RD05-OWN-002 (the panel API is the only source of connection fields; address-only changes use the equivalent move: T085, T096, T103, T113, T116, T181, T183) and the GP-D2 wording (OQ-2). Second `/speckit-analyze` run, same day: T099 no longer waits on T082 part A; subscription-level `uncertain` added to T107; zero-value safety in T095/T085 and the part A repeats in T255; manual card-to-card kept off the automatic invoice path (T212, T215); method list limited to accepted contracts (T113, T116); panel setup reads go through the worker (T098, T116); External Proxy setup in T099 and T240; test pointers fixed (T086, T103, T113). Owner decisions RD05-D6–D8: old identity disabled at publication on a same-inbound move (T181, T183); an open discrepancy blocks new generations (T086, T120, T162, T166); renewal matching ignores the address (T143, T144, T186). 2026-10-23, third `/speckit-analyze` run: RD05-D7 clarified (in-progress purchases keep their 15-minute deadline, T111; the block ends per subscription when its own move publishes, T162); test case for subscription-level `uncertain` (T086); rules-table row for plan.md:203 names T082 part A.
+**Updated**: 2026-10-21: owner-reported routing evidence RD05-MAN-001 recorded under T082; OQ-3 resolved and the fence on T096, T099 and T120 lifted. 2026-10-22: RD05-MAN-001 and the owner's build-first decision moved to research.md RD-05 (RD05-OWN-001); OQ-5 resolved, and evidence paths follow its rule. OQ-1 and OQ-2 resolved (research.md GP-OWN-001): automatic card-to-card and methods outside the six candidates are excluded from composite plans, and T215 now enforces that. Later on 2026-10-22, after `/speckit-analyze`: T082 split into part A (as soon as authorized; gates T097) and part B (after T096 and T099); T255 adds rule precedence and API-created clients; T099, T107 and T215 clarified. Owner decisions on the analyze findings: RD03-OWN-001 (provider checks also build first, test after), RD05-OWN-002 (the panel API is the only source of connection fields; address-only changes use the equivalent move: T085, T096, T103, T113, T116, T181, T183) and the GP-D2 wording (OQ-2). Second `/speckit-analyze` run, same day: T099 no longer waits on T082 part A; subscription-level `uncertain` added to T107; zero-value safety in T095/T085 and the part A repeats in T255; manual card-to-card kept off the automatic invoice path (T212, T215); method list limited to accepted contracts (T113, T116); panel setup reads go through the worker (T098, T116); External Proxy setup in T099 and T240; test pointers fixed (T086, T103, T113). Owner decisions RD05-D6–D8: old identity disabled at publication on a same-inbound move (T181, T183); an open discrepancy blocks new generations (T086, T120, T162, T166); renewal matching ignores the address (T143, T144, T186). 2026-10-23, third `/speckit-analyze` run: RD05-D7 clarified (in-progress purchases keep their 15-minute deadline, T111; the block ends per subscription when its own move publishes, T162); test case for subscription-level `uncertain` (T086); rules-table row for plan.md:203 names T082 part A. Later on 2026-10-23, fourth `/speckit-analyze` run: each new generation is checked against the descriptor it will publish, so a same-inbound move is not blocked by the discrepancy it resolves; the move target descriptor, each subscription's current descriptor and the discrepancy's closure are defined (T086, T103, T120, T181–T183; data-model.md); new checkouts and test claims are refused while their node has an open discrepancy (T063, T074, T112, T118, T152, T155); the owner's pick is checked on the plan node, not the binding (T099, T113, T116, T240); the leak-release case moved to T181 so US5 stays independent of US7; renewal during a discrepancy (T143, T147) and an accepted test claim during one (T152) tested; release check of the change path (T255); Phase 15 dependency wording. Owner decision RD05-D9 (research.md): any connection value, not only the address, changes through the same equivalent move and is not part of the renewal-matching signature (T143, T144, T181, T183, T186, T240).
 
 **Planning status at generation**: PROVISIONAL / ERROR, only because gate **G-P** (exact configured payment-method contracts; E-005) is open. G-C closed on 2026-10-10, G-A on 2026-10-14 and RX-01 on 2026-10-17. The plan rules out only *unconditional* task generation, so this list is **conditional**:
 
@@ -40,7 +40,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 | RD-05 "Gate: E-001 first six-node egress/readiness and unrelated-user preservation, before implementing dependent routing/export behavior" | Routing bindings and strict export are implemented now. The anchored-namespace, unrelated-user, six-node egress and export-field checks run after implementation (T082, T255, T257) | research.md RD05-OWN-001 (owner decision 2026-10-21, on RD05-MAN-001); OQ-3 |
 | E-001 ledger "First validate exact disposable deployment API/TLS/canonical identity/mutation scope …" before dependent implementation | Provider operations (T095) are built first. T082 part A runs as soon as it is authorized, and only T097 waits on it | research.md RD03-OWN-001 (owner decision 2026-10-22) |
 | plan.md:203 "G-P and RX-01 (V-RX-01(a)–(h)) probes precede work that they could invalidate … later full acceptance checks cannot retroactively justify an unverified early design" | Only G-P, and T082 part A for T097, still precede the work they could invalidate. The RX-01 probes ran; routing, export and provider operations are built first and checked before release (T082, T255, T257) | research.md RD05-OWN-001, RD03-OWN-001; RX-MAN-001 |
-| RD-05 and data-model.md `composite_plan_nodes`: an owner-selected endpoint descriptor verified against API fields | The 3x-UI API is the only source of connection fields, with the address and port from the inbound's External Proxy entry; the owner picks only where the panel offers several values. A later panel change is an FR-041 discrepancy and blocks new generations for that node until resolved. An address-only change is an equivalent move to the same inbound; its old identity is disabled at publication. The address is not part of the renewal-matching signature | research.md RD05-OWN-002 (owner decisions 2026-10-22) |
+| RD-05 and data-model.md `composite_plan_nodes`: an owner-selected endpoint descriptor verified against API fields | The 3x-UI API is the only source of connection fields, with the address and port from the inbound's External Proxy entry; the owner picks only where the panel offers several values. A later panel change is an FR-041 discrepancy: no new generation that would publish the old values is built, and new checkouts and test claims on that plan version are refused, until it is resolved. A change of the address or of any other connection value is an equivalent move to the same inbound; the move's generation is checked against its target descriptor, and the old identity is disabled at publication. Connection values are not part of the renewal-matching signature | research.md RD05-OWN-002 (owner decisions 2026-10-22; RD05-D9 2026-10-23) |
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -356,7 +356,8 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `confirm_checkout` creates the offer, the compatibility order (`service_kind='composite'`, unique checkout reference, no fake `config_id`), the coupon hold, the wallet debit and the work in one transaction, with crash points before and after commit;
   - quantity is one, and a repeated confirmation key returns the same checkout;
   - an open renewal is returned with no second order, debit or coupon hold (AS-03.4), while a terminal checkout does not block a new one;
-  - full-wallet and validated zero-price checkouts become `authorized` with the original deadline
+  - full-wallet and validated zero-price checkouts become `authorized` with the original deadline;
+  - an initial checkout for a plan version whose node has an open descriptor discrepancy is refused with an explanation, before any offer, debit, coupon hold or clock, while a renewal or conversion is not refused for that reason (FR-071; research.md RD05-OWN-002 RD05-D7, RD05-D8)
 - [ ] T064 [P] Write `tests/integration/test_receipt_settlement.py` (FR-011; FR-013; FR-014; EC-01; SC-002):
   - unique receipt binding; a repeated hint returns the earlier outcome;
   - the same reference on another checkout or a top-up fails or returns the original binding;
@@ -403,6 +404,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
 - [ ] T073 Implement the shared coupon reservation guard over `resource_reservations` in `composite/finance.py`, and route the legacy coupon increment in `handlers_user.py:_buy_start` and the coupon helpers in `database.py` through it (FR-020; data-model §9). Tests: T062; characterization T013
 - [ ] T074 Implement `confirm_checkout` in `composite/service.py` for `initial`, `renewal` and `conversion` (FR-008; FR-010; FR-012; FR-015; FR-021). Tests: T063, T066.
   - Validate the principal, offer, ownership, price, eligibility and capacity, and enforce the partial unique open-renewal index.
+  - Refuse an initial checkout for a plan version whose node has an open descriptor discrepancy, before any offer, debit, coupon hold or clock, and explain that the plan is temporarily unavailable. New sales wait for the plan version the owner activates with the new values (research.md RD05-OWN-002 RD05-D5, RD05-D7; FR-071 refusal rules). Renewal and conversion build no new generation and are not refused for this reason (RD05-D8).
   - Atomically create the immutable offer, the compatibility order, the coupon hold, a conditional wallet debit (wallet first, up to the store price) and durable work.
   - Full-wallet and zero-price checkouts become `authorized` with the original deadline.
   - An existing open renewal returns its progress instead
@@ -503,7 +505,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - 3 consecutive writes missing T = 10 s raise a panel-stall escalation, and nothing is restarted automatically;
   - the quarantine is per client, and there is one writer per physical panel;
   - the budget is five attempts, with 1/2/4/8/15 s backoff after a definite no-effect failure;
-  - a node whose panel connection fields differ from its saved descriptor opens an FR-041 discrepancy and leaves published links unchanged (RD05-OWN-002 RD05-D5), and the node is not ready for a new generation until the discrepancy is resolved (RD05-D7);
+  - panel connection values that differ from a descriptor still in use open an FR-041 discrepancy and leave published links unchanged (RD05-OWN-002 RD05-D5). A new generation that would publish the old values is refused, while one built from a descriptor that matches the panel (a move's target descriptor) is not (RD05-D7). The discrepancy closes when the old value is put back, or when no unmoved subscription and no plan version on sale still uses the old values;
   - a child with an uncertain request that could undo the state shows the subscription as `uncertain` in the customer, owner and support views, distinct from `requested`, `partial` and `confirmed` (FR-007; T107);
   - the worked check holds: 0 → 15 → 45 → about 46 s, within 60 s
 - [ ] T087 [P] Write `tests/integration/test_restart_setting_verification.py` (RX-D2; RX-MAN-001 finding 4): binding is refused when `restartXrayOnClientDisable` is on or unreadable. The sweep's lower-cadence re-verification detects a settings reset that turns it back on, blocks new composite binding and opens FR-041 drift, while existing subscriptions stay managed
@@ -559,7 +561,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - [ ] T099 Implement prepared bindings in `composite/lifecycle.py` (FR-004; RD-05). Deactivation keeps the management references. Tests: T085. Routing mechanism: RD05-MAN-001 (research.md RD-05); the anchored namespace is checked after implementation (T082 part B), and six-node egress and unrelated-user preservation again at release (T255). Fence lifted 2026-10-21 (OQ-3).
   - Panel-qualified inbound; protocol, transport and security fingerprint; intended egress key.
   - A versioned anchored authenticated-email route namespace, validated against owner-prepared rules that Shopvpn never writes. Shopvpn reads those rules through the panel API with the admin-scope token (T094). The read is built now and verified by T082 part A (RD03-OWN-001), so T099 does not wait for it.
-  - Binding is refused unless the inbound has an External Proxy entry, or the owner's recorded pick among several still exists (RD05-OWN-002 RD05-D4).
+  - Binding is refused unless the inbound has at least one External Proxy entry (RD05-OWN-002 RD05-D4). Where it has several, the owner's pick belongs to the plan node (data-model.md `composite_plan_nodes`) and is checked when the node is saved (T116) and at every readiness check (T096, T120), not here.
   - Readiness and egress evidence, and an owner activation audit
 - [ ] T100 Implement the worker's remote lanes in `composite/worker.py` (plan.md "Worker lifecycle"; FR-085). Tests: T086, T090.
   - Per-panel fair queues, the per-panel OS mutation lock, reserved capacity for urgent restrictions, and bounded concurrent reads.
@@ -579,7 +581,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Compare every owned identity, including inactive and cleanup-pending ones, and flag deleted identities that reappear.
   - Repair mismatches and record `composite_divergences` with their exposure. A failed read is `unknown`.
   - Repeated divergence opens an FR-041 discrepancy; repair failures and stalls escalate.
-  - At the T104 cadence, compare each bound node's connection fields with its saved descriptor. A difference opens an FR-041 discrepancy and never changes published links (RD05-OWN-002 RD05-D5).
+  - At the T104 cadence, compare the panel's connection values with every descriptor still in use: the nodes of each plan version on sale, each subscription's current descriptor and each pending move's target descriptor (data-model.md). A difference opens an FR-041 discrepancy and never changes published links (RD05-OWN-002 RD05-D5). The discrepancy closes when the panel value is put back, or when no unmoved subscription and no plan version on sale still uses the old values.
   - Never restart anything automatically
 - [ ] T104 Implement continuous re-verification of `restartXrayOnClientDisable` in `composite/lifecycle.py`, at a lower cadence than the sweep (RX-D2; RX-MAN-001 finding 4). A value of on, or an unreadable setting, is recorded with its time on the panel, blocks new composite binding and raises FR-041 drift with owner attention. Existing subscriptions stay managed. Tests: T087
 - [ ] T105 Implement terminal revocation in `composite/lifecycle.py` (RX-D9; FR-022; constitution II). Tests: T088.
@@ -625,15 +627,16 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - five of six nodes ready stays pending;
   - a crash at every fulfillment boundary; a local persistence failure is never reported as fulfillment;
   - a restart keeps the original 15-minute deadline;
-  - a purchase whose node has an open descriptor discrepancy keeps its original 15-minute deadline and, if the discrepancy is not resolved in time, is cancelled and refunded as usual (FR-024; research.md RD05-OWN-002 RD05-D7);
+  - a purchase accepted before its node's descriptor discrepancy opened keeps its original 15-minute deadline and, if the discrepancy is not resolved in time, is cancelled and refunded as usual (FR-024; research.md RD05-OWN-002 RD05-D7);
   - payment, provisioning, availability, notification and cleanup outcomes stay distinguishable in the customer and owner status views (T107)
 - [ ] T112 [P] [US1] Write `tests/integration/test_catalog_telegram.py` (FR-003; FR-005; FR-006; FR-010; FR-025):
   - `cmp:` callbacks take the actor from `call.from_user.id`;
   - the preview shows nodes, GiB with the binary-unit explanation, "30 days", base price, reductions, total, invoice cost and fee boundary, refund destination and the no-unused-service-refund notice;
   - buyers with reseller or discount status buy as ordinary customers, without reseller credit;
   - unsupported channels are refused;
+  - a plan version whose node has an open descriptor discrepancy is shown as temporarily unavailable, and its checkout is refused before any debit, coupon hold or clock (FR-071; research.md RD05-OWN-002 RD05-D7);
   - the callback grammar fits Telegram's size limit and collides with no prefix in the T028 snapshot
-- [ ] T113 [P] [US1] Write `tests/unit/test_composite_plans.py`, plus route cases for T116 in `tests/integration/test_composite_plan_routes.py` (FR-001; FR-002; FR-003; FR-008; FR-010): finite positive bytes; paid duration exactly 2,592,000 s; a positive base price; any positive node count (the six-node fixture and the A-only five); immutable versions; edits affecting only new offers; sold terms surviving edits; node connection fields taken from the panel read, with an owner pick required only where the panel offers several values (RD05-OWN-002); the routes list and accept only methods with an accepted contract in the T075 registry, and hand panel reads to the worker
+- [ ] T113 [P] [US1] Write `tests/unit/test_composite_plans.py`, plus route cases for T116 in `tests/integration/test_composite_plan_routes.py` (FR-001; FR-002; FR-003; FR-008; FR-010): finite positive bytes; paid duration exactly 2,592,000 s; a positive base price; any positive node count (the six-node fixture and the A-only five); immutable versions; edits affecting only new offers; sold terms surviving edits; node connection fields taken from the panel read, with an owner pick required only where the panel offers several values and refused when it no longer exists on the panel (RD05-OWN-002 RD05-D4); the routes list and accept only methods with an accepted contract in the T075 registry, and hand panel reads to the worker
 - [ ] T114 [P] [US1] Write `tests/integration/test_initial_cancellation.py`: offline V-CAN-04 (FR-026; AS-01.6):
   - cancellation at 12:14 blocks delivery immediately, even if children become ready later;
   - the final stage starts at the earlier of a clean outcome or 12:15;
@@ -649,19 +652,20 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Implementation for User Story 1
 
-- [ ] T116 [US1] Implement the owner plan routes `GET/POST/PATCH /api/composite/plans` in `admin_panel/server.py`, backed by `composite/service.py`: immutable plan versions, prepared node bindings, ordered node remarks and egress, finite exact units and selected payment-method restrictions (FR-002; FR-003; FR-004; FR-008). Node connection fields are read from the panel when a node is saved, never typed in; the owner picks only where the panel offers several values (research.md RD05-OWN-002). The route only records the request; the worker performs the bounded panel read (15 s timeout) and the screen shows its result. The payment-method list shows and accepts only methods with an accepted contract in the T075 registry (FR-010; T215). Tests: T113
+- [ ] T116 [US1] Implement the owner plan routes `GET/POST/PATCH /api/composite/plans` in `admin_panel/server.py`, backed by `composite/service.py`: immutable plan versions, prepared node bindings, ordered node remarks and egress, finite exact units and selected payment-method restrictions (FR-002; FR-003; FR-004; FR-008). Node connection fields are read from the panel when a node is saved, never typed in; the owner picks only where the panel offers several values, and a pick that no longer exists on the panel is refused (research.md RD05-OWN-002 RD05-D4). The route only records the request; the worker performs the bounded panel read (15 s timeout) and the screen shows its result. The payment-method list shows and accepts only methods with an accepted contract in the T075 registry (FR-010; T215). Tests: T113
 - [ ] T117 [P] [US1] Add composite plan and panel-registration screens to `admin_panel/static/app.js`. They render only the validation results and previews the server returns; behavior is covered by the T113 route tests (FR-002; FR-004)
 - [ ] T118 [US1] Implement the Telegram catalog and checkout adapter (FR-003; FR-005; FR-006; FR-010; FR-025; NG-05). Tests: T112.
   - `keyboards.py`: the `cmp:` namespace, with opaque references and confirmation nonces, grammar frozen against T028.
   - `states.py`: draft references only.
   - `handlers_user.py`: dispatch composite before the inventory, naming, single-panel and referral logic in `_buy_start`; show the T070 preview; call `confirm_checkout`.
+  - A plan version whose node has an open descriptor discrepancy is shown as temporarily unavailable and cannot be checked out; `confirm_checkout` (T074) refuses it again if the discrepancy opens after the preview (research.md RD05-OWN-002 RD05-D7; FR-071).
   - No purchase referral reward
 - [ ] T119 [US1] Implement initial fulfillment orchestration in `composite/lifecycle.py` (FR-001; FR-022; FR-023; RD-09 "Other periods"). Tests: T111.
   - Allocate child identities, secrets, route emails and meter links transactionally before any call.
   - Prepare children inactive with their exact attachments, then converge access under the current restrictions.
   - Build a candidate generation and take initial chain-node meter readings.
   - The subscription is ready only when every intended node is confirmed
-- [ ] T120 [US1] Implement the complete generation builder in `composite/exports.py`: one real URI per intended node, in saved order, with distinct owner remarks and the exact protocol fields from the T096 descriptors; encrypted content plus a fingerprint. A missing faithful export fails readiness; it never produces a shorter list (FR-049). A node with an open descriptor discrepancy is not ready for a new generation, while existing generations are still served (research.md RD05-OWN-002 RD05-D7). Tests: T086, T111, T115. Fence lifted 2026-10-21 (OQ-3).
+- [ ] T120 [US1] Implement the complete generation builder in `composite/exports.py`: one real URI per intended node, in saved order, with distinct owner remarks and the exact protocol fields from the T096 descriptors; encrypted content plus a fingerprint. A missing faithful export fails readiness; it never produces a shorter list (FR-049). Each new generation is checked against the descriptor it will publish: the subscription's current descriptor, or for a move the target descriptor (T183). The builder re-reads the panel; if its values differ from that descriptor, the node is not ready and nothing is published, while existing generations are still served (research.md RD05-OWN-002 RD05-D7). A same-inbound move's own generation is therefore not blocked by the discrepancy on the old values it replaces (checked in T086; the move itself in T181). Tests: T086, T111, T115. Fence lifted 2026-10-21 (OQ-3).
 - [ ] T121 [US1] Implement the Telegram retrieval-readiness acknowledgement in `handlers_user.py` and the availability transaction in `composite/service.py` (FR-023; data-model §4). Tests: T110, T111.
   - First verify the customer-visible details and handler, and current main-bot liveness.
   - Then, before the original deadline, atomically set `available_at`, the common `expires_at`, publication, coupon consumption and the initial entitlement period
@@ -764,14 +768,15 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - V-GA-06: a blocked second panel restored before the deadline; one kept blocked through the deadline (the renewal fails and no counter changes); a reading aged past 60 s (a re-read is required); a retired emergency-exposure meter (its first later delta is `absorbed_exposure`)
 - [ ] T143 [P] [US3] Write `tests/integration/test_renewal_matching_and_blocks.py` (FR-042; FR-062; AS-03.5):
   - matching uses the saved intended node signature, not the plan ID or name, and different nodes need a separate purchase;
-  - after an address-only change, a subscription not yet moved still matches the new plan version, because the address is not part of the signature (RD05-OWN-002 RD05-D8);
+  - after a change of the address, or of another connection value such as the SNI, a subscription not yet moved still matches the new plan version, because connection values are not part of the signature (RD05-OWN-002 RD05-D8, RD05-D9); a change of protocol, transport, security type or egress does not match;
+  - while its node has an open descriptor discrepancy, a not-yet-moved subscription's renewal still completes and its links keep the old values until its move publishes: renewal builds no new generation, so the RD05-D7 block does not apply;
   - accounting uncertainty, owner suspension, pending cancellation, dependent recovery and a pending move each block renewal, with an explanation and no debit; customer disable alone does not;
   - owner suspension rejects unfunded quotes and restores wallet and coupon, while an already authorized renewal resolves under suspension
 
 ### Implementation for User Story 3
 
 - [ ] T144 [US3] Implement renewal/conversion eligibility, matching and the Telegram renewal flow in `composite/service.py` and `handlers_user.py` (FR-015; FR-042; FR-043). Tests: T143.
-  - Offered presets must match the saved node semantics, using the stable logical signature that survives authorized moves. The External Proxy address and port are not part of it (research.md RD05-OWN-002 RD05-D8).
+  - Offered presets must match the saved node semantics, using the stable logical signature that survives authorized moves. The External Proxy address and port and the other connection values are not part of it; the logical panel and inbound, protocol, transport, security type and egress are (research.md RD05-OWN-002 RD05-D8, RD05-D9).
   - The preview shows the combined allowance, resulting expiry and forfeited time, qualified by continuing usage.
   - Repeated selection returns the open checkout
 - [ ] T145 [US3] Implement `establish_period_boundary` in `composite/accounting.py`, running inside the effective-renewal transaction after all children are ready (FR-043; FR-046; PR-002; D7; D8). Tests: T142.
@@ -781,8 +786,9 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Key the commit by the renewal operation.
   - Perform no remote mutation and no reset
 - [ ] T146 [US3] Implement renewal balances in `composite/accounting.py`: `U_old`, `O`, eligible `C`, `N = A_new + C` and `U_new` across later epochs, plus the exact expiry formula with the 45-day cap, timely-payment protection and absorbed overrun (FR-043; FR-044; FR-045). Tests: T141
-- [ ] T147 [US3] Implement renewal application in `composite/lifecycle.py` (FR-046; FR-048; FR-079; FR-085; A15). Tests: T140, T142.
+- [ ] T147 [US3] Implement renewal application in `composite/lifecycle.py` (FR-046; FR-048; FR-079; FR-085; A15). Tests: T140, T142, T143.
   - Confirm every required child for the renewed terms under the current restrictions, using RD-10 confirmation; the old allowance and expiry keep governing access while the renewal is pending.
+  - An open descriptor discrepancy does not block renewal, because renewal builds no new generation; the subscription's current descriptor is unchanged until its move publishes (research.md RD05-OWN-002 RD05-D7, RD05-D8).
   - Reconcile obsolete old-term exhaustion or expiry disables to the renewed terms, without clearing independent restrictions.
   - Keep the URL and every child identity.
   - Then commit the period, boundary readings, grant, expiry, reminder period, checkout and coupon consumption atomically.
@@ -820,6 +826,8 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - confirmed failure releases ordinary eligibility and the place once;
   - an unknown outcome keeps the holds past the deadline, forbids late delivery and alerts the owner;
   - a retry after release gets no priority;
+  - a new claim on a test plan whose node has an open descriptor discrepancy is refused before any eligibility or campaign hold (FR-071; research.md RD05-OWN-002 RD05-D7);
+  - a claim accepted before its node's discrepancy opened keeps its 15-minute deadline; if the discrepancy is not resolved in time, nothing is delivered late, confirmed failure releases ordinary eligibility and the place once, and an unknown remote outcome keeps the holds (RD05-D7);
   - 150 fulfilled closes the campaign permanently
 - [ ] T153 [P] [US4] Write `tests/integration/test_test_eligibility_shared.py` (FR-027; FR-031):
   - one common `MAX_TEST_PER_USER` across legacy and composite tests, with the actor taken from `call.from_user.id`;
@@ -833,7 +841,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - A finite allowance with explicit MiB labels and a positive whole-hour duration; defaults 209,715,200 bytes / 3,600 s.
   - Enable and disable alongside legacy plans.
   - Edits never change tests already issued
-- [ ] T155 [US4] Replace counter-only test reservation with shared, operation-based reservations (FR-027; FR-030; data-model §9). Route `database.py` `try_reserve_test_slot`/`release_test_slot` (affected scope) and `claim_test` in `composite/service.py` through `resource_reservations`, carrying identity, acceptance sequence and the unchanged 15-minute deadline. Tests: T152, T153; characterization T017
+- [ ] T155 [US4] Replace counter-only test reservation with shared, operation-based reservations (FR-027; FR-030; data-model §9). Route `database.py` `try_reserve_test_slot`/`release_test_slot` (affected scope) and `claim_test` in `composite/service.py` through `resource_reservations`, carrying identity, acceptance sequence and the unchanged 15-minute deadline. `claim_test` refuses a test plan whose node has an open descriptor discrepancy before reserving anything (research.md RD05-OWN-002 RD05-D7; FR-071). Tests: T152, T153; characterization T017
 - [ ] T156 [US4] Extend `btn_test` in `handlers_user.py` (FR-027). Tests: T153.
   - Zero active plans keeps the legacy fallback; one eligible plan is selected directly; several plans show options.
   - Disabled behavior is unchanged.
@@ -872,7 +880,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - the new URL is withheld until old fresh authentication is denied and the new set is fully ready and retrievable, with no fallback to leaked credentials;
   - the 86,400 s cooldown starts only at success and applies per subscription; pending retries continue the same operation;
   - an audited owner override bypasses the cooldown only, and emergency cutover cannot bypass the gate;
-  - a node with an open descriptor discrepancy keeps the replacement pending, with the usual escalation, until that subscription's own move publishes; confirming the move batch alone does not release it, and the old address is never used (RD05-OWN-002 RD05-D7);
+  - a node with an open descriptor discrepancy keeps the replacement pending, with the usual escalation, and the old values are never used (RD05-OWN-002 RD05-D7). The release when that subscription's own move publishes is tested in T181, so this file does not depend on US7;
   - the 60-second target and 15-minute escalation
 - [ ] T163 [P] [US5] Write `tests/integration/test_owner_bulk_and_compensation.py` (FR-061; FR-064; AS-05.5; AS-05.6):
   - the preview digest binds the exact subscriptions, customers, action and reason, and a changed selection needs a new preview;
@@ -893,7 +901,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - [ ] T166 [US5] Implement leak replacement in `composite/service.py` and `composite/lifecycle.py` (FR-055; FR-056; FR-057). Tests: T162.
   - On acceptance, revoke the token and set `replacement_delivery_block` immediately.
   - Preallocate replacement identities with fresh UUIDs or Trojan passwords, and revoke every old credential at once.
-  - Publish the new token only after old fresh authentication is confirmed denied and the new set is fully ready and retrievable. A node with an open descriptor discrepancy is not ready (research.md RD05-OWN-002 RD05-D7).
+  - Publish the new token only after old fresh authentication is confirmed denied and the new set is fully ready and retrievable. A node whose panel values differ from the subscription's current descriptor is not ready (T120; research.md RD05-OWN-002 RD05-D7); the replacement is re-evaluated when that subscription's move publishes (T183).
   - Start the 86,400 s cooldown at success.
   - Explain re-import and the existing-session limitation
 - [ ] T167 [US5] Implement the owner leak-replacement override, `POST /api/composite/subscriptions/{id}/leak-replacement`, in `admin_panel/server.py` (FR-057). Tests: T162.
@@ -980,7 +988,9 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - [ ] T181 [P] [US7] Write `tests/integration/test_move_batches.py` (FR-065–FR-071):
   - the preview shows the exact subscriptions, customers and old-to-new mapping, with inactive members visible;
   - only moved children get fresh secrets; unmoved credentials and the token stay unchanged;
-  - an address-only move to the same inbound (RD05-OWN-002 RD05-D5) gives fresh secrets and the new address on the same token. The old client is disabled at publication and its secret is refused on that inbound; it is deleted only after its final usage is read (RD05-D6). Only the old plan version stops selling (RD05-D8);
+  - a move to the same inbound after an address-only change, and another after a change of a different connection value such as the SNI (RD05-OWN-002 RD05-D5, RD05-D9), gives fresh secrets and the new values on the same token. The old client is disabled at publication and its secret is refused on that inbound; it is deleted only after its final usage is read (RD05-D6). Only the old plan version stops selling (RD05-D8);
+  - such a move publishes while the discrepancy on the old values is still open: its generation is checked against the target descriptor saved at preview, not the old one (T120; RD05-D7). The subscription's current descriptor becomes the target at publication. The discrepancy closes once the last affected subscription has moved and the old plan version no longer sells;
+  - a leak replacement pending on that discrepancy (T162) proceeds when that subscription's own move publishes; confirming the move batch alone does not release it, and the old values are never used (RD05-D7);
   - each subscription switches only when its moved set is ready; one failure never blocks or rolls back the others, and a retry never re-moves completed members;
   - inactive subscriptions move inactive, owner-suspended ones stay status-only, cancelled ones are cleanup-only and recovery-held ones are ineligible;
   - emergency cutover removes old meters from current-serving freshness while their exposure stays tracked, and it cannot bypass leak repair;
@@ -989,13 +999,13 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 
 ### Implementation for User Story 7
 
-- [ ] T182 [US7] Implement move preview and confirm, `POST /api/composite/replacements/preview` and `/confirm`, in `admin_panel/server.py`, `composite/service.py` and `admin_panel/static/app.js`, with a separate explicit emergency authorization (FR-065; FR-066; FR-067). Tests: T181
+- [ ] T182 [US7] Implement move preview and confirm, `POST /api/composite/replacements/preview` and `/confirm`, in `admin_panel/server.py`, `composite/service.py` and `admin_panel/static/app.js`, with a separate explicit emergency authorization (FR-065; FR-066; FR-067). Tests: T181. The preview has the worker read the target inbound's connection values (bounded 15 s read) and saves them, with the owner's pick where the panel offers several, as the target descriptor of each moved node in the batch mapping (research.md RD05-OWN-002 RD05-D4; data-model.md `composite_batches`). For a same-inbound move the binding stays the same and only the descriptor changes
 - [ ] T183 [US7] Implement per-subscription move execution in `composite/lifecycle.py` (FR-065; FR-067). Tests: T181.
   - Preallocate fresh identities for the moved children.
-  - Prepare and verify replacement readiness and trustworthy metering.
-  - Publish the changed descriptors on the same token only when the set is complete.
+  - Prepare and verify replacement readiness and trustworthy metering. Readiness and the T120 check compare the move's generation with the target descriptor saved at preview (T182), never with the old descriptor (research.md RD05-OWN-002 RD05-D7).
+  - Publish the changed descriptors on the same token only when the set is complete. At publication the subscription's current descriptor becomes the target descriptor, and a leak replacement pending on a discrepancy for that subscription (T166) is re-evaluated; confirming the batch alone releases nothing.
   - Keep unmoved children, history and cooldown, and send old identities through terminal revocation.
-  - The target may be the same inbound with a new address: an address-only change (RD05-OWN-002 RD05-D5). New secrets and fresh client names are issued as in any move. The old identity is disabled when the new list is published and deleted after the RX-D9 wait, never before its final usage is read (RD05-D6).
+  - The target may be the same inbound with new connection values: a new address or any other connection value (RD05-OWN-002 RD05-D5, RD05-D9). New secrets and fresh client names are issued as in any move. The old identity is disabled when the new list is published and deleted after the RX-D9 wait, never before its final usage is read (RD05-D6).
   - Changing a management API address alone is not a move
 - [ ] T184 [US7] Implement explicit emergency cutover in `composite/lifecycle.py` and `composite/accounting.py` (FR-066; D8). Tests: T181.
   - Requires the old management API to be unreachable, and owner review of the last confirmed usage.
@@ -1007,7 +1017,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - Cancelled subscriptions are cleanup-only.
   - Recovery-held cases stay ineligible
 - [ ] T186 [US7] Implement catalog and checkout behavior at cutover in `composite/service.py` (FR-071; AS-07.3). Tests: T181.
-  - Stop new offers and claims on the old topology. For an address-only change, that means the old plan version (research.md RD05-OWN-002 RD05-D8).
+  - Stop new offers and claims on the old topology. For a same-inbound change of connection values, that means the old plan version (research.md RD05-OWN-002 RD05-D8, RD05-D9); its sales are already refused while the discrepancy is open (T074, T118, T155).
   - Reject affected unfunded quotes through T079, with wallet and coupon release and the late-credit rules.
   - Block renewal funding while the subscription's move is pending.
   - Authorized work keeps its terms and deadlines.
@@ -1271,8 +1281,8 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - verifying that `restartXrayOnClientDisable` is off, and its panel-wide effect on legacy services;
   - manual panel restarts at quiet hours (RX-D10), and stall-alert handling without automatic restart (RX-D12 guidance);
   - re-running V-GA and V-RX-01 when versions or the route change; the master/node prohibition;
-  - every composite inbound needs an External Proxy entry, or the owner's recorded pick among several, before binding (RD05-OWN-002 RD05-D4);
-  - changing a node's address: an equivalent move to the same inbound, plus a new plan version for new sales (RD05-D5);
+  - every composite inbound needs at least one External Proxy entry before binding; where it has several, the owner picks one per plan node (RD05-OWN-002 RD05-D4);
+  - changing a node's address or any other connection value (for example the SNI, a REALITY key or short ID, or a WS path): new sales of that plan version stop until the owner activates a new plan version saved with the new values, and sold subscriptions get them through an equivalent move to the same inbound (RD05-D5, RD05-D7, RD05-D9). Run the move promptly, because leak replacements on that node wait for it;
   - setting up the A-only live offer
 - [ ] T241 Write `tests/integration/test_upgrade_rehearsal.py`, an offline rehearsal of plan.md "Upgrade, deployment and recovery design" steps 2, 3 and 8 on synthetic state (constitution IV; FR-083):
   - issuance stays disabled while guards and schema ship;
@@ -1347,7 +1357,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - simultaneous Telegram and web owner decisions;
   - refusal of staff;
   - unique settlement
-- [ ] T255 Run the full E-001 campaign, recording the results in `specs/001-composite-subscriptions/evidence/E-001.md` (FR-001; FR-002; FR-004; FR-033; FR-034; FR-082; SC-001; SC-003). **Requires authorization**. Establish:
+- [ ] T255 Run the full E-001 campaign, recording the results in `specs/001-composite-subscriptions/evidence/E-001.md` (FR-001; FR-002; FR-004; FR-033; FR-034; FR-041; FR-065; FR-071; FR-082; SC-001; SC-003). **Requires authorization**. Establish:
   - exact versions and configuration, and the six protocol-ready identities with actual egress (A-US, A-DE and A-RU on A's single 443 REALITY inbound; B-CDN; B-gRPC; C-Direct);
   - the create, lookup, update, delete and reset mutation scope, unique meters and counter persistence;
   - no periodic reset on composite children, and no remote reset at renewal;
@@ -1358,6 +1368,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
   - unrelated users, shared configuration, listeners and outbounds unchanged;
   - rule precedence: with the owner's other routing rules in place, the anchored composite rules and those rules each still select their intended outbound (RD05-MAN-001 "not established");
   - clients created through the panel API, as Shopvpn creates them, route like the UI-created clients of RD05-MAN-001 (RD05-D2);
+  - the connection-value change path (RD05-OWN-002 RD05-D5–D7, RD05-D9): change a lab inbound's External Proxy Host, and separately one other connection value such as the SNI. Confirm that the sweep (T103) opens the discrepancy, new checkouts and claims on that plan version are refused and existing links stay unchanged. Then run a same-inbound move for a few subscriptions: it publishes the new values with fresh secrets while the discrepancy is open, the old client is disabled at publication and its secret is refused on that inbound (using the runtime evidence T097 provides), and the discrepancy closes after the last affected subscription has moved;
   - `restartXrayOnClientDisable` off, with drift detection exercised
 - [ ] T256 Run the full E-002 campaign, recording the results in `specs/001-composite-subscriptions/evidence/E-002.md` (FR-036–FR-039; FR-053–FR-060; FR-085; SC-004; SC-007). **Requires authorization**. Measure:
   - fresh-authentication denial within 60 s of the actual quota crossing or expiry, including detection;
@@ -1423,7 +1434,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - **Phase 4 (Remote and accounting core)** depends on 2B and 2D. T082 is evidence that needs authorization: part A can run as soon as it is authorized, and only T097 waits for its results (and for OQ-4); part B runs after T096 and T099.
 - **Phases 5–13 (US1–US9)** depend on Phases 2–4; stories that move money also depend on Phase 3.
 - **Phase 14 (Payment bindings)** depends on T069 and T075–T077 (Phase 3) and on T208, except T215, which depends only on T075, T116 and T118. Each group's evidence task gates the rest of that group, and the groups are independent of each other. The card-to-card receipt flow also needs T118. A group can start as soon as its evidence is available, alongside story work.
-- **Phase 15 (Polish)** depends on the stories being released.
+- **Phase 15 (Polish)** depends on the desired stories being complete. Release itself comes after Phase 16 (T264), which needs T245.
 - **Phase 16 (Release acceptance)** depends on implementation of the stories it checks, on Phase 14 for E-005 and V-RCP-01, and on explicit authorization. T250 must pass before any composite mutation reaches a production panel.
 
 ### Fences
@@ -1443,7 +1454,7 @@ It includes the RX-MAN-001 lab design findings: admin-scope panel token handling
 - **US4 (P1)**: reuses the US1 orchestration (T119–T121).
 - **US5 (P1)**: needs Phase 4 (RX-01 engine, terminal revocation). Testable on seeded subscriptions. T169 calls T150 (US3).
 - **US6 (P1)**: completes the US1 endpoint (T122) and builds on the generation builder (T120).
-- **US7 (P1)**: needs US1 (T119, T120), T105 and T079.
+- **US7 (P1)**: needs US1 (T119, T120), T105 and T079, and US5's T166 for the leak-release case at publication (T181, T183). US5 does not depend on US7.
 - **US8 (P1)**: needs T055 and T081. Its reconciliation coverage grows as other stories land.
 - **US9 (P2)**: needs the period commits (T121, T147) and N-01 (T108).
 
@@ -1646,7 +1657,7 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 | FR-038 | T135, T247, T256 |
 | FR-039 | T109, T130, T136, T247, T256 |
 | FR-040 | T131, T137, T247 |
-| FR-041 | T085–T087, T103, T104, T131, T138, T247 |
+| FR-041 | T085–T087, T103, T104, T131, T138, T247, T255 |
 | FR-042 | T143, T144, T247 |
 | FR-043 | T038, T141, T142, T144–T146, T247 |
 | FR-044 | T141, T146, T247 |
@@ -1670,13 +1681,13 @@ Generated by parsing every task block and expanding ranges such as "FR-058–FR-
 | FR-062 | T143, T150, T169 |
 | FR-063 | T031, T164, T171 |
 | FR-064 | T163, T170 |
-| FR-065 | T181–T183 |
+| FR-065 | T181–T183, T255 |
 | FR-066 | T181, T182, T184 |
 | FR-067 | T181–T183 |
 | FR-068 | T109, T181, T188, T259 |
 | FR-069 | T181, T187 |
 | FR-070 | T181, T185 |
-| FR-071 | T181, T186 |
+| FR-071 | T063, T074, T112, T118, T152, T155, T181, T186, T255 |
 | FR-072 | T067, T081, T109, T111, T193, T200, T260 |
 | FR-073 | T190, T193, T198, T199, T260 |
 | FR-074 | T068, T072, T157, T193, T199, T260 |
