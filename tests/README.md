@@ -13,4 +13,6 @@
 
 ## Running Tests
 
-`.venv/bin/python -m pytest tests`
+`.venv/bin/python -m pytest tests --network=deny`
+
+The network guard in `_harness/network_guard.py` is always on, with or without `--network=deny`. A test fails if it opens a socket to anything other than loopback, looks up a host name other than `localhost`, or opens a SQLite file outside pytest's temporary directory for the run (use `tmp_path`).
