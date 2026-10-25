@@ -76,6 +76,8 @@ Copy `brief-template.md` to `FEATURE_DIR/briefs/<packet-id>.md` (`T001-T004.md`,
 - **Point into big files**: name the function and line range, not just the file.
 - **Open points must say "None"** before the brief goes out. If the specs don't answer something, ask the user; the coder must never guess.
 - **Keep it short.** Most briefs fit in about 150 lines. A much longer one usually means the packet is too big.
+- **Expected `git status` output includes your own files.** The brief file is untracked until the packet is committed, and test files you wrote are staged, so list them as already there. Otherwise a careful coder sees an unexpected line and stops.
+- **Reread it for contradictions before it goes out.** Every rule must agree with the Files entries, examples, interfaces and checks. When a rule says one thing and an example shows another, the coder has to guess or stop.
 
 ### 4. Decide who writes the tests
 
