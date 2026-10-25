@@ -1,2 +1,45 @@
 *.pyc
 __pycache__/
+
+*.pyo
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Databases and runtime state
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Backups
+backups/
+full_backup_*.zip
+
+# Composite lab roots and evidence scratch (raw logs stay outside the repository)
+shopvpn-composite-lab.*/
+evidence-scratch/
+
+# Logs
+*.log
+logs/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

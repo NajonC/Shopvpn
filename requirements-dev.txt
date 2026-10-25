@@ -1,0 +1,3 @@
+# Dev-only test dependencies. Tested with Python 3.12 in .venv/.
+pytest==9.1.1
+pytest-asyncio==1.4.1
