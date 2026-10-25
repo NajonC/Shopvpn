@@ -136,7 +136,7 @@ specs/001-composite-subscriptions/
 ├── data-model.md                   proposed entities/invariants/transitions
 ├── quickstart.md                   present vs future validation
 ├── tasks.md                        dependency-ordered tasks (generated 2026-10-19)
-├── implementation-review.md        implementation review/Constitution Check (created by tasks.md T005)
+├── implementation-review.md        implementation review/Constitution Check (created by tasks.md T005; linked below)
 ├── evidence/                       release evidence, one file per check (created by tasks.md T005)
 └── contracts/
     ├── application.md              commands, authority, UI/payment contracts
@@ -144,6 +144,8 @@ specs/001-composite-subscriptions/
     ├── subscription-http.md        public complete-export/gating contract
     └── operations.md               migration/maintenance/recovery contracts
 ```
+
+Implementation review and Constitution Check against the actual diff: [implementation-review.md](implementation-review.md).
 
 `tasks.md` is deliberately not generated *(superseded 2026-10-19: generated on explicit owner request)*. Historical P0–P6 packages are not the task structure.
 
