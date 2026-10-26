@@ -97,7 +97,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 - [X] T010 [P] Implement payment and Telegram substitutes:
   - `tests/_harness/fake_payments.py`: a method adapter that can return confirmed, rejected, uncertain, a repeated hint, a mismatched amount or currency, and a missing or unparseable amount;
   - `tests/_harness/fake_telegram.py`: acceptance with a message reference, a lost response, retry-after, permanent rejection and a crash after dispatch
-- [ ] T011 [P] Implement the multi-process SQLite and crash-injection harness in `tests/_harness/multiprocess.py` and `tests/_harness/crash.py` (plan.md "Validation and traceability"; quickstart). It runs separate processes and connections on synthetic files, with named crash points before and after each commit, each remote dispatch and each remote result
+- [X] T011 [P] Implement the multi-process SQLite and crash-injection harness in `tests/_harness/multiprocess.py` and `tests/_harness/crash.py` (plan.md "Validation and traceability"; quickstart). It runs separate processes and connections on synthetic files, with named crash points before and after each commit, each remote dispatch and each remote result
 - [ ] T012 [P] Implement `tests/_harness/secret_scan.py` (FR-084; constitution III). It fails when generated tokens, UUIDs, Trojan passwords, panel tokens, subscription URLs or payment keys appear in captured logs, exception text, HTTP bodies returned to unauthorized callers, or fixture files
 
 **Checkpoint**: the harness imports, and `python -m pytest tests --network=deny` collects with zero tests and no network access.
