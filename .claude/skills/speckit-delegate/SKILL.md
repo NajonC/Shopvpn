@@ -20,7 +20,7 @@ $ARGUMENTS
 
 All optional, in any order:
 
-- `auto`: don't wait for the user to approve each brief. You still stop at every phase end, at blocked tasks and whenever you have a doubt. Without `auto` you're in **ask mode**: every brief waits for the user's approval.
+- `auto`: don't wait for the user to approve each brief. You still stop after each packet unless the user asked to keep going (step 9), at every phase end, at blocked tasks and whenever you have a doubt. Without `auto` you're in **ask mode**: every brief waits for the user's approval.
 - A scope: a task range (`T013-T026`), a phase (`phase 2A`) or one task. Default: from the first unchecked task on.
 - `coder <providerInstanceId>/<model>`. Default: `antigravity/gemini-3.8-flash-high`.
 - Anything else is guidance for this run.
@@ -29,6 +29,7 @@ All optional, in any order:
 
 - `brief-template.md`: the brief you fill in for each packet.
 - `coder-rules.md`: standing rules and the report format. Append it unchanged to every coder prompt.
+- `effort.md`: the reasoning effort each task should run at, and the rules behind it.
 
 ## Setup (once per session)
 
@@ -59,6 +60,7 @@ One packet at a time, in tasks.md order. Only one coder works at a time, in this
   - needs a decision the specs don't make.
 
   Don't skip past it unless the user says so.
+- Tell the user in one line which packet you picked and its effort in `effort.md`, so a session started at the wrong effort can be restarted before the research.
 
 ### 2. Research
 
@@ -144,8 +146,10 @@ When the child finishes, check everything yourself; never take its report on tru
 
 ### 9. Next
 
-- **Ask mode**: research and write the next brief, then ask for approval (step 5).
-- **Auto mode**: go on to the next packet.
+Work one packet per session. A fresh session costs less, because in this one every step carries all the earlier packets' files and output, and the next packet may need a different effort. The next session finds its place from tasks.md and the briefs, so nothing is lost.
+
+- Find the next unchecked task in tasks.md and its level in `effort.md`. In the same message as step 8's line, name the packet, its effort and anything it waits on (a gate or the user's authorization). Ask the user to start a new session at that effort and run `/speckit-delegate` again, then stop.
+- If the user asked in this run to keep going in this session, still name the next packet and its effort, then go on. In **ask mode**, research and write the next brief, then ask for approval (step 5). In **auto mode**, go on to the next packet.
 - **Always stop** when the scope is done, at a stop condition from step 1, and at the end of each tasks.md phase. At a phase end, run the full suite, list what was built, the packets you took over and the concerns from the coder's reports, and wait for the user.
 
 ## When every task is done
