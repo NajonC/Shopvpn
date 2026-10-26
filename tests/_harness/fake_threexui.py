@@ -28,6 +28,18 @@ the composite tests. Basis for its behavior:
   triggered manually; restarts happen instantly, so panel/service restart
   loss is at most ten seconds in this model. These views omit fields and
   behavior outside this test model.
+* Lab (RX-MAN-001/V-RX-01): writes to one inbound queue in send order and wait
+  on a held database; holds near ten seconds allow writes at release, while
+  longer holds fail with ``database is locked``; usage collection also waits;
+  writes survive caller cancellation and panel/service restarts; held responses
+  do not stop writes; and API outage refuses requests immediately.
+* Source (v3.9.0 source reading): ``lockInbound`` queues writes per inbound
+  without a timeout, and ``Update`` looks up the client before changing it.
+* Fake choice: the database-lock threshold is exactly 10,300 ms (the lab saw
+  10.3–10.5 s); collector deltas older than that threshold are lost during a
+  hold (the lab lost about 39 s per 60 s hold); and API outage is instantaneous.
+  A write whose client is already gone still waits for a held database before
+  failing, while the real lookup before the lock would fail at once.
 
 Any recognized real route or behavior outside this model raises
 ``FakeNotModelled`` instead of returning an invented success.
@@ -35,6 +47,7 @@ Any recognized real route or behavior outside this model raises
 
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from dataclasses import dataclass
 import re
@@ -47,6 +60,7 @@ from tests._harness.fixtures import CompositeFixture, Inbound
 
 EVIDENCE_LABEL = "substitute, not evidence"
 COLLECTOR_INTERVAL_MS = 5_000
+DB_LOCKED_AFTER_MS = 10_300
 
 
 class FakeNotModelled(Exception):
@@ -78,6 +92,29 @@ class PanelSnapshot:
 
 class _RequestFailure(Exception):
     """A modeled API failure represented by the panel's JSON envelope."""
+
+
+@dataclass(eq=False)
+class _PendingWrite:
+    sequence: int
+    route: str
+    params: tuple
+    query: dict
+    body: object
+    inbound_ids: frozenset[int]
+    future: asyncio.Future
+    started_ms: int | None = None
+    finished: bool = False
+    caller_waiting: bool = True
+
+
+@dataclass(eq=False)
+class _DatabaseWaiter:
+    sequence: int
+    started_ms: int
+    deadline_ms: int
+    write: _PendingWrite | None = None
+    deltas: tuple[tuple[str, int, int], ...] = ()
 
 
 _STRING_FIELDS = (
@@ -194,6 +231,19 @@ class FakeThreeXUIPanel:
         self._collector_started_ms = clock.true_now_ms()
         self._next_tick_ms = self._collector_started_ms + COLLECTOR_INTERVAL_MS
         self._baseline_pending = True
+        self._database_held = False
+        self._stalled_inbounds: set[int] = set()
+        self._pending_write_list: list[_PendingWrite] = []
+        self._database_waiters: list[_DatabaseWaiter] = []
+        self._held_responses: list[tuple[asyncio.Future, FakeResponse]] = []
+        self._responses_held = False
+        self._api_is_down = False
+        self._dispatch_sequence = 0
+        self._waiter_sequence = 0
+        self._processing_time_ms: int | None = None
+        self._running_due = False
+        self._starting_writes = False
+        self._releasing_database = False
 
     def __repr__(self) -> str:
         return (
@@ -213,6 +263,10 @@ class FakeThreeXUIPanel:
     def xray_restarts(self) -> tuple[int, ...]:
         return tuple(self._xray_restarts)
 
+    @property
+    def pending_writes(self) -> int:
+        return len(self._pending_write_list)
+
     def serve(self, email: str, *, up: int = 0, down: int = 0) -> None:
         """Add panel-counted bytes to a client's cumulative Xray counters."""
         self.collect_due()
@@ -226,38 +280,327 @@ class FakeThreeXUIPanel:
         current_up, current_down = self._counters[email]
         self._counters[email] = (current_up + up, current_down + down)
 
-    def collect_due(self) -> None:
-        """Apply all collector ticks due at the panel's current true time."""
-        now = self._clock.true_now_ms()
-        while self._next_tick_ms <= now:
-            if self._baseline_pending:
-                self._last_values = dict(self._counters)
-                self._baseline_pending = False
-            else:
-                for email, (current_up, current_down) in self._counters.items():
-                    record = self._traffic.get(email)
-                    if record is None:
-                        continue
+    def run_due(self) -> None:
+        """Process collector ticks and database-lock deadlines due by true time."""
+        errors = self._run_due_internal()
+        if errors:
+            raise errors[0]
 
-                    last = self._last_values.get(email)
-                    last_up, last_down = last if last is not None else (None, None)
-                    delta_up = (
-                        current_up
-                        if last_up is None or current_up < last_up
-                        else current_up - last_up
+    collect_due = run_due
+
+    def _event_now_ms(self) -> int:
+        if self._processing_time_ms is not None:
+            return self._processing_time_ms
+        return self._clock.true_now_ms()
+
+    def _run_due_internal(self) -> list[FakeNotModelled]:
+        if self._running_due:
+            return []
+
+        self._running_due = True
+        errors: list[FakeNotModelled] = []
+        now = self._clock.true_now_ms()
+        try:
+            while True:
+                due_waiters = [
+                    waiter
+                    for waiter in self._database_waiters
+                    if waiter.deadline_ms <= now
+                ]
+                deadline = min(
+                    (waiter.deadline_ms for waiter in due_waiters), default=None
+                )
+                tick = self._next_tick_ms if self._next_tick_ms <= now else None
+
+                # Deadlines sort before ticks at the same true-time millisecond.
+                if deadline is not None and (tick is None or deadline <= tick):
+                    self._processing_time_ms = deadline
+                    due = min(
+                        (w for w in due_waiters if w.deadline_ms == deadline),
+                        key=lambda w: w.sequence,
                     )
-                    delta_down = (
-                        current_down
-                        if last_down is None or current_down < last_down
-                        else current_down - last_down
+                    self._database_waiters.remove(due)
+                    if due.write is not None:
+                        self._finish_write(
+                            due.write,
+                            response=self._failure("database is locked"),
+                            errors=errors,
+                            kick=False,
+                        )
+                        self._start_available_writes(errors)
+                    # Collector deltas that reach their deadline are discarded.
+                    continue
+
+                if tick is None:
+                    break
+
+                self._processing_time_ms = tick
+                self._collect_tick(tick)
+                self._next_tick_ms += COLLECTOR_INTERVAL_MS
+
+            self._processing_time_ms = None
+            self._start_available_writes(errors)
+        finally:
+            self._processing_time_ms = None
+            self._running_due = False
+        return errors
+
+    def _collect_tick(self, tick_ms: int) -> None:
+        if self._baseline_pending:
+            self._last_values = dict(self._counters)
+            self._baseline_pending = False
+            return
+
+        deltas = []
+        for email, (current_up, current_down) in self._counters.items():
+            record = self._traffic.get(email)
+            if record is None:
+                continue
+
+            last = self._last_values.get(email)
+            last_up, last_down = last if last is not None else (None, None)
+            delta_up = (
+                current_up
+                if last_up is None or current_up < last_up
+                else current_up - last_up
+            )
+            delta_down = (
+                current_down
+                if last_down is None or current_down < last_down
+                else current_down - last_down
+            )
+            if delta_up or delta_down:
+                deltas.append((email, delta_up, delta_down))
+            self._last_values[email] = (current_up, current_down)
+
+        if self._database_held:
+            self._waiter_sequence += 1
+            self._database_waiters.append(
+                _DatabaseWaiter(
+                    sequence=self._waiter_sequence,
+                    started_ms=tick_ms,
+                    deadline_ms=tick_ms + DB_LOCKED_AFTER_MS,
+                    deltas=tuple(deltas),
+                )
+            )
+        else:
+            self._apply_collector_deltas(deltas)
+
+    def _apply_collector_deltas(
+        self, deltas: tuple[tuple[str, int, int], ...] | list[tuple[str, int, int]]
+    ) -> None:
+        for email, delta_up, delta_down in deltas:
+            record = self._traffic.get(email)
+            if record is None:
+                continue
+            record["up"] += delta_up
+            record["down"] += delta_down
+            inbound = self._inbounds.get(record["inboundId"])
+            if inbound is not None:
+                inbound["up"] += delta_up
+                inbound["down"] += delta_down
+
+    def hold_database(self) -> None:
+        self.run_due()
+        if self._database_held:
+            raise RuntimeError("database is already held")
+        self._database_held = True
+
+    def release_database(self) -> None:
+        errors = self._run_due_internal()
+        if not self._database_held:
+            raise RuntimeError("database is not held")
+
+        self._database_held = False
+        now = self._clock.true_now_ms()
+        self._processing_time_ms = now
+        waiters = sorted(self._database_waiters, key=lambda waiter: waiter.sequence)
+        self._database_waiters = []
+        self._releasing_database = True
+        try:
+            for waiter in waiters:
+                if waiter.deadline_ms <= now:
+                    continue
+                if waiter.write is not None:
+                    self._execute_write(waiter.write, errors, kick=False)
+                else:
+                    self._apply_collector_deltas(waiter.deltas)
+        finally:
+            self._releasing_database = False
+            self._processing_time_ms = None
+
+        self._start_available_writes(errors)
+        if errors:
+            raise errors[0]
+
+    def stall_inbound(self, inbound_id: int) -> None:
+        self.run_due()
+        if inbound_id not in self._inbounds:
+            raise KeyError(inbound_id)
+        if inbound_id in self._stalled_inbounds:
+            raise RuntimeError(f"inbound {inbound_id} is already stalled")
+        self._stalled_inbounds.add(inbound_id)
+
+    def release_inbound(self, inbound_id: int) -> None:
+        errors = self._run_due_internal()
+        if inbound_id not in self._inbounds:
+            raise KeyError(inbound_id)
+        if inbound_id not in self._stalled_inbounds:
+            raise RuntimeError(f"inbound {inbound_id} is not stalled")
+        self._stalled_inbounds.remove(inbound_id)
+        self._start_available_writes(errors)
+        if errors:
+            raise errors[0]
+
+    def hold_responses(self) -> None:
+        self.run_due()
+        if self._responses_held:
+            raise RuntimeError("responses are already held")
+        self._responses_held = True
+
+    def release_responses(self) -> None:
+        errors = self._run_due_internal()
+        if not self._responses_held:
+            raise RuntimeError("responses are not held")
+        self._responses_held = False
+        held, self._held_responses = self._held_responses, []
+        for future, response in held:
+            if not future.done():
+                future.set_result(response)
+        if errors:
+            raise errors[0]
+
+    def api_down(self) -> None:
+        self.run_due()
+        self._api_is_down = True
+
+    def api_up(self) -> None:
+        self.run_due()
+        self._api_is_down = False
+
+    def _publish_answer(
+        self, future: asyncio.Future, response: FakeResponse
+    ) -> None:
+        if self._responses_held:
+            self._held_responses.append((future, response))
+        elif not future.done():
+            future.set_result(response)
+
+    def _dispatch_inbounds(self, route: str, params: tuple, body: object) -> frozenset[int]:
+        if route == "clients_add":
+            if not isinstance(body, dict):
+                return frozenset()
+            inbound_ids = body.get("inboundIds")
+            if not isinstance(inbound_ids, list):
+                return frozenset()
+            return frozenset(
+                inbound_id
+                for inbound_id in inbound_ids
+                if type(inbound_id) is int and inbound_id in self._inbounds
+            )
+
+        email = params[0]
+        if route in {"clients_update", "clients_del", "clients_reset_traffic"}:
+            return frozenset(inbound_id for inbound_id, _, _ in self._find_clients(email))
+        if route == "clients_update_traffic":
+            record = self._traffic.get(email)
+            if record is not None:
+                return frozenset({record["inboundId"]})
+        return frozenset()
+
+    def _write_is_startable(self, candidate: _PendingWrite) -> bool:
+        inbound_ids = candidate.inbound_ids
+        if inbound_ids & self._stalled_inbounds:
+            return False
+        for write in self._pending_write_list:
+            if write is candidate:
+                continue
+            if write.finished:
+                continue
+            if write.started_ms is not None and inbound_ids & write.inbound_ids:
+                return False
+            if (
+                write.started_ms is None
+                and write.sequence < candidate.sequence
+                and inbound_ids & write.inbound_ids
+            ):
+                return False
+        return True
+
+    def _start_available_writes(self, errors: list[FakeNotModelled]) -> None:
+        if self._starting_writes or self._releasing_database:
+            return
+        self._starting_writes = True
+        try:
+            while True:
+                candidate = next(
+                    (
+                        write
+                        for write in self._pending_write_list
+                        if not write.finished
+                        and write.started_ms is None
+                        and self._write_is_startable(write)
+                    ),
+                    None,
+                )
+                if candidate is None:
+                    break
+                candidate.started_ms = self._event_now_ms()
+                if self._database_held:
+                    self._waiter_sequence += 1
+                    self._database_waiters.append(
+                        _DatabaseWaiter(
+                            sequence=self._waiter_sequence,
+                            started_ms=candidate.started_ms,
+                            deadline_ms=candidate.started_ms + DB_LOCKED_AFTER_MS,
+                            write=candidate,
+                        )
                     )
-                    record["up"] += delta_up
-                    record["down"] += delta_down
-                    inbound = self._inbounds[record["inboundId"]]
-                    inbound["up"] += delta_up
-                    inbound["down"] += delta_down
-                    self._last_values[email] = (current_up, current_down)
-            self._next_tick_ms += COLLECTOR_INTERVAL_MS
+                else:
+                    self._execute_write(candidate, errors, kick=False)
+        finally:
+            self._starting_writes = False
+
+    def _execute_write(
+        self, write: _PendingWrite, errors: list[FakeNotModelled], *, kick: bool
+    ) -> None:
+        try:
+            obj = self._run_route(write.route, write.params, write.query, write.body)
+        except _RequestFailure as exc:
+            self._finish_write(
+                write, response=self._failure(str(exc)), errors=errors, kick=kick
+            )
+        except FakeNotModelled as exc:
+            self._finish_write(write, error=exc, errors=errors, kick=kick)
+        else:
+            self._finish_write(
+                write, response=self._success(obj), errors=errors, kick=kick
+            )
+
+    def _finish_write(
+        self,
+        write: _PendingWrite,
+        *,
+        response: FakeResponse | None = None,
+        error: FakeNotModelled | None = None,
+        errors: list[FakeNotModelled],
+        kick: bool,
+    ) -> None:
+        if write.finished:
+            return
+        write.finished = True
+        if write in self._pending_write_list:
+            self._pending_write_list.remove(write)
+        if error is not None:
+            if write.caller_waiting:
+                if not write.future.done():
+                    write.future.set_exception(error)
+            else:
+                errors.append(error)
+        elif response is not None:
+            self._publish_answer(write.future, response)
+        if kick and not self._releasing_database:
+            self._start_available_writes(errors)
 
     def restart(self, mode: str) -> None:
         """Restart Xray, the panel, or both while preserving stored totals."""
@@ -271,6 +614,9 @@ class FakeThreeXUIPanel:
             self._xray_restarts.append(now)
             self._xray_started_ms = now
         if mode in {"panel", "service"}:
+            self._database_waiters = [
+                waiter for waiter in self._database_waiters if waiter.write is not None
+            ]
             self._last_values.clear()
             self._collector_started_ms = now
             self._next_tick_ms = now + COLLECTOR_INTERVAL_MS
@@ -298,6 +644,8 @@ class FakeThreeXUIPanel:
     def restore(self, snapshot: PanelSnapshot) -> None:
         """Replace the panel database with a snapshot and restart the service."""
         self.collect_due()
+        if self.pending_writes:
+            raise FakeNotModelled("restoring while client writes are pending")
         self._inbounds = deepcopy(snapshot._inbounds)
         self._traffic = deepcopy(snapshot._traffic)
         self._next_traffic_id = snapshot._next_traffic_id
@@ -323,30 +671,32 @@ class FakeThreeXUIPanel:
         query: dict[str, str] | None = None,
         body: object = None,
     ) -> FakeResponse:
-        """Authenticate and handle one API call without performing I/O."""
+        """Authenticate and handle one API call using controlled virtual stalls."""
+        if self._api_is_down:
+            raise ConnectionRefusedError("fake 3x-UI API is down")
         self.collect_due()
         route, params = self._resolve_route(method, path)
         if not path.startswith("/panel/api/") or route is None:
             self._record(method, path, None)
-            return FakeResponse(404, None)
+            return await self._answer(FakeResponse(404, None))
 
         if token is None:
             self._record(method, path, None)
-            return FakeResponse(404, None)
+            return await self._answer(FakeResponse(404, None))
         scope = next((name for name, value in self._tokens.items() if token == value), None)
         if scope is None:
             self._record(method, path, None)
-            return FakeResponse(401, None)
+            return await self._answer(FakeResponse(401, None))
 
         self._record(method, path, scope)
         if not self._scope_permits(scope, method, path, route):
-            return FakeResponse(
+            return await self._answer(FakeResponse(
                 403,
                 {
                     "success": False,
                     "msg": "this API token is not permitted to access this endpoint",
                 },
-            )
+            ))
         if route in {
             "clients_get",
             "clients_get_by_tgid",
@@ -358,11 +708,51 @@ class FakeThreeXUIPanel:
         if route == "unmodelled":
             raise FakeNotModelled(f"{method} {path}")
 
+        if route in {
+            "clients_add",
+            "clients_update",
+            "clients_del",
+            "clients_reset_traffic",
+            "clients_update_traffic",
+        }:
+            loop = asyncio.get_running_loop()
+            self._dispatch_sequence += 1
+            write = _PendingWrite(
+                sequence=self._dispatch_sequence,
+                route=route,
+                params=params,
+                query=(query or {}).copy(),
+                body=deepcopy(body),
+                inbound_ids=self._dispatch_inbounds(route, params, body),
+                future=loop.create_future(),
+            )
+            self._pending_write_list.append(write)
+            errors: list[FakeNotModelled] = []
+            self._start_available_writes(errors)
+            if errors:
+                write.caller_waiting = False
+                raise errors[0]
+            try:
+                return await asyncio.shield(write.future)
+            except asyncio.CancelledError:
+                write.caller_waiting = False
+                raise
+            finally:
+                if write.future.done():
+                    write.caller_waiting = False
+
         try:
             obj = self._run_route(route, params, query or {}, body)
         except _RequestFailure as exc:
-            return self._failure(str(exc))
-        return self._success(obj)
+            return await self._answer(self._failure(str(exc)))
+        return await self._answer(self._success(obj))
+
+    async def _answer(self, response: FakeResponse) -> FakeResponse:
+        if not self._responses_held:
+            return response
+        future = asyncio.get_running_loop().create_future()
+        self._held_responses.append((future, response))
+        return await asyncio.shield(future)
 
     def seed_client(self, inbound_ids: list[int], client: dict) -> None:
         """Add one client directly, without recording an API call or restart."""
@@ -419,14 +809,17 @@ class FakeThreeXUIPanel:
         return [self._client_json(client) for client in inbound["clients"]]
 
     def setting(self, name: str) -> object:
+        self.run_due()
         return deepcopy(self._settings[name])
 
     def set_setting(self, name: str, value: object) -> None:
+        self.run_due()
         if name not in self._settings:
             raise KeyError(name)
         self._settings[name] = deepcopy(value)
 
     def reset_settings(self) -> None:
+        self.run_due()
         self._settings = self._default_settings()
 
     def _default_settings(self) -> dict:
