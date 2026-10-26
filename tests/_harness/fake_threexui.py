@@ -40,6 +40,18 @@ the composite tests. Basis for its behavior:
   hold (the lab lost about 39 s per 60 s hold); and API outage is instantaneous.
   A write whose client is already gone still waits for a held database before
   failing, while the real lookup before the lock would fail at once.
+* Lab (RX-MAN-001/V-RX-01): over TLS 1.3, a request not fully delivered before
+  the client closed never executed, one whose held bytes arrived after the
+  close executed, and a complete request whose response was held executed
+  after the client closed. A timed-out create also landed after a read-back
+  had returned not found, and the panel API was unavailable for about 14
+  seconds.
+* Source (v3.9.0 API): requests authenticate with a bearer-token header.
+* Fake choice: the HTTPS front holds fully read requests, refuses connections
+  by closing its listener while the API is down, returns 404 outside its base
+  path, and returns 500 for unmodelled requests. It uses empty bodies for
+  ``None``, accepts JSON request bodies only, creates one EC certificate per
+  front, and records times when it sees transport events.
 
 Any recognized real route or behavior outside this model raises
 ``FakeNotModelled`` instead of returning an invented success.
@@ -49,10 +61,26 @@ from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+import ipaddress
+import json
 import re
 import secrets
+import socket
+import ssl
+import tempfile
+import time
 import uuid
+from typing import Callable
+
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat
+from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
+
+from aiohttp import web
 
 from tests._harness.clock import FakeClock
 from tests._harness.fixtures import CompositeFixture, Inbound
@@ -238,6 +266,7 @@ class FakeThreeXUIPanel:
         self._held_responses: list[tuple[asyncio.Future, FakeResponse]] = []
         self._responses_held = False
         self._api_is_down = False
+        self._fronts: list[FakeThreeXUIServer] = []
         self._dispatch_sequence = 0
         self._waiter_sequence = 0
         self._processing_time_ms: int | None = None
@@ -473,10 +502,14 @@ class FakeThreeXUIPanel:
     def api_down(self) -> None:
         self.run_due()
         self._api_is_down = True
+        for front in tuple(self._fronts):
+            front._api_down()
 
     def api_up(self) -> None:
         self.run_due()
         self._api_is_down = False
+        for front in tuple(self._fronts):
+            front._api_up()
 
     def _publish_answer(
         self, future: asyncio.Future, response: FakeResponse
@@ -1225,3 +1258,597 @@ class FakeThreeXUIPanel:
             200,
             {"success": False, "msg": f"Request failed ({error})", "obj": None},
         )
+
+
+@dataclass(frozen=True)
+class FakeCertificate:
+    cert_pem: bytes
+    key_pem: bytes = field(repr=False)
+    sha256_fingerprint: str
+
+    def client_context(self) -> ssl.SSLContext:
+        return ssl.create_default_context(cadata=self.cert_pem.decode("ascii"))
+
+
+def make_certificate(
+    *,
+    ip_addresses: tuple[str, ...] = ("127.0.0.1",),
+    dns_names: tuple[str, ...] = ("localhost",),
+) -> FakeCertificate:
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name(
+        [x509.NameAttribute(NameOID.COMMON_NAME, "fake 3x-ui panel")]
+    )
+    now = datetime.now(timezone.utc)
+    san_names = [x509.DNSName(name) for name in dns_names]
+    san_names.extend(
+        x509.IPAddress(ipaddress.ip_address(address)) for address in ip_addresses
+    )
+    subject_key_identifier = x509.SubjectKeyIdentifier.from_public_key(
+        private_key.public_key()
+    )
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(private_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(hours=1))
+        .not_valid_after(now + timedelta(days=1))
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                content_commitment=False,
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=True,
+                crl_sign=False,
+                encipher_only=None,
+                decipher_only=None,
+            ),
+            critical=True,
+        )
+        .add_extension(
+            x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False
+        )
+        .add_extension(x509.SubjectAlternativeName(san_names), critical=False)
+        .add_extension(subject_key_identifier, critical=False)
+        .add_extension(
+            x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(
+                subject_key_identifier
+            ),
+            critical=False,
+        )
+        .sign(private_key, hashes.SHA256())
+    )
+    cert_pem = certificate.public_bytes(Encoding.PEM)
+    key_pem = private_key.private_bytes(
+        Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()
+    )
+    return FakeCertificate(
+        cert_pem=cert_pem,
+        key_pem=key_pem,
+        sha256_fingerprint=certificate.fingerprint(hashes.SHA256()).hex(),
+    )
+
+
+@dataclass(frozen=True)
+class FakeServedRequest:
+    method: str
+    path: str
+    received_ms: int
+    state: str
+    status: int | None
+
+
+@dataclass(frozen=True)
+class FakeConnection:
+    index: int
+    opened_ms: int
+    closed_ms: int | None
+    requests: tuple[FakeServedRequest, ...]
+
+
+@dataclass
+class _ServedRequestRecord:
+    method: str
+    path: str
+    received_ms: int
+    state: str = "at panel"
+    status: int | None = None
+
+    def snapshot(self) -> FakeServedRequest:
+        return FakeServedRequest(
+            self.method,
+            self.path,
+            self.received_ms,
+            self.state,
+            self.status,
+        )
+
+
+@dataclass
+class _ConnectionRecord:
+    index: int
+    opened_ms: int
+    transport: asyncio.Transport = field(repr=False)
+    closed_ms: int | None = None
+    requests: list[_ServedRequestRecord] = field(default_factory=list)
+    closed: asyncio.Future = field(repr=False, default=None)
+
+    def snapshot(self) -> FakeConnection:
+        return FakeConnection(
+            self.index,
+            self.opened_ms,
+            self.closed_ms,
+            tuple(request.snapshot() for request in self.requests),
+        )
+
+
+@dataclass
+class _ParkedRequest:
+    connection: _ConnectionRecord = field(repr=False)
+    record: _ServedRequestRecord = field(repr=False)
+    method: str
+    panel_path: str
+    token: str | None = field(repr=False)
+    query: dict[str, str] = field(repr=False)
+    body: object = field(repr=False)
+    completion: asyncio.Future = field(repr=False)
+
+
+class _ConnectionLoggingWebServer(web.Server):
+    def __init__(self, front: FakeThreeXUIServer, handler, *, loop) -> None:
+        super().__init__(
+            handler,
+            access_log=None,
+            handler_cancellation=False,
+            loop=loop,
+        )
+        self._front = front
+
+    def connection_made(self, handler, transport: asyncio.Transport) -> None:
+        record = _ConnectionRecord(
+            index=len(self._front._connection_records),
+            opened_ms=self._front._now_ms(),
+            transport=transport,
+            closed=self._front._loop.create_future(),
+        )
+        self._front._connection_records.append(record)
+        self._front._records_by_protocol[handler] = record
+        super().connection_made(handler, transport)
+
+    def connection_lost(self, handler, exc: BaseException | None = None) -> None:
+        record = self._front._records_by_protocol.get(handler)
+        if record is not None and record.closed_ms is None:
+            record.closed_ms = self._front._now_ms()
+            if not record.closed.done():
+                record.closed.set_result(None)
+        super().connection_lost(handler, exc)
+
+
+class FakeThreeXUIServer:
+    """A small verified-HTTPS transport front for ``FakeThreeXUIPanel``."""
+
+    def __init__(
+        self,
+        panel: FakeThreeXUIPanel,
+        *,
+        base_path: str = "/xui",
+        certificate: FakeCertificate | None = None,
+    ) -> None:
+        if base_path != "" and (not base_path.startswith("/") or base_path.endswith("/")):
+            raise ValueError("base_path must be empty or start with '/' and not end with '/'")
+        self._panel = panel
+        self._base_path = base_path
+        self._certificate = certificate or make_certificate()
+        self._ssl_context: ssl.SSLContext | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._web_server: _ConnectionLoggingWebServer | None = None
+        self._listener: asyncio.Server | None = None
+        self._listener_task: asyncio.Task | None = None
+        self._pending_socket: socket.socket | None = None
+        self._closing_listeners: list[asyncio.Server] = []
+        self._port: int | None = None
+        self._started = False
+        self._ever_started = False
+        self._closed = False
+        self._hold_match: Callable[[str, str], bool] | None = None
+        self._hold_active = False
+        self._held: list[_ParkedRequest] = []
+        self._connection_records: list[_ConnectionRecord] = []
+        self._records_by_protocol: dict[object, _ConnectionRecord] = {}
+        self._tasks: set[asyncio.Task] = set()
+        self._kept_exceptions: list[Exception] = []
+
+    def __repr__(self) -> str:
+        return (
+            f"FakeThreeXUIServer(port={self._port!r}, "
+            f"base_path={self._base_path!r})"
+        )
+
+    @property
+    def certificate(self) -> FakeCertificate:
+        return self._certificate
+
+    @property
+    def port(self) -> int:
+        if self._port is None:
+            raise RuntimeError("server has not started")
+        return self._port
+
+    @property
+    def base_url(self) -> str:
+        if self._port is None:
+            raise RuntimeError("server has not started")
+        suffix = f"{self._base_path}" if self._base_path else ""
+        return f"https://127.0.0.1:{self._port}{suffix}"
+
+    @property
+    def connections(self) -> tuple[FakeConnection, ...]:
+        return tuple(record.snapshot() for record in self._connection_records)
+
+    @property
+    def held_requests(self) -> int:
+        return len(self._held)
+
+    async def start(self) -> None:
+        if self._ever_started or self._closed:
+            raise RuntimeError("server cannot be started more than once")
+        if self._panel._api_is_down:
+            raise RuntimeError("panel API is down")
+        self._loop = asyncio.get_running_loop()
+        self._ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        with tempfile.TemporaryDirectory() as directory:
+            cert_path = f"{directory}/certificate.pem"
+            key_path = f"{directory}/private-key.pem"
+            with open(cert_path, "wb") as certificate_file:
+                certificate_file.write(self._certificate.cert_pem)
+            with open(key_path, "wb") as key_file:
+                key_file.write(self._certificate.key_pem)
+            self._ssl_context.load_cert_chain(cert_path, key_path)
+
+        web_server = _ConnectionLoggingWebServer(
+            self, self._handle_request, loop=self._loop
+        )
+        listener = await self._loop.create_server(
+            web_server,
+            host="127.0.0.1",
+            port=0,
+            ssl=self._ssl_context,
+            reuse_address=True,
+        )
+        self._web_server = web_server
+        self._listener = listener
+        self._port = listener.sockets[0].getsockname()[1]
+        self._started = True
+        self._ever_started = True
+        self._panel._fronts.append(self)
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        self._stop_listener()
+        if self._hold_active:
+            self.drop_requests()
+        self._abort_open_connections()
+
+        current = asyncio.current_task()
+        active = [task for task in self._tasks if task is not current and not task.done()]
+        for task in active:
+            task.cancel()
+
+        pending_listener = self._listener_task
+        if pending_listener is not None and pending_listener is not current:
+            await asyncio.gather(pending_listener, return_exceptions=True)
+        if active:
+            await asyncio.gather(*active, return_exceptions=True)
+
+        listeners, self._closing_listeners = self._closing_listeners, []
+        if self._listener is not None:
+            self._listener.close()
+            listeners.append(self._listener)
+            self._listener = None
+        if listeners:
+            await asyncio.gather(
+                *(listener.wait_closed() for listener in listeners),
+                return_exceptions=True,
+            )
+
+        open_connections = [
+            record.closed
+            for record in self._connection_records
+            if record.closed_ms is None
+        ]
+        if open_connections:
+            await asyncio.gather(*open_connections)
+        if self in self._panel._fronts:
+            self._panel._fronts.remove(self)
+        if self._kept_exceptions:
+            raise self._kept_exceptions[0]
+
+    async def __aenter__(self) -> FakeThreeXUIServer:
+        await self.start()
+        return self
+
+    async def __aexit__(self, *exc_info) -> None:
+        await self.close()
+
+    async def wait_connections_closed(self, timeout_s: float = 2.0) -> None:
+        deadline = time.monotonic() + timeout_s
+        while any(record.closed_ms is None for record in self._connection_records):
+            if time.monotonic() >= deadline:
+                raise TimeoutError("connections did not close before timeout")
+            await asyncio.sleep(0.001)
+
+    def hold_requests(
+        self, match: Callable[[str, str], bool] | None = None
+    ) -> None:
+        if self._hold_active:
+            raise RuntimeError("requests are already held")
+        self._hold_active = True
+        self._hold_match = match
+
+    def deliver_requests(self) -> None:
+        if not self._hold_active:
+            raise RuntimeError("requests are not held")
+        self._hold_active = False
+        self._hold_match = None
+        held, self._held = self._held, []
+        for parked in held:
+            task = asyncio.Task(
+                self._dispatch_parked(parked),
+                loop=self._loop,
+                eager_start=True,
+            )
+            self._track_task(task)
+
+    def drop_requests(self) -> None:
+        if not self._hold_active:
+            raise RuntimeError("requests are not held")
+        self._hold_active = False
+        self._hold_match = None
+        held, self._held = self._held, []
+        for parked in held:
+            parked.record.state = "dropped"
+            self._abort_connection(parked.connection)
+            if not parked.completion.done():
+                parked.completion.set_result(None)
+
+    def _now_ms(self) -> int:
+        return self._panel._clock.true_now_ms()
+
+    def _track_task(self, task: asyncio.Task) -> None:
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+
+    def _keep_exception(self, exception: Exception) -> None:
+        self._kept_exceptions.append(exception)
+
+    def _stop_listener(self) -> None:
+        if self._listener is not None:
+            self._listener.close()
+            self._closing_listeners.append(self._listener)
+            self._listener = None
+        if self._pending_socket is not None:
+            self._pending_socket.close()
+            self._pending_socket = None
+        task = self._listener_task
+        self._listener_task = None
+        if task is not None and not task.done():
+            task.cancel()
+
+    def _api_down(self) -> None:
+        if not self._started or self._closed:
+            return
+        self._stop_listener()
+        if self._hold_active:
+            self.drop_requests()
+        self._abort_open_connections()
+
+    def _api_up(self) -> None:
+        if not self._started or self._closed:
+            return
+        if self._listener is not None or self._pending_socket is not None:
+            return
+        loop = self._loop
+        assert loop is not None and self._web_server is not None and self._ssl_context
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_socket.bind(("127.0.0.1", self.port))
+        server_socket.listen(socket.SOMAXCONN)
+        server_socket.setblocking(False)
+        self._pending_socket = server_socket
+        task = loop.create_task(self._attach_listener(server_socket))
+        self._listener_task = task
+        task.add_done_callback(self._listener_task_done)
+
+    async def _attach_listener(self, server_socket: socket.socket) -> None:
+        assert self._loop is not None and self._web_server is not None
+        try:
+            listener = await self._loop.create_server(
+                self._web_server,
+                sock=server_socket,
+                ssl=self._ssl_context,
+                reuse_address=True,
+            )
+        except BaseException:
+            server_socket.close()
+            self._pending_socket = None
+            raise
+        self._pending_socket = None
+        if self._closed or self._panel._api_is_down:
+            listener.close()
+            self._closing_listeners.append(listener)
+        else:
+            self._listener = listener
+
+    def _listener_task_done(self, task: asyncio.Task) -> None:
+        if task.cancelled():
+            return
+        exception = task.exception()
+        if exception is not None:
+            self._keep_exception(exception)
+
+    def _abort_connection(self, connection: _ConnectionRecord) -> None:
+        if connection.closed_ms is None and not connection.transport.is_closing():
+            connection.transport.abort()
+
+    def _abort_open_connections(self) -> None:
+        for connection in self._connection_records:
+            self._abort_connection(connection)
+
+    def _panel_path(self, request_path: str) -> str | None:
+        if not self._base_path:
+            return request_path
+        if request_path == self._base_path:
+            return ""
+        prefix = self._base_path + "/"
+        if request_path.startswith(prefix):
+            return request_path[len(self._base_path) :]
+        return None
+
+    async def _handle_request(self, request: web.Request) -> web.StreamResponse:
+        task = asyncio.current_task()
+        if task is not None:
+            self._track_task(task)
+        try:
+            raw_body = await request.read()
+            connection = self._records_by_protocol[request.protocol]
+            record = _ServedRequestRecord(
+                method=request.method,
+                path=request.path,
+                received_ms=self._now_ms(),
+            )
+            connection.requests.append(record)
+
+            panel_path = self._panel_path(request.path)
+            if panel_path is None:
+                return self._answer_ready(
+                    request, connection, record, FakeResponse(404, None)
+                )
+
+            authorization = request.headers.get("Authorization")
+            token = (
+                authorization[len("Bearer ") :]
+                if authorization is not None and authorization.startswith("Bearer ")
+                else None
+            )
+            query = {key: request.query.get(key, "") for key in request.query}
+            body: object = None
+            if raw_body:
+                try:
+                    if request.content_type != "application/json":
+                        raise ValueError("request body is not application/json")
+                    body = json.loads(raw_body.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                    self._keep_exception(FakeNotModelled(str(exc)))
+                    return self._answer_ready(
+                        request, connection, record, FakeResponse(500, None)
+                    )
+
+            if self._hold_active:
+                try:
+                    should_hold = (
+                        self._hold_match is None
+                        or self._hold_match(request.method, panel_path)
+                    )
+                except Exception as exc:
+                    self._keep_exception(exc)
+                    return self._answer_ready(
+                        request, connection, record, FakeResponse(500, None)
+                    )
+                if should_hold:
+                    record.state = "in transit"
+                    parked = _ParkedRequest(
+                        connection=connection,
+                        record=record,
+                        method=request.method,
+                        panel_path=panel_path,
+                        token=token,
+                        query=query,
+                        body=body,
+                        completion=self._loop.create_future(),
+                    )
+                    self._held.append(parked)
+                    response = await parked.completion
+                    if response is None:
+                        return web.Response(status=500)
+                    return self._answer_ready(request, connection, record, response)
+
+            response = await self._call_panel(
+                record,
+                request.method,
+                panel_path,
+                token=token,
+                query=query,
+                body=body,
+                connection=connection,
+            )
+            if response is None:
+                return web.Response(status=500)
+            return self._answer_ready(request, connection, record, response)
+        finally:
+            if task is not None:
+                self._tasks.discard(task)
+
+    async def _call_panel(
+        self,
+        record: _ServedRequestRecord,
+        method: str,
+        panel_path: str,
+        *,
+        token: str | None,
+        query: dict[str, str],
+        body: object,
+        connection: _ConnectionRecord,
+    ) -> FakeResponse | None:
+        record.state = "at panel"
+        try:
+            return await self._panel.handle(
+                method,
+                panel_path,
+                token=token,
+                query=query,
+                body=body,
+            )
+        except ConnectionRefusedError:
+            record.state = "dropped"
+            self._abort_connection(connection)
+            return None
+        except Exception as exc:
+            self._keep_exception(exc)
+            return FakeResponse(500, None)
+
+    async def _dispatch_parked(self, parked: _ParkedRequest) -> None:
+        response = await self._call_panel(
+            parked.record,
+            parked.method,
+            parked.panel_path,
+            token=parked.token,
+            query=parked.query,
+            body=parked.body,
+            connection=parked.connection,
+        )
+        if not parked.completion.done():
+            parked.completion.set_result(response)
+
+    def _answer_ready(
+        self,
+        request: web.Request,
+        connection: _ConnectionRecord,
+        record: _ServedRequestRecord,
+        response: FakeResponse,
+    ) -> web.Response:
+        record.status = response.status
+        record.state = (
+            "answered"
+            if connection.closed_ms is None and not connection.transport.is_closing()
+            else "answer dropped"
+        )
+        if response.body is None:
+            return web.Response(status=response.status)
+        return web.json_response(response.body, status=response.status)

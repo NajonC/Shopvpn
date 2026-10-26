@@ -85,7 +85,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
   - a second subscription for the same customer and a second customer;
   - overlapping tenant/local IDs and panel aliases.
   Secrets are generated per run and never written to the repository
-- [ ] T009 [P] Implement a controlled standalone 3x-UI v3.9.0 substitute in `tests/_harness/fake_threexui.py`, modelled on the RX-MAN-001 and GA-MAN-002 observations and labelled "substitute, not evidence". It covers:
+- [X] T009 [P] Implement a controlled standalone 3x-UI v3.9.0 substitute in `tests/_harness/fake_threexui.py`, modelled on the RX-MAN-001 and GA-MAN-002 observations and labelled "substitute, not evidence". It covers:
   - client writes ordered per inbound;
   - `success: true, obj: null` for missing clients;
   - "database is locked" after about 10.3 s;
