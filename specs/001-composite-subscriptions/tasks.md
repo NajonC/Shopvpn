@@ -78,7 +78,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
   - turn the existing `implementation-review.md` entry in the documentation tree of `specs/001-composite-subscriptions/plan.md` into a link, without restructuring plan.md;
   - raw logs stay outside the repository
 - [X] T006 Implement the `--network=deny` pytest plugin in `tests/_harness/network_guard.py` and register it from `tests/conftest.py` (quickstart "Proposed post-implementation commands"). It fails any test that opens a non-loopback socket or selects a database or service path outside a `mktemp` lab root
-- [ ] T007 [P] Implement a controllable clock in `tests/_harness/clock.py`: a UTC epoch-millisecond wall clock and a separate monotonic clock, with injectable regression and large drift (plan.md "Worker lifecycle")
+- [X] T007 [P] Implement a controllable clock in `tests/_harness/clock.py`: a UTC epoch-millisecond wall clock and a separate monotonic clock, with injectable regression and large drift (plan.md "Worker lifecycle")
 - [ ] T008 [P] Implement synthetic fixture factories in `tests/_harness/fixtures.py`, following the spec FR-002 fixture table:
   - the six-node fixture: A-US, A-DE and A-RU on one REALITY 443 inbound; B-CDN (VLESS-WS); B-gRPC (Trojan); C-Direct (VMess TCP-TLS);
   - the A-only five-choice offer;
