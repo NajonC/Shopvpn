@@ -6,13 +6,28 @@ the composite tests. Basis for its behavior:
 * Lab (RX-MAN-001/GA-MAN-002 runtime): a missing client traffic lookup returns
   a successful null object; Xray status reports uptime in seconds; disabling
   an enabled client and deleting a client can restart Xray; resetting settings
-  restores the panel defaults.
+  restores the panel defaults. Resets, traffic updates, database restores and
+  periodic resets can lower stored traffic, while restarts do not lower it;
+  disabled clients continue to count traffic. Resetting a disabled client
+  zeroed both directions and re-enabled it; restoring a database lowered
+  totals by post-backup traffic; a per-client periodic reset left inbound
+  totals cumulative; and recreating a deleted email started at zero.
 * Source (v3.9.0 source reading): API route authentication and token scopes,
   the JSON response envelope, client create/update validation and defaults,
-  traffic view fields, and the restart-on-disable setting.
+  traffic view fields, the restart-on-disable setting, and the Xray traffic
+  collector: ``QueryStats`` uses ``Reset_: false``, its first stats pass only
+  establishes a baseline, lower counters count from zero, and
+  ``cadenceXrayTraffic = "@every 5s"``. Panel and service restarts had measured
+  losses of 9.0–13.1 seconds because there is no stop-time flush and collection
+  waits for a new baseline; Xray-only restarts lost 1.2–4.6 seconds because
+  the collector's previous values survive.
 * Fake choice: the inbound JSON projection, the three exposed setting values,
   default values for unprovided update fields, and the limited server status
-  object. These views omit fields and behavior outside this test model.
+  object. Served bytes have no protocol overhead, unknown/deleted emails are
+  ignored, and a missing last counter value counts from zero. Periodic reset is
+  triggered manually; restarts happen instantly, so panel/service restart
+  loss is at most ten seconds in this model. These views omit fields and
+  behavior outside this test model.
 
 Any recognized real route or behavior outside this model raises
 ``FakeNotModelled`` instead of returning an invented success.
@@ -31,6 +46,7 @@ from tests._harness.fixtures import CompositeFixture, Inbound
 
 
 EVIDENCE_LABEL = "substitute, not evidence"
+COLLECTOR_INTERVAL_MS = 5_000
 
 
 class FakeNotModelled(Exception):
@@ -48,6 +64,16 @@ class RecordedCall:
     method: str
     path: str
     scope: str | None
+
+
+@dataclass(frozen=True)
+class PanelSnapshot:
+    """Opaque deep copy of a panel database; only ``restore()`` reads it."""
+
+    _inbounds: dict
+    _traffic: dict
+    _next_traffic_id: int
+    _settings: dict
 
 
 class _RequestFailure(Exception):
@@ -78,6 +104,8 @@ _MODELLED_ROUTES = (
     ("POST", re.compile(r"^/panel/api/clients/update/([^/]+)$"), "clients_update"),
     ("POST", re.compile(r"^/panel/api/clients/del/([^/]+)$"), "clients_del"),
     ("GET", re.compile(r"^/panel/api/clients/traffic/([^/]+)$"), "clients_traffic"),
+    ("POST", re.compile(r"^/panel/api/clients/resetTraffic/([^/]+)$"), "clients_reset_traffic"),
+    ("POST", re.compile(r"^/panel/api/clients/updateTraffic/([^/]+)$"), "clients_update_traffic"),
     ("POST", re.compile(r"^/panel/api/setting/all$"), "setting_all"),
     ("GET", re.compile(r"^/panel/api/server/status$"), "server_status"),
 )
@@ -105,8 +133,6 @@ _UNMODELLED_ROUTES = (
     ("POST", "/panel/api/clients/bulkAttach"),
     ("POST", "/panel/api/clients/bulkDetach"),
     ("POST", "/panel/api/clients/bulkResetTraffic"),
-    ("POST", "/panel/api/clients/resetTraffic/([^/]+)"),
-    ("POST", "/panel/api/clients/updateTraffic/([^/]+)"),
     ("POST", "/panel/api/clients/ips/([^/]+)"),
     ("POST", "/panel/api/clients/clearIps/([^/]+)"),
     ("POST", "/panel/api/clients/hwids/([^/]+)"),
@@ -143,7 +169,12 @@ class FakeThreeXUIPanel:
         self._panel_key = panel_key
         self._clock = clock
         self._inbounds: dict[int, dict] = {
-            inbound.inbound_id: {"source": inbound, "clients": []}
+            inbound.inbound_id: {
+                "source": inbound,
+                "clients": [],
+                "up": 0,
+                "down": 0,
+            }
             for inbound in fixture.inbounds
             if inbound.panel_key == panel_key
         }
@@ -154,10 +185,15 @@ class FakeThreeXUIPanel:
         }
         self._calls: list[RecordedCall] = []
         self._traffic: dict[str, dict] = {}
+        self._counters: dict[str, tuple[int, int]] = {}
+        self._last_values: dict[str, tuple[int, int]] = {}
         self._next_traffic_id = 1
         self._settings = self._default_settings()
         self._xray_started_ms = clock.true_now_ms()
         self._xray_restarts: list[int] = []
+        self._collector_started_ms = clock.true_now_ms()
+        self._next_tick_ms = self._collector_started_ms + COLLECTOR_INTERVAL_MS
+        self._baseline_pending = True
 
     def __repr__(self) -> str:
         return (
@@ -177,6 +213,107 @@ class FakeThreeXUIPanel:
     def xray_restarts(self) -> tuple[int, ...]:
         return tuple(self._xray_restarts)
 
+    def serve(self, email: str, *, up: int = 0, down: int = 0) -> None:
+        """Add panel-counted bytes to a client's cumulative Xray counters."""
+        self.collect_due()
+        for name, value in (("up", up), ("down", down)):
+            if type(value) is not int:
+                raise TypeError(f"{name} must be an int, got {type(value).__name__}")
+            if value < 0:
+                raise ValueError(f"{name} must be >= 0")
+        if email not in self._counters:
+            return
+        current_up, current_down = self._counters[email]
+        self._counters[email] = (current_up + up, current_down + down)
+
+    def collect_due(self) -> None:
+        """Apply all collector ticks due at the panel's current true time."""
+        now = self._clock.true_now_ms()
+        while self._next_tick_ms <= now:
+            if self._baseline_pending:
+                self._last_values = dict(self._counters)
+                self._baseline_pending = False
+            else:
+                for email, (current_up, current_down) in self._counters.items():
+                    record = self._traffic.get(email)
+                    if record is None:
+                        continue
+
+                    last = self._last_values.get(email)
+                    last_up, last_down = last if last is not None else (None, None)
+                    delta_up = (
+                        current_up
+                        if last_up is None or current_up < last_up
+                        else current_up - last_up
+                    )
+                    delta_down = (
+                        current_down
+                        if last_down is None or current_down < last_down
+                        else current_down - last_down
+                    )
+                    record["up"] += delta_up
+                    record["down"] += delta_down
+                    inbound = self._inbounds[record["inboundId"]]
+                    inbound["up"] += delta_up
+                    inbound["down"] += delta_down
+                    self._last_values[email] = (current_up, current_down)
+            self._next_tick_ms += COLLECTOR_INTERVAL_MS
+
+    def restart(self, mode: str) -> None:
+        """Restart Xray, the panel, or both while preserving stored totals."""
+        self.collect_due()
+        if mode not in {"xray", "panel", "service"}:
+            raise ValueError(f"unknown restart mode: {mode}")
+
+        now = self._clock.true_now_ms()
+        if mode in {"xray", "service"}:
+            self._counters = {email: (0, 0) for email in self._counters}
+            self._xray_restarts.append(now)
+            self._xray_started_ms = now
+        if mode in {"panel", "service"}:
+            self._last_values.clear()
+            self._collector_started_ms = now
+            self._next_tick_ms = now + COLLECTOR_INTERVAL_MS
+            self._baseline_pending = True
+
+    def periodic_reset(self, email: str) -> None:
+        """Manually apply a configured per-client traffic reset."""
+        self.collect_due()
+        record = self._traffic.get(email)
+        if record is None:
+            raise KeyError(email)
+        record["up"] = 0
+        record["down"] = 0
+
+    def snapshot(self) -> PanelSnapshot:
+        """Return a deep copy of the panel's database state."""
+        self.collect_due()
+        return PanelSnapshot(
+            _inbounds=deepcopy(self._inbounds),
+            _traffic=deepcopy(self._traffic),
+            _next_traffic_id=self._next_traffic_id,
+            _settings=deepcopy(self._settings),
+        )
+
+    def restore(self, snapshot: PanelSnapshot) -> None:
+        """Replace the panel database with a snapshot and restart the service."""
+        self.collect_due()
+        self._inbounds = deepcopy(snapshot._inbounds)
+        self._traffic = deepcopy(snapshot._traffic)
+        self._next_traffic_id = snapshot._next_traffic_id
+        self._settings = deepcopy(snapshot._settings)
+        self._counters = {
+            client["email"]: (0, 0)
+            for _, _, client in self._all_clients()
+        }
+        self.restart("service")
+
+    def traffic(self, email: str) -> dict | None:
+        """Return a copy of one stored traffic record, or ``None``."""
+        self.collect_due()
+        record = self._traffic.get(email)
+        return deepcopy(record) if record is not None else None
+
     async def handle(
         self,
         method: str,
@@ -187,6 +324,7 @@ class FakeThreeXUIPanel:
         body: object = None,
     ) -> FakeResponse:
         """Authenticate and handle one API call without performing I/O."""
+        self.collect_due()
         route, params = self._resolve_route(method, path)
         if not path.startswith("/panel/api/") or route is None:
             self._record(method, path, None)
@@ -215,7 +353,6 @@ class FakeThreeXUIPanel:
             "clients_attach",
             "clients_detach",
             "clients_external_links",
-            "clients_reset_traffic",
         }:
             raise FakeNotModelled(f"{method} {path}")
         if route == "unmodelled":
@@ -229,6 +366,7 @@ class FakeThreeXUIPanel:
 
     def seed_client(self, inbound_ids: list[int], client: dict) -> None:
         """Add one client directly, without recording an API call or restart."""
+        self.collect_due()
         try:
             self._add_client({"inboundIds": inbound_ids, "client": client})
         except _RequestFailure as exc:
@@ -238,6 +376,7 @@ class FakeThreeXUIPanel:
         self, fixture: CompositeFixture, subscription_key: str, *, enable: bool = True
     ) -> None:
         """Seed the subscription credentials whose nodes belong to this panel."""
+        self.collect_due()
         subscription = fixture.subscription(subscription_key)
         credentials = {credential.node_key: credential for credential in subscription.credentials}
         for node in fixture.nodes:
@@ -270,10 +409,12 @@ class FakeThreeXUIPanel:
             self.seed_client([node.inbound_id], client)
 
     def client(self, email: str) -> dict | None:
+        self.collect_due()
         matches = self._find_clients(email)
         return self._client_json(matches[0][2]) if matches else None
 
     def inbound_clients(self, inbound_id: int) -> list[dict]:
+        self.collect_due()
         inbound = self._inbounds[inbound_id]
         return [self._client_json(client) for client in inbound["clients"]]
 
@@ -317,8 +458,6 @@ class FakeThreeXUIPanel:
                     return "clients_detach", match.groups()
                 if path.endswith("/externalLinks"):
                     return "clients_external_links", match.groups()
-                if path.startswith("/panel/api/clients/resetTraffic/"):
-                    return "clients_reset_traffic", match.groups()
                 return "unmodelled", match.groups()
 
         return None, ()
@@ -360,8 +499,13 @@ class FakeThreeXUIPanel:
             self._delete_client(params[0], query)
             return None
         if route == "clients_traffic":
-            record = self._traffic.get(params[0])
-            return deepcopy(record) if record is not None else None
+            return self.traffic(params[0])
+        if route == "clients_reset_traffic":
+            self._reset_traffic(params[0])
+            return None
+        if route == "clients_update_traffic":
+            self._update_traffic(params[0], body)
+            return None
         if route == "setting_all":
             return deepcopy(self._settings)
         if route == "server_status":
@@ -425,6 +569,7 @@ class FakeThreeXUIPanel:
         stored_client = {**values, "created_at": now, "updated_at": now}
         for inbound_id in inbound_ids:
             self._inbounds[inbound_id]["clients"].append(deepcopy(stored_client))
+        self._counters[values["email"]] = (0, 0)
         self._traffic[values["email"]] = self._new_traffic_record(
             inbound_ids[0], stored_client
         )
@@ -463,12 +608,18 @@ class FakeThreeXUIPanel:
             self._inbounds[inbound_id]["clients"][index] = deepcopy(updated)
 
         self._traffic.pop(path_email)
+        counter = self._counters.pop(path_email, None)
+        last_values = self._last_values.pop(path_email, None)
         record["email"] = new_email
         record["enable"] = updated["enable"]
         record["expiryTime"] = updated["expiryTime"]
         record["total"] = updated["totalGB"]
         record["reset"] = updated["reset"]
         self._traffic[new_email] = record
+        if counter is not None:
+            self._counters[new_email] = counter
+        if last_values is not None:
+            self._last_values[new_email] = last_values
 
         if old_client["enable"] and not updated["enable"]:
             self._maybe_restart()
@@ -482,15 +633,50 @@ class FakeThreeXUIPanel:
             inbound["clients"] = [
                 client for client in inbound["clients"] if client["email"] != email
             ]
+        self._counters.pop(email, None)
+        self._last_values.pop(email, None)
         if query.get("keepTraffic") != "1":
             self._traffic.pop(email, None)
         self._maybe_restart()
 
     def _maybe_restart(self) -> None:
         if self._settings["restartXrayOnClientDisable"]:
-            now = self._clock.true_now_ms()
-            self._xray_restarts.append(now)
-            self._xray_started_ms = now
+            self.restart("xray")
+
+    def _reset_traffic(self, email: str) -> None:
+        matches = self._find_clients(email)
+        if not matches:
+            raise FakeNotModelled(f"resetting traffic for missing client {email!r}")
+        record = self._traffic.get(email)
+        if record is None:
+            raise FakeNotModelled(f"resetting traffic without a record for {email!r}")
+
+        now = self._clock.true_now_ms()
+        record["up"] = 0
+        record["down"] = 0
+        record["enable"] = True
+        for inbound_id, index, _ in matches:
+            client = self._inbounds[inbound_id]["clients"][index]
+            client["enable"] = True
+            client["updated_at"] = now
+
+    def _update_traffic(self, email: str, body: object) -> None:
+        record = self._traffic.get(email)
+        if record is None:
+            raise FakeNotModelled(f"updating traffic for missing record {email!r}")
+        if not isinstance(body, dict):
+            raise _RequestFailure("invalid traffic body")
+
+        values = {}
+        for field in ("upload", "download"):
+            value = body.get(field, 0)
+            if type(value) is not int:
+                raise _RequestFailure(f"invalid traffic field: {field}")
+            values[field] = value
+        if values["upload"] < 0 or values["download"] < 0:
+            raise FakeNotModelled("updating traffic to a negative value")
+        record["up"] = values["upload"]
+        record["down"] = values["download"]
 
     def _validated_client_values(self, client: dict, *, default_enable: bool) -> dict:
         values = dict(_CLIENT_DEFAULTS)
@@ -617,8 +803,8 @@ class FakeThreeXUIPanel:
         ]
         return {
             "id": source.inbound_id,
-            "up": 0,
-            "down": 0,
+            "up": model["up"],
+            "down": model["down"],
             "total": 0,
             "remark": f"inbound-{source.inbound_id}",
             "enable": True,
