@@ -94,7 +94,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
   - admin, node-sync and monitor token scopes (403);
   - a 5-second collector cadence and restart baseline loss;
   - per-direction counter decreases: reset, `updateTraffic`, database restore, recreate and periodic reset
-- [ ] T010 [P] Implement payment and Telegram substitutes:
+- [X] T010 [P] Implement payment and Telegram substitutes:
   - `tests/_harness/fake_payments.py`: a method adapter that can return confirmed, rejected, uncertain, a repeated hint, a mismatched amount or currency, and a missing or unparseable amount;
   - `tests/_harness/fake_telegram.py`: acceptance with a message reference, a lost response, retry-after, permanent rejection and a crash after dispatch
 - [ ] T011 [P] Implement the multi-process SQLite and crash-injection harness in `tests/_harness/multiprocess.py` and `tests/_harness/crash.py` (plan.md "Validation and traceability"; quickstart). It runs separate processes and connections on synthetic files, with named crash points before and after each commit, each remote dispatch and each remote result
