@@ -54,3 +54,9 @@ Never **low**: it is too thin for the review, where the coder's mistakes are cau
 - T059, T061 and T066 are high: the spec gives worked examples (100 → 81, 30 + 73 = 103), and the race side of money is in T060 and T062–T065.
 - T044 is high but T045 is xhigh: crypto mistakes often still pass standard tests.
 - Phase 16 runs checks designed earlier, so it is high by default. T249 (lab harness code for the RX-01 re-run), T255 (the largest campaign, with the connection-value change path) and T264 are the exceptions.
+
+## Coder
+
+A packet uses SKILL.md's default coder, `antigravity/gemini-3.8-flash-high`, unless this section names another. The user's `coder` argument wins over both.
+
+- **Phase 2A** (characterization; owner decision 2026-10-27): `codex/gpt-6-luna` with `reasoningEffort` `xhigh` (its default is medium) for T013–T018, T020, T021, T023 and T026–T031; Gemini for T019, T022, T024 and T025. Luna writes all the tests of its packets (SKILL.md step 4). T023 and T029 span many files: split them into sub-packets by file.

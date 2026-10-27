@@ -22,14 +22,14 @@ All optional, in any order:
 
 - `auto`: don't wait for the user to approve each brief. You still stop after each packet unless the user asked to keep going (step 9), at every phase end, at blocked tasks and whenever you have a doubt. Without `auto` you're in **ask mode**: every brief waits for the user's approval.
 - A scope: a task range (`T013-T026`), a phase (`phase 2A`) or one task. Default: from the first unchecked task on.
-- `coder <providerInstanceId>/<model>`. Default: `antigravity/gemini-3.8-flash-high`.
+- `coder <providerInstanceId>/<model>`. Default: the coder `effort.md` names for the task, otherwise `antigravity/gemini-3.8-flash-high`.
 - Anything else is guidance for this run.
 
 ## Files in this skill
 
 - `brief-template.md`: the brief you fill in for each packet.
 - `coder-rules.md`: standing rules and the report format. Append it unchanged to every coder prompt.
-- `effort.md`: the reasoning effort each task should run at, and the rules behind it.
+- `effort.md`: the reasoning effort each task should run at, the rules behind it, and the coder for tasks that don't use the default.
 
 ## Setup (once per session)
 
@@ -52,6 +52,7 @@ One packet at a time, in tasks.md order. Only one coder works at a time, in this
 - Take the next unchecked task in scope. A packet is one diff you can review in one sitting: usually one task. Group only small neighbours in the same area, like creating folders, adding a dev requirements file and extending `.gitignore`.
 - Split a large task by its sub-bullets into packets `T099a`, `T099b`…, and mark the task `[X]` only when all of them are accepted.
 - Test tasks go before the code they test, as tasks.md orders them. A test packet is accepted when its tests exist, are collected and fail only because the behaviour isn't built yet. Committing those failing tests is expected.
+- A characterization task (Phase 2A) records what existing code does today. Its tests must pass against today's code at once, and the coder changes nothing outside `tests/`. Say in the brief's Goal that the tests characterize existing code, so the coder follows that part of coder rule 3.
 - `[P]` only means order doesn't matter. Still one packet at a time.
 - Don't delegate a packet that only edits Spec Kit documents under FEATURE_DIR, or one whose brief would be longer than the code. Do it yourself and go to step 8.
 - **Stop and ask the user** instead of picking when the next task:
@@ -60,7 +61,7 @@ One packet at a time, in tasks.md order. Only one coder works at a time, in this
   - needs a decision the specs don't make.
 
   Don't skip past it unless the user says so.
-- Tell the user in one line which packet you picked and its effort in `effort.md`, so a session started at the wrong effort can be restarted before the research.
+- Tell the user in one line which packet you picked, its effort in `effort.md` and its coder, so a session started at the wrong effort can be restarted before the research.
 
 ### 2. Research
 
@@ -90,7 +91,9 @@ The coder writes the tests from the brief's case list, unless they decide any of
 - repeat safety: idempotency, duplicates, concurrency, crash ordering;
 - tenant authority and secrets.
 
-The user can override this for a packet. When you write them: put them where the brief says, run them and confirm they fail only because the behaviour isn't built yet, then `git add` them so you can see later whether the coder touched them. Fill in "Tests written by" and list the files as already written.
+The user can override this for a packet. When you write them: put them where the brief says, run them and confirm they fail only because the behaviour isn't built yet (characterization tests: that they pass on today's code), then `git add` them so you can see later whether the coder touched them. Fill in "Tests written by" and list the files as already written.
+
+**Characterization packets with Luna.** When `effort.md` gives a characterization packet to `codex/gpt-6-luna`, the coder writes all its tests, the groups above included (owner decision, 2026-10-27). The groups are there mainly so a coder doesn't check its own code with its own tests; in a characterization packet the code under test is existing code that nobody changes, so a wrong expected value fails. You still design each test in the groups: the brief says what it fakes, where it breaks in and the exact values it checks, and a test that needs a valid signature or token builds one itself rather than through the code under test. Step 7 checks each one by breaking the code on purpose. With any other coder, and in every packet that adds or changes code, the groups stay yours.
 
 ### 5. Approve
 
@@ -103,7 +106,7 @@ The user can override this for a packet. When you write them: put them where the
 2. Call `delegate_task`:
    - `task`: the brief without its Delegation log, followed by the full text of `coder-rules.md`;
    - `title`: `<packet-id>: <short title>`;
-   - `target`: `{"providerInstanceId": …, "model": …}` for the coder;
+   - `target`: `{"providerInstanceId": …, "model": …}` for the coder, plus any option `effort.md` names for it in `target.options` (Luna: `reasoningEffort` `xhigh`; its default is medium);
    - `role`: `implementation`, `mode`: `async`; leave `isolation` and `runtimeMode` unset (shared checkout, inherited mode);
    - `clientRequestId`: `<FEATURE_DIR name>-<packet-id>-r<round>`, e.g. `001-composite-subscriptions-T099-r1`. Reuse it only to retry that same round.
 3. Check the returned provider and model are the coder's. Add a row to the Delegation log (round, T3 task id) and set Status `delegated (round N)`.
@@ -117,7 +120,7 @@ When the child finishes, check everything yourself; never take its report on tru
 
 1. Read its report. If it stopped, read why. If the brief was missing something, fix the brief and start a new round; that round doesn't count toward the limit below.
 2. Compare `git status --porcelain` with your snapshot. Only the files the brief lists may be new or changed. If you wrote the tests, `git diff --name-only -- <test files>` must print nothing; anything there means the coder changed them.
-3. Run the brief's "How to check" commands yourself. Once the test harness exists, also run the full offline suite from FEATURE_DIR/quickstart.md. New tests must pass, and nothing that passed before may fail.
+3. Run the brief's "How to check" commands yourself. Once the test harness exists, also run the full offline suite from FEATURE_DIR/quickstart.md. New tests must pass, and nothing that passed before may fail. In a characterization packet, also check each test in the step 4 groups by breaking the code on purpose: in a scratch copy of the checkout outside the repository, change the line the test pins (swap two saves, drop a filter, change a limit) and run the test there. It must fail; a test that still passes must be fixed before you accept. Delete the copy afterwards.
 4. Read every changed line and every new file:
    - each rule in the brief is implemented, and nothing outside it was done;
    - each listed test case exists and really checks the stated result: no `assert True`, no mocking of the code under test, no added `skip` or `xfail`, no loosened existing test;
@@ -148,7 +151,7 @@ When the child finishes, check everything yourself; never take its report on tru
 
 Work one packet per session. A fresh session costs less, because in this one every step carries all the earlier packets' files and output, and the next packet may need a different effort. The next session finds its place from tasks.md and the briefs, so nothing is lost.
 
-- Find the next unchecked task in tasks.md and its level in `effort.md`. In the same message as step 8's line, name the packet, its effort and anything it waits on (a gate or the user's authorization). Ask the user to start a new session at that effort and run `/speckit-delegate` again, then stop.
+- Find the next unchecked task in tasks.md and its level in `effort.md`. In the same message as step 8's line, name the packet, its effort, its coder and anything it waits on (a gate or the user's authorization). Ask the user to start a new session at that effort and run `/speckit-delegate` again, then stop.
 - If the user asked in this run to keep going in this session, still name the next packet and its effort, then go on. In **ask mode**, research and write the next brief, then ask for approval (step 5). In **auto mode**, go on to the next packet.
 - **Always stop** when the scope is done, at a stop condition from step 1, and at the end of each tasks.md phase. At a phase end, run the full suite, list what was built, the packets you took over and the concerns from the coder's reports, and wait for the user.
 
