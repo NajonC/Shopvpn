@@ -68,6 +68,7 @@ One packet at a time, in tasks.md order. Only one coder works at a time, in this
 - Read the whole task, including its sub-bullets.
 - Look up every reference in it: FR-, SC-, PR-, RD-, OQ- and other task IDs, contract and data-model sections, constitution principles. Grep for each one and read only that part; reuse what you already read for earlier packets.
 - Read the code the packet changes or builds on, including earlier packets' modules and the exact legacy functions involved. Take real signatures and line numbers from the code, not from memory or the task text.
+- Find the existing tests that check that code: the task's `Tests:` line names the Phase 2A suites it touches (`characterization T016` means T016's test file), and grep `tests/` for the functions the packet changes. Put them in the brief's "How to check" so the coder runs them too. Most must keep passing as they are; if the specs make the packet change what one of them checks, step 4 says what to do.
 - Keep only what changes what the code must do. Leave out who decided what and when, evidence history and release checks.
 
 ### 3. Write the brief
@@ -79,7 +80,7 @@ Copy `brief-template.md` to `FEATURE_DIR/briefs/<packet-id>.md` (`T001-T004.md`,
 - **Point into big files**: name the function and line range, not just the file.
 - **Open points must say "None"** before the brief goes out. If the specs don't answer something, ask the user; the coder must never guess.
 - **Keep it short.** Most briefs fit in about 150 lines. A much longer one usually means the packet is too big.
-- **Expected `git status` output includes your own files.** The brief file is untracked until the packet is committed, and test files you wrote are staged, so list them as already there. Otherwise a careful coder sees an unexpected line and stops.
+- **Expected `git status` output includes your own files.** The brief file is untracked until the packet is committed, and the test files you wrote or changed (and implementation-review.md, if step 4 changed it) are staged, so list them as already there. Otherwise a careful coder sees an unexpected line and stops.
 - **Reread it for contradictions before it goes out.** Every rule must agree with the Files entries, examples, interfaces and checks. When a rule says one thing and an example shows another, the coder has to guess or stop.
 
 ### 4. Decide who writes the tests
@@ -95,6 +96,12 @@ The user can override this for a packet. When you write them: put them where the
 
 **Characterization packets with Luna.** When `effort.md` gives a characterization packet to `codex/gpt-6-luna`, the coder writes all its tests, the groups above included (owner decision, 2026-10-27). The groups are there mainly so a coder doesn't check its own code with its own tests; in a characterization packet the code under test is existing code that nobody changes, so a wrong expected value fails. You still design each test in the groups: the brief says what it fakes, where it breaks in and the exact values it checks, and a test that needs a valid signature or token builds one itself rather than through the code under test. Step 7 checks each one by breaking the code on purpose. With any other coder, and in every packet that adds or changes code, the groups stay yours.
 
+**Tests a packet changes on purpose.** Phase 2A pins legacy behaviour, known bugs included, and some later tasks fix those bugs. T072, for example, makes `reject_order` commit the rejection and the refund together, so T016's case of a crash between the two, which loses the refund, no longer holds. When the specs make a packet change what an existing test checks, you change that test before delegating, whoever the coder is; the coder never does (coder rule 4).
+
+- Change only what the specs change and keep every other check. Take the new expected values from the specs, never from what the new code does. Delete a case only when nothing it checks is left.
+- Run it and confirm it fails only because the change isn't built yet. `git add` it and list it in the brief as already written, naming the cases that changed.
+- If it is a Phase 2A test (`tests/characterization/`, `tests/contract/test_provider_factory_legacy.py`), also record the change under "Intended behavior differences" in `FEATURE_DIR/implementation-review.md` (the first entry replaces "None recorded."): the test and the task that wrote it, the behaviour before and after, this packet, and the spec rule that requires the change. `git add` it too. T242 checks this list when it re-runs every suite.
+
 ### 5. Approve
 
 - **Ask mode**: show the user the brief's path and a short summary: goal, files, test cases and anything you weren't sure about. Wait, apply their changes, then set Status `approved`.
@@ -106,7 +113,7 @@ The user can override this for a packet. When you write them: put them where the
 2. Call `delegate_task`:
    - `task`: the brief without its Delegation log, followed by the full text of `coder-rules.md`;
    - `title`: `<packet-id>: <short title>`;
-   - `target`: `{"providerInstanceId": …, "model": …}` for the coder, plus any option `effort.md` names for it in `target.options` (Luna: `reasoningEffort` `xhigh`; its default is medium);
+   - `target`: `{"providerInstanceId": …, "model": …}` for the coder. Luna (`codex/gpt-6-luna`) always gets `reasoningEffort` `xhigh` in `target.options`, however it was chosen, unless the user asks for another level (its default is medium);
    - `role`: `implementation`, `mode`: `async`; leave `isolation` and `runtimeMode` unset (shared checkout, inherited mode);
    - `clientRequestId`: `<FEATURE_DIR name>-<packet-id>-r<round>`, e.g. `001-composite-subscriptions-T099-r1`. Reuse it only to retry that same round.
 3. Check the returned provider and model are the coder's. Add a row to the Delegation log (round, T3 task id) and set Status `delegated (round N)`.
@@ -120,7 +127,7 @@ When the child finishes, check everything yourself; never take its report on tru
 
 1. Read its report. If it stopped, read why. If the brief was missing something, fix the brief and start a new round; that round doesn't count toward the limit below.
 2. Compare `git status --porcelain` with your snapshot. Only the files the brief lists may be new or changed. If you wrote the tests, `git diff --name-only -- <test files>` must print nothing; anything there means the coder changed them.
-3. Run the brief's "How to check" commands yourself. Once the test harness exists, also run the full offline suite from FEATURE_DIR/quickstart.md. New tests must pass, and nothing that passed before may fail. In a characterization packet, also check each test in the step 4 groups by breaking the code on purpose: in a scratch copy of the checkout outside the repository, change the line the test pins (swap two saves, drop a filter, change a limit) and run the test there. It must fail; a test that still passes must be fixed before you accept. Delete the copy afterwards.
+3. Run the brief's "How to check" commands yourself. Once the test harness exists, also run the full offline suite from FEATURE_DIR/quickstart.md. New tests and the tests you changed in step 4 must pass, and nothing else that passed before may fail. If a test that passed before fails because the specs require the change, step 2 missed it: change the test as step 4 says, and since the new code is already in place, check in a scratch copy of the last commit outside the repository that the changed test fails there. Any other failure is the coder's to fix. In a characterization packet, also check each test in the step 4 groups by breaking the code on purpose: in a scratch copy of the checkout outside the repository, change the line the test pins (swap two saves, drop a filter, change a limit) and run the test there. It must fail; a test that still passes must be fixed before you accept. Delete the copy afterwards.
 4. Read every changed line and every new file:
    - each rule in the brief is implemented, and nothing outside it was done;
    - each listed test case exists and really checks the stated result: no `assert True`, no mocking of the code under test, no added `skip` or `xfail`, no loosened existing test;
@@ -134,7 +141,7 @@ When the child finishes, check everything yourself; never take its report on tru
 ### 8. Accept and commit
 
 1. Mark the packet's finished tasks `[X]` in tasks.md. Set the brief's Status `accepted` and complete its log.
-2. Stage exactly the packet's files, its brief and tasks.md, by name; never `git add -A`.
+2. Stage exactly the packet's files, its brief, tasks.md and implementation-review.md if step 4 changed it, by name; never `git add -A`.
 3. Commit on the current branch. `<feature>` is FEATURE_DIR's name without its number, e.g. `composite-subscriptions`:
 
    ```text

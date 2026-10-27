@@ -57,6 +57,7 @@ Never **low**: it is too thin for the review, where the coder's mistakes are cau
 
 ## Coder
 
-A packet uses SKILL.md's default coder, `antigravity/gemini-3.8-flash-high`, unless this section names another. The user's `coder` argument wins over both.
+A packet uses SKILL.md's default coder, `antigravity/gemini-3.8-flash-high`, unless this section names another. The user's `coder` argument wins over both. Luna, `codex/gpt-6-luna`, runs at `reasoningEffort` `xhigh` (SKILL.md step 6).
 
-- **Phase 2A** (characterization; owner decision 2026-10-27): `codex/gpt-6-luna` with `reasoningEffort` `xhigh` (its default is medium) for T013–T018, T020, T021, T023 and T026–T031; Gemini for T019, T022, T024 and T025. Luna writes all the tests of its packets (SKILL.md step 4). T023 and T029 span many files: split them into sub-packets by file.
+- **Phase 2A** (characterization; owner decision 2026-10-27): Luna for T013–T018, T020, T021, T023 and T026–T031; Gemini for T019, T022, T024 and T025. Luna writes all the tests of its packets (SKILL.md step 4). T023 and T029 span many files: split them into sub-packets by file.
+- **Phase 2B onwards** (owner decision 2026-10-27): Luna for packets whose level is xhigh, Gemini for high and medium. Claude still writes the step 4 test groups, so Luna writes code against Claude's tests.
