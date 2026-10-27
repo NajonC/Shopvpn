@@ -5,8 +5,10 @@ import os
 import sys
 import types
 
-from aiogram import Router
+from aiogram import F, Router
+from aiogram.dispatcher.event.bases import UNHANDLED
 from aiogram.exceptions import TelegramForbiddenError
+from aiogram.filters import StateFilter
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import pytest
 
@@ -14,6 +16,7 @@ from tests._harness.legacy_bot import (
     EVIDENCE_LABEL,
     SYNTHETIC_BOT_TOKEN,
     FakeCallbackQuery,
+    FakeFile,
     FakeMessage,
     FakeUser,
     RecordingBot,
@@ -23,6 +26,7 @@ from tests._harness.legacy_bot import (
     callback_rows,
     find_handler,
     make_state,
+    route_message,
     use_synthetic_bot_settings,
 )
 import tests._harness.legacy_bot as legacy_bot
@@ -138,3 +142,65 @@ def test_find_handler_state_and_rows():
             ]
         )
     ) == [["a"], ["b"]]
+
+
+def test_bot_sends_documents():
+    async def scenario():
+        log = TelegramLog()
+        bot = RecordingBot(log, blocked_chat_ids={7})
+
+        assert await bot.send_document(5, "doc-id", caption="cap", reply_markup="kb") == SentMessage(5, 1)
+        with pytest.raises(TelegramForbiddenError):
+            await bot.send_document(7, "doc-id", caption="c")
+
+        assert log.events == [
+            TelegramEvent("send_document", 5, 1, "cap", None, "kb"),
+            TelegramEvent("send_document", 7, None, "c", delivered=False),
+        ]
+
+    asyncio.run(scenario())
+
+
+def test_message_files():
+    log = TelegramLog()
+    empty = FakeMessage(log, 5)
+    assert empty.photo is None
+    assert empty.document is None
+
+    message = FakeMessage(
+        log,
+        5,
+        photo=[FakeFile("s"), FakeFile("l")],
+        document=FakeFile("d"),
+    )
+    assert message.photo == [FakeFile("s"), FakeFile("l")]
+    assert message.document == FakeFile("d")
+
+
+def test_route_message_uses_router_filters():
+    async def scenario():
+        router = Router()
+
+        async def in_state(message):
+            return "state"
+
+        async def got_photo(message):
+            return "photo"
+
+        router.message.register(in_state, StateFilter("S:a"))
+        router.message.register(got_photo, F.photo)
+        state = make_state(5)
+        log = TelegramLog()
+        bot = RecordingBot(log)
+
+        assert await route_message(
+            router, FakeMessage(log, 5, photo=[FakeFile("a")]), state, bot
+        ) == "photo"
+        assert await route_message(router, FakeMessage(log, 5, text="hi"), state, bot) is UNHANDLED
+
+        await state.set_state("S:a")
+        assert await route_message(
+            router, FakeMessage(log, 5, photo=[FakeFile("a")]), state, bot
+        ) == "state"
+
+    asyncio.run(scenario())

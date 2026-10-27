@@ -1,4 +1,4 @@
-"""Synthetic settings and Telegram doubles for driving legacy aiogram handlers (tasks.md T013).
+"""Synthetic settings and Telegram doubles for driving legacy aiogram handlers (tasks.md T013, T014).
 
 Basis:
 
@@ -102,6 +102,11 @@ class FakeUser:
 
 
 @dataclass(frozen=True)
+class FakeFile:
+    file_id: str
+
+
+@dataclass(frozen=True)
 class FakeChat:
     id: int
     type: str = "private"
@@ -123,6 +128,9 @@ class RecordingBot:
 
     async def send_photo(self, chat_id, photo, caption=None, **kwargs) -> SentMessage:
         return self._send("send_photo", chat_id, caption, **kwargs)
+
+    async def send_document(self, chat_id, document, caption=None, **kwargs) -> SentMessage:
+        return self._send("send_document", chat_id, caption, **kwargs)
 
     def _send(self, kind: str, chat_id: int, text: str | None, **kwargs) -> SentMessage:
         blocked = chat_id in self.blocked_chat_ids
@@ -153,12 +161,16 @@ class FakeMessage:
         from_user: FakeUser | None = None,
         text: str | None = None,
         message_id: int | None = None,
+        photo: list[FakeFile] | None = None,
+        document: FakeFile | None = None,
     ) -> None:
         self.log = log
         self.chat = FakeChat(chat_id)
         self.message_id = log.next_message_id() if message_id is None else message_id
         self.from_user = from_user
         self.text = text
+        self.photo = photo
+        self.document = document
 
     async def edit_text(
         self, text, parse_mode=None, reply_markup=None, **kwargs
@@ -209,6 +221,16 @@ def make_state(user_id: int, *, chat_id: int | None = None, bot_id: int = 1) -> 
             chat_id=user_id if chat_id is None else chat_id,
             user_id=user_id,
         ),
+    )
+
+
+async def route_message(router: Router, message, state: FSMContext, bot) -> Any:
+    return await router.propagate_event(
+        "message",
+        message,
+        state=state,
+        raw_state=await state.get_state(),
+        bot=bot,
     )
 
 

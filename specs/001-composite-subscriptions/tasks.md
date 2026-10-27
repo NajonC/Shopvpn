@@ -120,7 +120,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - quantity;
   - stock, direct and reseller fulfillment through `config_delivery.py:deliver_config_to_user:133`;
   - the referral reward hooks
-- [ ] T014 [P] Characterize both manual-receipt linkage paths in `tests/characterization/test_receipt_linkage.py`, recording the order of receipt persistence and admin notification (V-RCP-01 baseline; FR-014):
+- [X] T014 [P] Characterize both manual-receipt linkage paths in `tests/characterization/test_receipt_linkage.py`, recording the order of receipt persistence and admin notification (V-RCP-01 baseline; FR-014):
   - the FSM path, `handlers_user.py:receive_receipt:1560`;
   - the fallback at `handlers_user.py:5173` → `database.py:get_latest_pending_order_awaiting_receipt:3515`, which filters by actor and excludes orders with a crypto invoice.
   Cases: lost or stale FSM, several pending orders, another actor's order and duplicate uploads
