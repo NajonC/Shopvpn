@@ -114,7 +114,7 @@ description: "Dependency-ordered, G-P-fenced task list for Composite VPN Subscri
 
 Each task pins today's observable behavior, including known unsafe behavior, using synthetic substitutes, and records a reproducible baseline in the test module docstring. If isolation is impractical, the task records the constitution VI exception and its bounded follow-up in `specs/001-composite-subscriptions/implementation-review.md`.
 
-- [ ] T013 [P] Characterize the Telegram catalog purchase in `tests/characterization/test_buy_start.py` (FR-081; SC-012):
+- [X] T013 [P] Characterize the Telegram catalog purchase in `tests/characterization/test_buy_start.py` (FR-081; SC-012):
   - `handlers_user.py:_buy_start:1038` acting as `call.from_user.id`, with product methods, tier and FSM coupon;
   - the separate wallet-debit, coupon-increment and order-insert commits at lines 1081–1096;
   - quantity;
