@@ -1,7 +1,7 @@
 """Characterize the legacy payment verification helpers at commit b1390ac.
 
 Baseline: ``.venv/bin/python -m pytest tests/characterization/test_payment_methods_legacy.py --network=deny``.
-All inputs are synthetic and the helpers are called directly (no provider, no database). The settings database and the live USD rate are stubs (substitute, not evidence). Aban cases fake only the gateway client calls (and, where stated, provisioning or renewal); delivery runs against a recording bot. Tetra98, CubePay and NOWPayments cases replace only the HTTP call (``extra_gateway_clients._request``) with scripted replies.
+All inputs are synthetic and the helpers are called directly (no provider, no database). The settings database and the live USD rate are stubs (substitute, not evidence). Aban cases fake only the gateway client calls (and, where stated, provisioning or renewal); delivery runs against a recording bot. Tetra98, CubePay and NOWPayments cases replace only the HTTP call (``extra_gateway_clients._request``) with scripted replies. Telegram Stars cases run ``extra_gateway_payment.process_stars_payment`` against the same kind of real database and recording bot as the Aban cases.
 Card-to-card cases use a real SQLite database under tmp_path and a scripted random source.
 These are E-005 source leads, not method certification; composite payments must not use these helpers as authority (FR-011).
 
@@ -15,7 +15,7 @@ Known unsafe behaviour (abangateway_payment.py): (r) verification trusts the gat
 
 Known unsafe behaviour (extra_gateway_clients.py): (w) Tetra98 verification trusts status 100 alone, with no amount or order check, and no reply short of a server error ever counts as failed (case 56); (x) CubePay's one fee setting is a percentage up to 100 and a fixed Toman amount above it, so 100 doubles the price and 101 adds 101 Toman (case 57); (y) CubePay verification checks the order and amount only when the reply includes them, ignores an unparseable amount, accepts any overpayment and treats HTTP 409 as paid (case 61); (z) NOWPayments classification compares the quoted ``price_amount``, not what was actually paid, accepts a shortfall under one cent and any overpayment, and an expected price of 0 accepts any finished payment (case 64).
 
-A later section (T023f) characterizes ``extra_gateway_payment.process_stars_payment``.
+Known unsafe behaviour (extra_gateway_payment.py, Telegram Stars): (aa) the charge id is written before the claim and replaces the previous one, so a second, distinct Stars payment for a completed invoice overwrites the first charge id and is answered "already delivered" with no credit, record or admin alert (case 68); (ab) charge ids are never compared across invoices, so one charge id completes several invoices (case 68); (ac) a payment for an expired or cancelled invoice is kept and answered "already delivered" though nothing was delivered, with no admin alert (case 73); (ad) a missing Stars quote counts as 0, so a payment of 0 Stars matches it (case 72); (ae) a claimed invoice is never released: when the order is missing or no longer active, when delivery fails or when it crashes, the invoice stays completed, the order is not fulfilled, only an admin message is sent and every retry answers "already delivered" (cases 74–76); (af) a payment for an order that is already approved is answered "already delivered" with no admin alert (case 74); (ag) a payment for a wallet top-up that is no longer pending is kept with no credit and no admin alert (case 77).
 """
 
 import asyncio
@@ -35,6 +35,7 @@ import abangateway_client
 import abangateway_payment
 import database
 import exchange_rate
+import extra_gateway_payment
 import extra_gateway_clients
 import payment_engine
 from card_to_card_payment import CardToCardError, create_invoice, match_and_complete, normalize_amount, rial_to_toman
@@ -43,6 +44,7 @@ from custom_gateway_payment import CustomGatewayPaymentError, compute_send_amoun
 from direct_panel_provision import ProvisionError as DirectProvisionError
 from payment_engine import GenericGateway, amounts_match
 from extra_gateway_clients import GatewayError, cubepay_create, cubepay_payable_toman, cubepay_verify, nowpayments_classify, nowpayments_create_invoice, nowpayments_payment_status, nowpayments_verify_ipn_signature, tetra98_create, tetra98_verify
+from extra_gateway_payment import parse_stars_payload, process_stars_payment, stars_payload
 from renewal_engine import RenewalError
 from tests._harness.legacy_bot import RecordingBot, TelegramLog
 
@@ -86,6 +88,22 @@ NP_STATUS_201 = "NowPayments: خطا در دریافت وضعیت پرداخت (
 IPN_BODY = {"payment_status": "finished", "order_id": "ORD-3", "invoice_id": 5077, "price_amount": 2.35, "order_description": "اشتراک", "fee": {"depositFee": 0, "currency": "usdttrc20"}}
 IPN_CANONICAL = '{"fee":{"currency":"usdttrc20","depositFee":0},"invoice_id":5077,"order_description":"اشتراک","order_id":"ORD-3","payment_status":"finished","price_amount":2.35}'
 NP_PAYMENT = {"invoice_id": 5077, "order_id": "ORD-3", "payment_status": "finished", "price_amount": 2.35}
+STARS_BAD_INVOICE = "⚠️ پرداخت دریافت شد ولی فاکتور یافت نشد. با پشتیبانی تماس بگیرید."
+STARS_BAD_INVOICE_ADMIN = "⚠️ پرداخت استارز با payload نامعتبر از کاربر {} (شارژ {}). دستی بررسی کن."
+STARS_MISMATCH = "⚠️ مبلغ پرداخت\u200cشده با فاکتور نمی\u200cخواند. با پشتیبانی تماس بگیرید."
+STARS_MISMATCH_ADMIN = "⚠️ مبلغ استارز فاکتور #{} با مقدار پرداخت\u200cشده نمی\u200cخواند (شارژ {})."
+STARS_ALREADY = "✅ این پرداخت قبلاً ثبت و تحویل داده شده است."
+STARS_ORDER_MISSING = "⚠️ پرداخت شما دریافت شد ولی سفارش یافت نشد. با پشتیبانی تماس بگیرید."
+STARS_ORDER_MISSING_ADMIN = "⚠️ پرداخت استارز داخلی تلگرام برای سفارش #{} دریافت شد ولی سفارش پیدا نشد."
+STARS_ORDER_INACTIVE = "⚠️ پرداخت شما دریافت شد ولی این سفارش دیگر فعال نیست. با پشتیبانی تماس بگیرید."
+STARS_ORDER_INACTIVE_ADMIN = "⚠️ پرداخت استارز داخلی تلگرام برای سفارش #{} (کاربر {}) دریافت شد ولی وضعیت سفارش «{}» است. لطفاً دستی رسیدگی کنید."
+STARS_DELIVERY_FAILED_ADMIN = "⚠️ پرداخت استارز داخلی تلگرام برای سفارش #{} (کاربر {}) تایید شد ولی تحویل خودکار ناموفق بود:\n{}"
+STARS_CRASH = "⚠️ پرداخت شما دریافت شد ولی تحویل با خطا مواجه شد. ادمین به\u200cزودی رسیدگی می\u200cکند."
+STARS_CRASH_ADMIN = "⚠️ خطای غیرمنتظره در تحویل فاکتور استارز #{} (شارژ {}). دستی بررسی کن."
+STARS_CRASH_LOG = "خطای غیرمنتظره در تحویل فاکتور استارز {}"
+OUT_OF_STOCK_PREFIX = "⚠️ پرداخت تایید شد ولی موجودی"
+TOPUP_CREDITED = "✅ پرداخت تایید شد و 50,000 تومان به کیف پول کاربر اضافه شد."
+TOPUP_ALREADY = "✅ این درخواست شارژ قبلاً بررسی شده است."
 
 
 class FakeAban:
@@ -185,6 +203,41 @@ def gateway_error(coro):
 
 def sign(secret, text, digest=hashlib.sha512):
     return hmac.new(secret.encode("utf-8"), text.encode("utf-8"), digest).hexdigest()
+
+
+@pytest.fixture
+def stars(aban, monkeypatch):
+    monkeypatch.setattr(extra_gateway_payment, "_order_notifiers", {})
+    return aban
+
+
+def stars_invoice(aban, kind, ref_id, payable=770, status="new", gateway="tgstars", user_id=BUYER):
+    invoice_id = aban.db.create_extra_invoice(gateway, kind, ref_id, user_id, 100_000, payable)
+    if status != "new":
+        aban.db.update_extra_invoice_status(invoice_id, status)
+    return invoice_id
+
+
+def pay_stars(aban, invoice_id, total=770, currency="XTR", charge="CH-1", user_id=BUYER, notify=None):
+    return asyncio.run(process_stars_payment(aban.db, aban.bot, invoice_id, user_id, total, currency, charge, notify_admins_fn=notify))
+
+
+def stars_state(aban, invoice_id):
+    row = aban.db.get_extra_invoice(invoice_id)
+    return (row["status"], json.loads(row["meta"]))
+
+
+def set_order_status(aban, order_id, status):
+    conn = sqlite3.connect(aban.db_path)
+    try:
+        conn.execute("UPDATE orders SET status=? WHERE id=?", (status, order_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def sent(aban, start=0):
+    return [(e.kind, e.chat_id, e.text) for e in aban.log.events[start:]]
 
 
 class ScriptedRandom:
@@ -1212,3 +1265,198 @@ def test_nowpayments_ipn_signature():
         (NP_SECRET, IPN_BODY, sign(NP_SECRET, IPN_CANONICAL, hashlib.sha256)),
     ):
         assert nowpayments_verify_ipn_signature(secret, body, signature) is False
+
+
+# --- extra_gateway_payment.py (T023f) ---
+
+
+def test_stars_payload_round_trip():
+    assert stars_payload(42) == "xg:42"
+    for payload, expected in (("xg:42", 42), ("xg:-3", -3), ("xg: 7", 7), ("xg:۴۲", 42), (None, None), ("", None), ("xg:", None), ("xg:abc", None), ("xg:1.5", None), ("xg:1:2", None), ("XG:1", None), ("ab:1", None)):
+        assert parse_stars_payload(payload) == expected
+
+
+def test_stars_pays_and_delivers_a_stock_order_once(stars):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv = stars_invoice(aban, "order", order)
+    notified = []
+
+    async def notify(bot, order_id):
+        notified.append(order_id)
+
+    assert pay_stars(aban, inv, notify=notify) == DELIVERED
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    assert order_status(aban, order) == "approved"
+    assert stock_rows(aban) == [(1, 1, BUYER, order), (2, 0, None, None)]
+    assert notified == [order]
+    assert aban.log.trace() == [("send_message", OWNER), ("send_photo", BUYER), ("send_message", BUYER), ("send_message", BUYER)]
+    assert pay_stars(aban, inv, notify=notify) == STARS_ALREADY
+    assert len(aban.log.events) == 4 and notified == [order]
+    assert stock_rows(aban) == [(1, 1, BUYER, order), (2, 0, None, None)]
+
+
+def test_stars_has_no_receipt_level_deduplication(stars):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv = stars_invoice(aban, "order", order)
+    assert pay_stars(aban, inv) == DELIVERED
+    n = len(aban.log.events)
+    assert pay_stars(aban, inv, charge="CH-2") == STARS_ALREADY
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-2"})
+    assert len(aban.log.events) == n
+    order2 = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv2 = stars_invoice(aban, "order", order2)
+    assert pay_stars(aban, inv2, charge="CH-1") == DELIVERED
+    assert stars_state(aban, inv2) == ("completed", {"charge_id": "CH-1"})
+    assert stock_rows(aban) == [(1, 1, BUYER, order), (2, 1, BUYER, order2)]
+
+
+def test_stars_overlapping_payments_deliver_once(stars):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv = stars_invoice(aban, "order", order)
+
+    async def both():
+        return await asyncio.gather(*(process_stars_payment(aban.db, aban.bot, inv, BUYER, 770, "XTR", charge) for charge in ("CH-1", "CH-2")))
+
+    assert sorted(asyncio.run(both())) == sorted([DELIVERED, STARS_ALREADY])
+    assert stars_state(aban, inv)[0] == "completed"
+    assert stars_state(aban, inv)[1] in ({"charge_id": "CH-1"}, {"charge_id": "CH-2"})
+    assert order_status(aban, order) == "approved"
+    assert stock_rows(aban) == [(1, 1, BUYER, order), (2, 0, None, None)]
+    assert aban.log.trace().count(("send_photo", BUYER)) == 1
+
+
+def test_stars_rejects_unknown_or_foreign_invoices(stars):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    zp = stars_invoice(aban, "order", order, payable=100_000, gateway="zarinpal")
+    inv = stars_invoice(aban, "order", order)
+    assert pay_stars(aban, 999, charge="CH-9") == STARS_BAD_INVOICE
+    assert pay_stars(aban, zp, total=100_000) == STARS_BAD_INVOICE
+    assert pay_stars(aban, inv, user_id=OTHER_BUYER) == STARS_BAD_INVOICE
+    assert sent(aban) == [("send_message", OWNER, STARS_BAD_INVOICE_ADMIN.format(BUYER, "CH-9")), ("send_message", OWNER, STARS_BAD_INVOICE_ADMIN.format(BUYER, "CH-1")), ("send_message", OWNER, STARS_BAD_INVOICE_ADMIN.format(OTHER_BUYER, "CH-1"))]
+    assert stars_state(aban, zp) == ("new", {}) and stars_state(aban, inv) == ("new", {})
+    assert order_status(aban, order) == "pending"
+    assert stock_rows(aban) == [(1, 0, None, None), (2, 0, None, None)]
+
+
+@pytest.mark.parametrize("total,currency", [(769, "XTR"), (771, "XTR"), (77, "XTR"), (7700, "XTR"), (770, "xtr"), (770, "USD"), (770, ""), (770, None)])
+def test_stars_amount_and_currency_must_match_exactly(stars, total, currency):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv = stars_invoice(aban, "order", order)
+    assert pay_stars(aban, inv, total=total, currency=currency) == STARS_MISMATCH
+    assert sent(aban) == [("send_message", OWNER, STARS_MISMATCH_ADMIN.format(inv, "CH-1"))]
+    assert stars_state(aban, inv) == ("new", {})
+    assert order_status(aban, order) == "pending"
+    assert stock_rows(aban) == [(1, 0, None, None), (2, 0, None, None)]
+
+
+def test_stars_missing_quote_accepts_zero_stars(stars):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv = stars_invoice(aban, "order", order, payable=None)
+    assert pay_stars(aban, inv) == STARS_MISMATCH
+    assert stars_state(aban, inv) == ("new", {})
+    assert pay_stars(aban, inv, total=0) == DELIVERED
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    assert order_status(aban, order) == "approved"
+
+
+@pytest.mark.parametrize("status,expected,final,order_final,events", [("new", DELIVERED, "completed", "approved", 4), ("pending", DELIVERED, "completed", "approved", 4), ("expired", STARS_ALREADY, "expired", "pending", 0), ("cancelled", STARS_ALREADY, "cancelled", "pending", 0)])
+def test_stars_invoice_status(stars, status, expected, final, order_final, events):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    inv = stars_invoice(aban, "order", order, status=status)
+    assert pay_stars(aban, inv) == expected
+    assert stars_state(aban, inv) == (final, {"charge_id": "CH-1"})
+    assert order_status(aban, order) == order_final
+    assert len(aban.log.events) == events
+
+
+@pytest.mark.parametrize("status,expected,alerted", [("rejected", STARS_ORDER_INACTIVE, True), ("processing", STARS_ORDER_INACTIVE, True), ("approved", ALREADY_HANDLED, False)])
+def test_stars_order_no_longer_payable(stars, status, expected, alerted):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    set_order_status(aban, order, status)
+    inv = stars_invoice(aban, "order", order)
+    assert pay_stars(aban, inv) == expected
+    assert sent(aban) == ([("send_message", OWNER, STARS_ORDER_INACTIVE_ADMIN.format(order, BUYER, status))] if alerted else [])
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    assert order_status(aban, order) == status
+    assert stock_rows(aban) == [(1, 0, None, None), (2, 0, None, None)]
+    n = len(aban.log.events)
+    assert pay_stars(aban, inv) == STARS_ALREADY
+    assert len(aban.log.events) == n and stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+
+
+def test_stars_order_missing(stars):
+    aban = stars
+    inv = stars_invoice(aban, "order", 999)
+    assert pay_stars(aban, inv) == STARS_ORDER_MISSING
+    assert sent(aban) == [("send_message", OWNER, STARS_ORDER_MISSING_ADMIN.format(999))]
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    n = len(aban.log.events)
+    assert pay_stars(aban, inv) == STARS_ALREADY
+    assert len(aban.log.events) == n and stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+
+
+def test_stars_delivery_failure_keeps_the_invoice_completed(stars):
+    aban = stars
+    empty = aban.db.add_product(aban.category_id, "Empty 30d", 100_000)
+    order = aban.db.create_order(BUYER, empty, 100_000)
+    inv = stars_invoice(aban, "order", order)
+    text = pay_stars(aban, inv)
+    assert text.startswith(OUT_OF_STOCK_PREFIX)
+    assert sent(aban) == [("send_message", OWNER, STARS_DELIVERY_FAILED_ADMIN.format(order, BUYER, text))]
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    assert order_status(aban, order) == "pending"
+    assert pay_stars(aban, inv) == STARS_ALREADY
+    assert order_status(aban, order) == "pending" and len(aban.log.events) == 1
+
+
+def test_stars_unexpected_delivery_error(stars, monkeypatch, caplog):
+    aban = stars
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    calls = []
+
+    async def fake(db, bot, order_id, notify_admins_fn=None):
+        calls.append((order_id, notify_admins_fn))
+        raise RuntimeError("synthetic crash")
+
+    monkeypatch.setattr(abangateway_payment, "finalize_paid_order", fake)
+    inv = stars_invoice(aban, "order", order)
+    with caplog.at_level(logging.ERROR, logger="extra_gateway_payment"):
+        assert pay_stars(aban, inv) == STARS_CRASH
+    assert calls == [(order, None)]
+    assert sent(aban) == [("send_message", OWNER, STARS_CRASH_ADMIN.format(inv, "CH-1"))]
+    records = [record for record in caplog.records if record.name == "extra_gateway_payment"]
+    assert len(records) == 1 and records[0].levelno == logging.ERROR
+    assert records[0].getMessage() == STARS_CRASH_LOG.format(inv)
+    assert records[0].exc_info[0] is RuntimeError
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    assert order_status(aban, order) == "pending"
+    assert pay_stars(aban, inv) == STARS_ALREADY
+    assert calls == [(order, None)] and len(aban.log.events) == 1
+
+
+def test_stars_wallet_topup(stars):
+    aban = stars
+    topup = aban.db.create_topup(BUYER, 50_000)
+    inv = stars_invoice(aban, "wallet_topup", topup, payable=385)
+    assert pay_stars(aban, inv, total=385) == TOPUP_CREDITED
+    assert aban.db.get_topup(topup)["status"] == "approved"
+    assert aban.db.get_wallet_credit(BUYER) == 50_000
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-1"})
+    assert pay_stars(aban, inv, total=385, charge="CH-2") == STARS_ALREADY
+    assert aban.db.get_wallet_credit(BUYER) == 50_000
+    assert stars_state(aban, inv) == ("completed", {"charge_id": "CH-2"})
+    topup2 = aban.db.create_topup(BUYER, 50_000)
+    aban.db.approve_topup(topup2)
+    inv2 = stars_invoice(aban, "wallet_topup", topup2, payable=385)
+    assert pay_stars(aban, inv2, total=385, charge="CH-3") == TOPUP_ALREADY
+    assert aban.db.get_wallet_credit(BUYER) == 100_000
+    assert stars_state(aban, inv2) == ("completed", {"charge_id": "CH-3"})
+    assert aban.log.events == []

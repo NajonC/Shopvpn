@@ -165,7 +165,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `_singbox_outbound_to_uri:190`: REALITY becomes TLS;
   - `fetch_individual_links:297`: a failure becomes an empty list;
   - `_session:268`: TLS disabled, URLs in diagnostics
-- [ ] T023 [P] Characterize the payment verification helpers, using synthetic responses only, in `tests/characterization/test_payment_methods_legacy.py` (E-005 source leads; FR-011):
+- [X] T023 [P] Characterize the payment verification helpers, using synthetic responses only, in `tests/characterization/test_payment_methods_legacy.py` (E-005 source leads; FR-011):
   - `payment_engine.py` `amounts_match:126` (None or unparseable returns True; 1 % tolerance) and `GenericGateway.check_webhook_auth:287` (mode `none`);
   - `custom_gateway_payment.py:compute_send_amount:31`;
   - `card_to_card_payment.py` `create_invoice:66`, `normalize_amount:29` and `match_and_complete:119`;
