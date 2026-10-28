@@ -135,7 +135,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `approve_topup:4662`, which approves before crediting;
   - `add_wallet_credit:4363`, which clamps the balance;
   - `_get_conn:500` committing per helper
-- [ ] T017 [P] Characterize the free-test flow in `tests/characterization/test_free_test_flow.py` (FR-027; FR-031):
+- [X] T017 [P] Characterize the free-test flow in `tests/characterization/test_free_test_flow.py` (FR-027; FR-031):
   - `handlers_user.py` `get_test_config:2204` and `_deliver_test_plan:2248`;
   - `cb_user_test_plan_pick:2284`, which passes `call.message`, so the recorded actor is the bot;
   - the identity-free counter in `database.py` `try_reserve_test_slot:2266` and `release_test_slot:2291`;
