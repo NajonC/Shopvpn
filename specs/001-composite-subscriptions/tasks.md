@@ -129,7 +129,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `admin_only:214` accepting staff;
   - `admin_panel/server.py:api_approve_order:2125` under `require_permission("orders")`;
   - claim release after an ambiguous remote error
-- [ ] T016 [P] Characterize the local finance helpers in `database.py`, including a crash between commits, in `tests/characterization/test_wallet_helpers.py` (FR-011; constitution II known gap):
+- [X] T016 [P] Characterize the local finance helpers in `database.py`, including a crash between commits, in `tests/characterization/test_wallet_helpers.py` (FR-011; constitution II known gap):
   - `claim_order:3413` and `approve_order:3433`;
   - `reject_order:3470`, which commits rejection before restoring wallet and coupon;
   - `approve_topup:4662`, which approves before crediting;
