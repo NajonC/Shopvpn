@@ -157,7 +157,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `set_enabled:416`;
   - `get_user_usage:207`: missing object or error becomes zero;
   - `delete_user:195`: checks HTTP status only
-- [ ] T021 [P] Characterize `direct_panel_provision.py:provision_direct:34` in `tests/characterization/test_direct_provision.py`: secrets and names allocated inside the call, in-memory rollback with ignored exceptions, and a persistence failure at lines 130–149 that still returns results (FR-022)
+- [X] T021 [P] Characterize `direct_panel_provision.py:provision_direct:34` in `tests/characterization/test_direct_provision.py`: secrets and names allocated inside the call, in-memory rollback with ignored exceptions, and a persistence failure at lines 130–149 that still returns results (FR-022)
 - [ ] T022 [P] Characterize legacy export in `sub_info.py`, in `tests/characterization/test_sub_info_export.py`. Legacy output stays unchanged, and composite export never reuses this code (FR-049; FR-081):
   - `_net_params_from_stream:47`;
   - `_vless_or_trojan_uri:103`: VLESS flow omitted;
