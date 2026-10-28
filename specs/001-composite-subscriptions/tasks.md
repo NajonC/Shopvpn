@@ -146,7 +146,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `renewal_reminders.py:261`: automatic replacement renewal;
   - legacy reminder thresholds and coupons;
   - `connect_alerts.py` connection alerts
-- [ ] T019 [P] Characterize the provider factory in `tests/contract/test_provider_factory_legacy.py`: all eleven identifiers registered by `panel_providers/__init__.py:get_provider:98`; the `panel_providers/base.py` signatures `BasePanelProvider:29`, `PanelUserResult:13` and `PanelError:20`; units; `preserve_remaining` (FR-082; constitution V)
+- [X] T019 [P] Characterize the provider factory in `tests/contract/test_provider_factory_legacy.py`: all eleven identifiers registered by `panel_providers/__init__.py:get_provider:98`; the `panel_providers/base.py` signatures `BasePanelProvider:29`, `PanelUserResult:13` and `PanelError:20`; units; `preserve_remaining` (FR-082; constitution V)
 - [ ] T020 [P] Characterize the legacy 3x-UI adapter in `panel_providers/threexui_provider.py` against `tests/_harness/fake_threexui.py`, in `tests/characterization/test_threexui_provider.py` (FR-034; FR-037; FR-084):
   - `_session:80`: `ssl=False`, a 20-second timeout and a new session per call;
   - `_build_client:141`: generated enabled identity, no VLESS flow;
