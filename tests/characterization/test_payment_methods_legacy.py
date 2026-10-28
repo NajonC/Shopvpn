@@ -1,7 +1,7 @@
 """Characterize the legacy payment verification helpers at commit b1390ac.
 
 Baseline: ``.venv/bin/python -m pytest tests/characterization/test_payment_methods_legacy.py --network=deny``.
-All inputs are synthetic and the helpers are called directly (no provider, no database). The settings database and the live USD rate are stubs (substitute, not evidence). Aban cases fake only the gateway client calls (and, where stated, provisioning or renewal); delivery runs against a recording bot.
+All inputs are synthetic and the helpers are called directly (no provider, no database). The settings database and the live USD rate are stubs (substitute, not evidence). Aban cases fake only the gateway client calls (and, where stated, provisioning or renewal); delivery runs against a recording bot. Tetra98, CubePay and NOWPayments cases replace only the HTTP call (``extra_gateway_clients._request``) with scripted replies.
 Card-to-card cases use a real SQLite database under tmp_path and a scripted random source.
 These are E-005 source leads, not method certification; composite payments must not use these helpers as authority (FR-011).
 
@@ -13,12 +13,15 @@ Known unsafe behaviour (card_to_card_payment.py): (k) the customer pays the base
 
 Known unsafe behaviour (abangateway_payment.py): (r) verification trusts the gateway's status alone and never compares the paid amount with the invoice (case 42); (s) the invoice is marked completed before anything is delivered, so after a crash between verification and delivery every retry answers "already delivered" and the order is never fulfilled (case 44); (t) a locally expired invoice that the gateway reports paid is still verified (case 46); (u) ``finalize_paid_order`` takes only an order id and delivers any pending order with no invoice or payment check (case 48); (v) when delivery fails after payment (stock exhausted, provisioning, renewal or a missing server), the order silently returns to pending with no refund or record of the payment (cases 50–53).
 
-Later sections (T023e–T023f) characterize the other payment modules.
+Known unsafe behaviour (extra_gateway_clients.py): (w) Tetra98 verification trusts status 100 alone, with no amount or order check, and no reply short of a server error ever counts as failed (case 56); (x) CubePay's one fee setting is a percentage up to 100 and a fixed Toman amount above it, so 100 doubles the price and 101 adds 101 Toman (case 57); (y) CubePay verification checks the order and amount only when the reply includes them, ignores an unparseable amount, accepts any overpayment and treats HTTP 409 as paid (case 61); (z) NOWPayments classification compares the quoted ``price_amount``, not what was actually paid, accepts a shortfall under one cent and any overpayment, and an expected price of 0 accepts any finished payment (case 64).
+
+A later section (T023f) characterizes ``extra_gateway_payment.process_stars_payment``.
 """
 
 import asyncio
 import hashlib
 import hmac
+import json
 import logging
 import sqlite3
 from datetime import datetime, timedelta
@@ -32,12 +35,14 @@ import abangateway_client
 import abangateway_payment
 import database
 import exchange_rate
+import extra_gateway_clients
 import payment_engine
 from card_to_card_payment import CardToCardError, create_invoice, match_and_complete, normalize_amount, rial_to_toman
 from abangateway_payment import finalize_paid_order, rial_to_toman as aban_rial_to_toman, toman_to_rial, try_verify_and_finalize
 from custom_gateway_payment import CustomGatewayPaymentError, compute_send_amount
 from direct_panel_provision import ProvisionError as DirectProvisionError
 from payment_engine import GenericGateway, amounts_match
+from extra_gateway_clients import GatewayError, cubepay_create, cubepay_payable_toman, cubepay_verify, nowpayments_classify, nowpayments_create_invoice, nowpayments_payment_status, nowpayments_verify_ipn_signature, tetra98_create, tetra98_verify
 from renewal_engine import RenewalError
 from tests._harness.legacy_bot import RecordingBot, TelegramLog
 
@@ -57,6 +62,30 @@ NO_ORDER = "⚠️ سفارش یافت نشد."
 ALREADY_HANDLED = "✅ این سفارش قبلاً بررسی و تحویل داده شده است."
 DELIVERED = "✅ پرداخت تایید شد و کانفیگ تحویل داده شد."
 NO_ABAN_KEY = "error:کلید API آبان گیت وی تنظیم نشده است."
+TETRA_KEY = "synthetic-tetra-key"
+CUBE_TOKEN = "synthetic-cube-token"
+NP_KEY = "synthetic-np-key"
+NP_SECRET = "synthetic-ipn-secret"
+CALLBACK = "https://bot.example.invalid/callback"
+CUBE_HEADERS = {"Authorization": "Bearer synthetic-cube-token", "Content-Type": "application/json"}
+TETRA_REFUSED_200 = "تترا۹۸: synthetic refusal (HTTP 200)."
+TETRA_CREATE_FAILED_502 = "تترا۹۸: خطا در ساخت سفارش (HTTP 502)."
+TETRA_CREATE_FAILED_200 = "تترا۹۸: خطا در ساخت سفارش (HTTP 200)."
+TETRA_SERVER_500 = "تترا۹۸: خطای سرور (HTTP 500)."
+CUBE_NO_LINK = "کیوب\u200cپی: لینک پرداخت در پاسخ نبود."
+CUBE_REFUSED_400 = "کیوب\u200cپی: synthetic refusal (HTTP 400)."
+CUBE_CREATE_FAILED_200 = "کیوب\u200cپی: خطا در ساخت تراکنش (HTTP 200)."
+CUBE_ORDER_MISMATCH = "کیوب\u200cپی: شناسه\u200cی سفارش در پاسخ تایید با فاکتور مطابقت ندارد."
+CUBE_SHORT = "کیوب\u200cپی: مبلغ پرداخت\u200cشده کمتر از مبلغ فاکتور است."
+CUBE_SERVER_500 = "کیوب\u200cپی: خطای سرور (HTTP 500)."
+CUBE_SERVER_503 = "کیوب\u200cپی: خطای سرور (HTTP 503)."
+NP_REFUSED_400 = "NowPayments: synthetic refusal (HTTP 400)."
+NP_CREATE_FAILED_200 = "NowPayments: خطا در ساخت فاکتور (HTTP 200)."
+NP_STATUS_404 = "NowPayments: خطا در دریافت وضعیت پرداخت (HTTP 404)."
+NP_STATUS_201 = "NowPayments: خطا در دریافت وضعیت پرداخت (HTTP 201)."
+IPN_BODY = {"payment_status": "finished", "order_id": "ORD-3", "invoice_id": 5077, "price_amount": 2.35, "order_description": "اشتراک", "fee": {"depositFee": 0, "currency": "usdttrc20"}}
+IPN_CANONICAL = '{"fee":{"currency":"usdttrc20","depositFee":0},"invoice_id":5077,"order_description":"اشتراک","order_id":"ORD-3","payment_status":"finished","price_amount":2.35}'
+NP_PAYMENT = {"invoice_id": 5077, "order_id": "ORD-3", "payment_status": "finished", "price_amount": 2.35}
 
 
 class FakeAban:
@@ -127,6 +156,35 @@ def stock_rows(aban):
         return conn.execute("SELECT id, is_used, assigned_user_id, order_id FROM configs ORDER BY id").fetchall()
     finally:
         conn.close()
+
+
+class FakeHttp:
+    """Stand-in for extra_gateway_clients._request: records calls, replays scripted (status, data) replies."""
+
+    def __init__(self):
+        self.replies = []
+        self.calls = []
+
+    async def request(self, method, url, headers=None, json_body=None, timeout=25):
+        self.calls.append((method, url, headers, json_body))
+        return self.replies.pop(0)
+
+
+@pytest.fixture
+def http(monkeypatch):
+    fake = FakeHttp()
+    monkeypatch.setattr(extra_gateway_clients, "_request", fake.request)
+    return fake
+
+
+def gateway_error(coro):
+    with pytest.raises(GatewayError) as exc:
+        asyncio.run(coro)
+    return str(exc.value)
+
+
+def sign(secret, text, digest=hashlib.sha512):
+    return hmac.new(secret.encode("utf-8"), text.encode("utf-8"), digest).hexdigest()
 
 
 class ScriptedRandom:
@@ -957,3 +1015,200 @@ def test_finalize_custom_config_without_server(aban):
     assert deliver(aban, order) == "⛔️ سرور مربوط به کانفیگ شخصی یافت نشد؛ با پشتیبانی تماس بگیرید."
     assert order_status(aban, order) == "pending"
     assert aban.log.events == []
+
+
+# --- extra_gateway_clients.py (T023e) ---
+
+
+def test_tetra98_create_sends_rial(http):
+    http.replies = [
+        (200, {"status": 100, "Authority": "A-1", "payment_url_web": "https://pay.example.invalid/web/A-1", "payment_url_bot": "https://pay.example.invalid/bot/A-1"}),
+        (200, {"status": "100", "Authority": 77}),
+    ]
+    assert asyncio.run(tetra98_create(TETRA_KEY, 100_000, CALLBACK, "x" * 250, "ORD-1")) == {
+        "remote_id": "A-1", "payment_url": "https://pay.example.invalid/web/A-1",
+        "meta": {"bot_url": "https://pay.example.invalid/bot/A-1"},
+    }
+    assert asyncio.run(tetra98_create(TETRA_KEY, 99.9, CALLBACK, "d", "ORD-1")) == {
+        "remote_id": "77", "payment_url": "https://tetra98.com/payment/77", "meta": {"bot_url": ""},
+    }
+    assert http.calls[0] == (
+        "POST", "https://tetra98.com/api/create_order", None,
+        {"ApiKey": TETRA_KEY, "Hash_id": "ORD-1", "Amount": 1_000_000, "Description": "x" * 200, "CallbackURL": CALLBACK},
+    )
+    assert http.calls[1][3]["Amount"] == 990
+
+
+def test_tetra98_create_errors(http):
+    for reply, expected in (
+        ((200, {"status": "101", "message": "synthetic refusal"}), TETRA_REFUSED_200),
+        ((502, {}), TETRA_CREATE_FAILED_502),
+        ((200, {"status": 100}), TETRA_CREATE_FAILED_200),
+    ):
+        http.replies = [reply]
+        assert gateway_error(tetra98_create(TETRA_KEY, 100_000, CALLBACK, "d", "ORD-1")) == expected
+
+
+@pytest.mark.parametrize("reply, expected", [
+    ((200, {"status": 100}), "paid"),
+    ((200, {"status": "100"}), "paid"),
+    ((200, {"status": 100, "Amount": 10, "Hash_id": "OTHER"}), "paid"),
+    ((200, {"status": 101}), "pending"),
+    ((201, {"status": 100}), "pending"),
+    ((400, {"status": "-1"}), "pending"),
+    ((404, {}), "pending"),
+    ((500, {}), TETRA_SERVER_500),
+])
+def test_tetra98_verify_trusts_status_alone(http, reply, expected):
+    http.replies = [reply]
+    if expected == TETRA_SERVER_500:
+        assert gateway_error(tetra98_verify(TETRA_KEY, "A-1")) == expected
+    else:
+        assert asyncio.run(tetra98_verify(TETRA_KEY, "A-1")) == expected
+    assert http.calls == [("POST", "https://tetra98.com/api/verify", None, {"ApiKey": TETRA_KEY, "authority": "A-1"})]
+
+
+@pytest.mark.parametrize("amount, fee, expected", [
+    (100_000, 0, 100_000), (100_000, -5, 100_000), (100_000, 2.5, 102_500),
+    (99_999, 1.5, 101_499), ("100000", 1, 101_000), (100_000, 100, 200_000),
+    (100_000, 100.4, 100_100), (100_000, 100.5, 100_100), (100_000, 101, 100_101),
+    (100_000, 101.5, 100_102),
+])
+def test_cubepay_payable_toman(amount, fee, expected):
+    result = cubepay_payable_toman(amount, fee)
+    assert result == expected
+    assert type(result) is int
+
+
+def test_cubepay_create_sends_rial(http):
+    http.replies = [
+        (200, {"success": True, "authority": "CB-1", "payment_link": "https://pay.example.invalid/cb/1", "pay_page_url": "https://pay.example.invalid/page/1", "pay_amount_toman": 102_500}),
+        (200, {"success": True, "authority": 88, "pay_page_url": "https://pay.example.invalid/page/88"}),
+    ]
+    args = (CUBE_TOKEN, 102_500, CALLBACK, "y" * 250, "ORD-2", 1001)
+    assert asyncio.run(cubepay_create(*args)) == {
+        "remote_id": "CB-1", "payment_url": "https://pay.example.invalid/cb/1", "meta": {"pay_amount_toman": 102_500},
+    }
+    assert http.calls[0] == (
+        "POST", "https://cubevps.ir/smspay/api/create-payment.php", CUBE_HEADERS,
+        {"amount": 1_025_000, "order_id": "ORD-2", "callback_url": CALLBACK, "type": "card",
+         "customer_user_id": "1001", "description": "y" * 200},
+    )
+    assert asyncio.run(cubepay_create(*args)) == {
+        "remote_id": "88", "payment_url": "https://pay.example.invalid/page/88", "meta": {"pay_amount_toman": None},
+    }
+
+
+def test_cubepay_create_errors(http):
+    for reply, expected in (
+        ((200, {"success": True, "authority": "CB-1"}), CUBE_NO_LINK),
+        ((400, {"success": False, "message": "synthetic refusal"}), CUBE_REFUSED_400),
+        ((200, {"success": True}), CUBE_CREATE_FAILED_200),
+    ):
+        http.replies = [reply]
+        assert gateway_error(cubepay_create(CUBE_TOKEN, 102_500, CALLBACK, "d", "ORD-2", 1001)) == expected
+
+
+def test_cubepay_verify_request(http):
+    http.replies = [(200, {"success": True, "order_id": "ORD-2", "amount": 1_025_000})]
+    assert asyncio.run(cubepay_verify(CUBE_TOKEN, "CB-1", "ORD-2", 1_025_000)) == "paid"
+    assert http.calls == [(
+        "POST", "https://cubevps.ir/smspay/api/verify-payment.php", CUBE_HEADERS, {"authority": "CB-1"},
+    )]
+
+
+@pytest.mark.parametrize("reply, expected", [
+    ((200, {"success": True, "order_id": "ORD-9", "amount": 1_025_000}), CUBE_ORDER_MISMATCH),
+    ((200, {"success": True, "order_id": "ORD-2", "amount": 1_024_999}), CUBE_SHORT),
+    ((409, {"amount": 1}), CUBE_SHORT),
+    ((200, {"success": True}), "paid"),
+    ((200, {"success": True, "order_id": "ORD-2", "amount": 9_999_999}), "paid"),
+    ((200, {"success": True, "order_id": "ORD-2", "amount": "1.025e6"}), "paid"),
+    ((200, {"success": True, "order_id": "ORD-2", "amount": "abc"}), "paid"),
+    ((409, {}), "paid"),
+    ((200, {"success": False}), "pending"), ((200, {}), "pending"),
+    ((402, {"order_id": "ORD-9", "amount": 1}), "pending"), ((400, {}), "pending"),
+    ((404, {}), "failed"), ((410, {}), "failed"),
+    ((500, {}), CUBE_SERVER_500), ((503, {"success": True}), CUBE_SERVER_503),
+])
+def test_cubepay_verify_outcomes(http, reply, expected):
+    http.replies = [reply]
+    call = cubepay_verify(CUBE_TOKEN, "CB-1", "ORD-2", 1_025_000)
+    if expected in (CUBE_ORDER_MISMATCH, CUBE_SHORT, CUBE_SERVER_500, CUBE_SERVER_503):
+        assert gateway_error(call) == expected
+    else:
+        assert asyncio.run(call) == expected
+
+
+def test_nowpayments_create_invoice(http):
+    http.replies = [(200, {"id": 5077, "invoice_url": "https://pay.example.invalid/np/5077"})]
+    args = (NP_KEY, 2.35, "ORD-3", "z" * 250, "https://bot.example.invalid/ipn?b=7")
+    assert asyncio.run(nowpayments_create_invoice(*args)) == {
+        "remote_id": "5077", "payment_url": "https://pay.example.invalid/np/5077", "meta": {"price_usd": 2.35},
+    }
+    assert http.calls == [(
+        "POST", "https://api.nowpayments.io/v1/invoice", {"x-api-key": NP_KEY, "Content-Type": "application/json"},
+        {"price_amount": 2.35, "price_currency": "usd", "order_id": "ORD-3", "order_description": "z" * 200,
+         "ipn_callback_url": "https://bot.example.invalid/ipn?b=7"},
+    )]
+    http.replies = [(400, {"message": "synthetic refusal"})]
+    assert gateway_error(nowpayments_create_invoice(*args)) == NP_REFUSED_400
+    http.replies = [(200, {"id": 1})]
+    assert gateway_error(nowpayments_create_invoice(*args)) == NP_CREATE_FAILED_200
+
+
+def test_nowpayments_payment_status(http):
+    http.replies = [(200, dict(NP_PAYMENT))]
+    assert asyncio.run(nowpayments_payment_status(NP_KEY, "P-9")) == NP_PAYMENT
+    assert http.calls == [("GET", "https://api.nowpayments.io/v1/payment/P-9", {"x-api-key": NP_KEY}, None)]
+    http.replies = [(404, {"payment_status": "finished"})]
+    assert gateway_error(nowpayments_payment_status(NP_KEY, "P-9")) == NP_STATUS_404
+    http.replies = [(201, {})]
+    assert gateway_error(nowpayments_payment_status(NP_KEY, "P-9")) == NP_STATUS_201
+
+
+DROP = object()
+
+
+@pytest.mark.parametrize("changes, expected_usd, expected", [
+    ({}, 2.35, "paid"), ({"invoice_id": "5078"}, 2.35, "failed"), ({"invoice_id": DROP}, 2.35, "failed"),
+    ({"order_id": "ORD-4"}, 2.35, "failed"), ({"order_id": DROP}, 2.35, "failed"),
+    ({"price_amount": 2.345}, 2.35, "paid"), ({"price_amount": 2.34}, 2.35, "failed"),
+    ({"price_amount": 1000}, 2.35, "paid"), ({"price_amount": "2.35"}, 2.35, "paid"),
+    ({"price_amount": "abc"}, 2.35, "failed"), ({"price_amount": DROP}, 2.35, "failed"),
+    ({"price_amount": DROP}, 0, "paid"), ({"actually_paid": 0.01, "pay_amount": 5}, 2.35, "paid"),
+    ({"payment_status": "partially_paid", "actually_paid": 0.01}, 2.35, "pending"),
+    ({"payment_status": "waiting"}, 2.35, "pending"), ({"payment_status": "confirming"}, 2.35, "pending"),
+    ({"payment_status": "confirmed"}, 2.35, "pending"), ({"payment_status": "sending"}, 2.35, "pending"),
+    ({"payment_status": "FINISHED"}, 2.35, "pending"), ({"payment_status": DROP}, 2.35, "pending"),
+    ({"payment_status": "failed"}, 2.35, "failed"), ({"payment_status": "refunded"}, 2.35, "failed"),
+    ({"payment_status": "expired"}, 2.35, "failed"),
+])
+def test_nowpayments_classify(changes, expected_usd, expected):
+    payment = {**NP_PAYMENT, **changes}
+    for key, value in changes.items():
+        if value is DROP:
+            payment.pop(key, None)
+    assert nowpayments_classify(payment, "5077", "ORD-3", expected_usd) == expected
+
+
+def test_nowpayments_ipn_signature():
+    assert json.dumps(IPN_BODY, sort_keys=True, separators=(",", ":"), ensure_ascii=False) == IPN_CANONICAL
+    sig_value = sign(NP_SECRET, IPN_CANONICAL)
+    reordered = {key: IPN_BODY[key] for key in reversed(IPN_BODY)}
+    reordered["fee"] = {key: IPN_BODY["fee"][key] for key in reversed(IPN_BODY["fee"])}
+    for secret, body, signature in (
+        (NP_SECRET, IPN_BODY, sig_value), (NP_SECRET, IPN_BODY, "  " + sig_value.upper() + "\n"),
+        (NP_SECRET, reordered, sig_value),
+    ):
+        assert nowpayments_verify_ipn_signature(secret, body, signature) is True
+    for secret, body, signature in (
+        (NP_SECRET, IPN_BODY, sign(NP_SECRET, json.dumps(IPN_BODY, sort_keys=True))),
+        (NP_SECRET, IPN_BODY, sign(NP_SECRET, json.dumps(IPN_BODY, sort_keys=True, separators=(",", ":")))),
+        (NP_SECRET, IPN_BODY, sign("other-secret", IPN_CANONICAL)),
+        (NP_SECRET, {**IPN_BODY, "price_amount": 2.36}, sig_value),
+        ("", IPN_BODY, sign("", IPN_CANONICAL)), (None, IPN_BODY, sig_value),
+        (NP_SECRET, IPN_BODY, ""), (NP_SECRET, IPN_BODY, None), (NP_SECRET, IPN_BODY, sig_value[:64]),
+        (NP_SECRET, IPN_BODY, sign(NP_SECRET, IPN_CANONICAL, hashlib.sha256)),
+    ):
+        assert nowpayments_verify_ipn_signature(secret, body, signature) is False
