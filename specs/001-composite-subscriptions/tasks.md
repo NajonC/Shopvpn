@@ -141,7 +141,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - the identity-free counter in `database.py` `try_reserve_test_slot:2266` and `release_test_slot:2291`;
   - the swallowed persistence failure in `test_config_provision.py:provision_test_plan:26`;
   - `MAX_TEST_PER_USER` and `test_used`, with disabled, one-plan and multi-plan selection
-- [ ] T018 [P] Characterize legacy renewal and alerts in `tests/characterization/test_legacy_renewal_reminders.py` (FR-081 manual-versus-automatic distinction; FR-078):
+- [X] T018 [P] Characterize legacy renewal and alerts in `tests/characterization/test_legacy_renewal_reminders.py` (FR-081 manual-versus-automatic distinction; FR-078):
   - `renewal_engine.py:execute_renewal:20`: manual full carryover, with the remote additive update/reset before local state and an ambiguous read-back;
   - `renewal_reminders.py:261`: automatic replacement renewal;
   - legacy reminder thresholds and coupons;
