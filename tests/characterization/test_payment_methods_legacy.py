@@ -1,7 +1,7 @@
 """Characterize the legacy payment verification helpers at commit b1390ac.
 
 Baseline: ``.venv/bin/python -m pytest tests/characterization/test_payment_methods_legacy.py --network=deny``.
-All inputs are synthetic and the helpers are called directly (no provider, no database). The settings database and the live USD rate are stubs (substitute, not evidence).
+All inputs are synthetic and the helpers are called directly (no provider, no database). The settings database and the live USD rate are stubs (substitute, not evidence). Aban cases fake only the gateway client calls (and, where stated, provisioning or renewal); delivery runs against a recording bot.
 Card-to-card cases use a real SQLite database under tmp_path and a scripted random source.
 These are E-005 source leads, not method certification; composite payments must not use these helpers as authority (FR-011).
 
@@ -11,7 +11,9 @@ Known unsafe behaviour (custom_gateway_payment.py): (g) the amount sent to the g
 
 Known unsafe behaviour (card_to_card_payment.py): (k) the customer pays the base price plus a random offset of 100–999 Toman (1000–9999 on the last ten attempts), and the offset is kept (cases 29, 31); (l) an existing pending invoice is returned for the same order whatever the user, price or deadline (case 30); (m) ``normalize_amount`` deletes every non-digit, so decimals, signs and any other digits in the text are joined into one number (case 26); (n) the Rial-to-Toman conversion floors, and any unit other than ``rial`` counts as Toman (case 27); (o) an SMS is matched by amount alone, with no card, sender, user or order check (case 33); (p) once an invoice expires its amount is free again, so a late SMS for it completes another customer's invoice (case 35); (q) completion has no pending-status condition, so two overlapping matches of one SMS both return the invoice as completed (case 36).
 
-Later sections (T023d–T023f) characterize the other payment modules.
+Known unsafe behaviour (abangateway_payment.py): (r) verification trusts the gateway's status alone and never compares the paid amount with the invoice (case 42); (s) the invoice is marked completed before anything is delivered, so after a crash between verification and delivery every retry answers "already delivered" and the order is never fulfilled (case 44); (t) a locally expired invoice that the gateway reports paid is still verified (case 46); (u) ``finalize_paid_order`` takes only an order id and delivers any pending order with no invoice or payment check (case 48); (v) when delivery fails after payment (stock exhausted, provisioning, renewal or a missing server), the order silently returns to pending with no refund or record of the payment (cases 50–53).
+
+Later sections (T023e–T023f) characterize the other payment modules.
 """
 
 import asyncio
@@ -26,12 +28,18 @@ import pytest
 
 import crypto_payment
 import card_to_card_payment
+import abangateway_client
+import abangateway_payment
 import database
 import exchange_rate
 import payment_engine
 from card_to_card_payment import CardToCardError, create_invoice, match_and_complete, normalize_amount, rial_to_toman
+from abangateway_payment import finalize_paid_order, rial_to_toman as aban_rial_to_toman, toman_to_rial, try_verify_and_finalize
 from custom_gateway_payment import CustomGatewayPaymentError, compute_send_amount
+from direct_panel_provision import ProvisionError as DirectProvisionError
 from payment_engine import GenericGateway, amounts_match
+from renewal_engine import RenewalError
+from tests._harness.legacy_bot import RecordingBot, TelegramLog
 
 
 EXPECTED = 100_000
@@ -44,6 +52,81 @@ CARD_1 = "6037-0000-0000-0001"
 CARD_2 = "6037-0000-0000-0002"
 NO_CARD = "هیچ شماره کارتی برای دریافت وجه تعریف نشده است."
 NO_UNIQUE_AMOUNT = "امکان رزرو مبلغ یکتا وجود نداشت، لطفاً چند لحظه دیگر دوباره تلاش کنید."
+ABAN_KEY = "synthetic-aban-key"
+NO_ORDER = "⚠️ سفارش یافت نشد."
+ALREADY_HANDLED = "✅ این سفارش قبلاً بررسی و تحویل داده شده است."
+DELIVERED = "✅ پرداخت تایید شد و کانفیگ تحویل داده شد."
+NO_ABAN_KEY = "error:کلید API آبان گیت وی تنظیم نشده است."
+
+
+class FakeAban:
+    """Stand-in for abangateway_client.get_invoice and verify_invoice; records calls."""
+
+    def __init__(self):
+        self.status = "pending"
+        self.get_error = None
+        self.verify_error = None
+        self.calls = []
+
+    async def get_invoice(self, api_key, invoice_id):
+        self.calls.append(("get", api_key, invoice_id))
+        if self.get_error is not None:
+            raise self.get_error
+        return {"invoice_id": invoice_id, "status": self.status, "amount_rial": 1, "payable_rial": 1}
+
+    async def verify_invoice(self, api_key, invoice_id):
+        self.calls.append(("verify", api_key, invoice_id))
+        if self.verify_error is not None:
+            raise self.verify_error
+        return {"invoice_id": invoice_id, "status": "paid"}
+
+
+@pytest.fixture
+def aban(tmp_path, monkeypatch):
+    db_path = str(tmp_path / "main.db")
+    db = database.Database(db_path)
+    db.init_db(OWNER)
+    db.add_or_update_user(BUYER, "ali", "Ali")
+    db.set_setting("abangateway_api_key", ABAN_KEY)
+    monkeypatch.setattr(abangateway_payment, "ABANGATEWAY_API_KEY", "")
+    remote = FakeAban()
+    monkeypatch.setattr(abangateway_client, "get_invoice", remote.get_invoice)
+    monkeypatch.setattr(abangateway_client, "verify_invoice", remote.verify_invoice)
+    category_id = db.add_category("VPN")
+    product_id = db.add_product(category_id, "Stock 30d", 100_000)
+    db.add_configs(product_id, ["vless://stock-1", "vless://stock-2"])
+    log = TelegramLog()
+    return SimpleNamespace(db=db, db_path=db_path, remote=remote, category_id=category_id, product_id=product_id, log=log, bot=RecordingBot(log))
+
+
+def aban_invoice(aban, invoice_id, order_id, status="new"):
+    aban.db.create_abangateway_invoice(invoice_id, "order", order_id, BUYER, 100_000, 1_000_000, payable_rial=1_000_090, payment_url=f"https://pay.example.invalid/{invoice_id}")
+    if status != "new":
+        aban.db.update_abangateway_invoice_status(invoice_id, status)
+
+
+def local_status(aban, invoice_id):
+    return aban.db.get_abangateway_invoice_by_invoice_id(invoice_id)["status"]
+
+
+def check(aban, invoice_id):
+    return asyncio.run(try_verify_and_finalize(aban.db, aban.db.get_abangateway_invoice_by_invoice_id(invoice_id)))
+
+
+def deliver(aban, order_id, notify=None):
+    return asyncio.run(finalize_paid_order(aban.db, aban.bot, order_id, notify_admins_fn=notify))
+
+
+def order_status(aban, order_id):
+    return aban.db.get_order(order_id)["status"]
+
+
+def stock_rows(aban):
+    conn = sqlite3.connect(aban.db_path)
+    try:
+        return conn.execute("SELECT id, is_used, assigned_user_id, order_id FROM configs ORDER BY id").fetchall()
+    finally:
+        conn.close()
 
 
 class ScriptedRandom:
@@ -643,3 +726,234 @@ def test_completed_amount_is_free_for_a_new_invoice(cards, monkeypatch):
     assert invoice_2["invoice_id"] == 2
     assert invoice_2["amount_toman"] == 100_500
     assert match_and_complete(cards.db, 100_500)["id"] == 2
+
+
+# --- abangateway_payment.py (T023d) ---
+
+
+def test_aban_amount_conversion():
+    assert toman_to_rial(100_000) == 1_000_000
+    assert toman_to_rial("100000") == 1_000_000
+    assert toman_to_rial(100.9) == 1_000
+    assert aban_rial_to_toman(1_000_009) == 100_000
+
+
+def test_aban_check_without_or_with_env_key(aban, monkeypatch):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order)
+    aban.db.set_setting("abangateway_api_key", "")
+    assert check(aban, "inv_syn_1") == NO_ABAN_KEY
+    assert aban.remote.calls == []
+    assert local_status(aban, "inv_syn_1") == "new"
+    monkeypatch.setattr(abangateway_payment, "ABANGATEWAY_API_KEY", "synthetic-env-key")
+    assert check(aban, "inv_syn_1") == "not_paid_yet"
+    assert aban.remote.calls == [("get", "synthetic-env-key", "inv_syn_1")]
+
+
+def test_aban_unpaid_statuses(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order)
+    aban.remote.status = "pending"
+    assert check(aban, "inv_syn_1") == "not_paid_yet"
+    assert local_status(aban, "inv_syn_1") == "new"
+    aban.remote.status = "partially_paid"
+    assert check(aban, "inv_syn_1") == "not_paid_yet"
+    assert local_status(aban, "inv_syn_1") == "pending"
+    aban.remote.status = None
+    assert check(aban, "inv_syn_1") == "not_paid_yet"
+    assert local_status(aban, "inv_syn_1") == "pending"
+    assert aban.remote.calls == [("get", ABAN_KEY, "inv_syn_1")] * 3
+
+
+def test_aban_expired_or_cancelled(aban):
+    order_1 = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    order_2 = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order_1)
+    aban_invoice(aban, "inv_syn_2", order_2)
+    aban.remote.status = "expired"
+    assert check(aban, "inv_syn_1") == "expired"
+    assert local_status(aban, "inv_syn_1") == "expired"
+    aban.remote.status = "cancelled"
+    assert check(aban, "inv_syn_2") == "cancelled"
+    assert local_status(aban, "inv_syn_2") == "cancelled"
+    assert all(call[0] == "get" for call in aban.remote.calls)
+
+
+def test_aban_paid_is_verified_without_an_amount_check(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order)
+    aban.remote.status = "paid"
+    assert check(aban, "inv_syn_1") == "verified_now"
+    assert local_status(aban, "inv_syn_1") == "completed"
+    assert aban.remote.calls == [("get", ABAN_KEY, "inv_syn_1"), ("verify", ABAN_KEY, "inv_syn_1")]
+
+
+def test_aban_completed_invoice_is_not_rechecked(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order, status="completed")
+    aban.remote.status = "expired"
+    assert check(aban, "inv_syn_1") == "already_delivered"
+    assert aban.remote.calls == []
+    assert local_status(aban, "inv_syn_1") == "completed"
+
+
+def test_aban_crash_between_verification_and_delivery_loses_the_order(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order)
+    aban.remote.status = "paid"
+    assert check(aban, "inv_syn_1") == "verified_now"
+    assert check(aban, "inv_syn_1") == "already_delivered"
+    assert aban.remote.calls == [("get", ABAN_KEY, "inv_syn_1"), ("verify", ABAN_KEY, "inv_syn_1")]
+    assert order_status(aban, order) == "pending"
+    assert aban.log.events == []
+
+    order_2 = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_2", order_2, status="pending")
+    aban.remote.status = "paid"
+    aban.remote.verify_error = abangateway_client.AbanGatewayAlreadyVerified(
+        "already verified", code="already_verified", http_status=409
+    )
+    assert check(aban, "inv_syn_2") == "already_delivered"
+    assert local_status(aban, "inv_syn_2") == "completed"
+    assert order_status(aban, order_2) == "pending"
+
+
+def test_aban_gateway_errors(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order, status="pending")
+    aban.remote.status = "paid"
+    aban.remote.verify_error = abangateway_client.AbanGatewayNotYetPaid(
+        "not yet paid", code="not_yet_paid", http_status=402
+    )
+    assert check(aban, "inv_syn_1") == "error:not yet paid"
+    assert local_status(aban, "inv_syn_1") == "pending"
+    aban.remote.verify_error = None
+    aban.remote.get_error = abangateway_client.AbanGatewayError("synthetic network failure")
+    assert check(aban, "inv_syn_1") == "error:synthetic network failure"
+    assert local_status(aban, "inv_syn_1") == "pending"
+
+
+def test_aban_locally_expired_invoice_is_still_verified(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    aban_invoice(aban, "inv_syn_1", order, status="expired")
+    aban.remote.status = "paid"
+    assert check(aban, "inv_syn_1") == "verified_now"
+    assert local_status(aban, "inv_syn_1") == "completed"
+
+
+def test_finalize_missing_order(aban):
+    assert deliver(aban, 999) == NO_ORDER
+    assert aban.log.events == []
+
+
+def test_finalize_delivers_any_pending_order_once(aban):
+    order = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    notified = []
+
+    async def notify(bot, order_id):
+        notified.append(order_id)
+
+    assert deliver(aban, order, notify) == DELIVERED
+    assert order_status(aban, order) == "approved"
+    assert stock_rows(aban) == [(1, 1, BUYER, order), (2, 0, None, None)]
+    assert notified == [order]
+    assert aban.log.trace() == [("send_message", OWNER), ("send_photo", BUYER), ("send_message", BUYER), ("send_message", BUYER)]
+    assert "vless://stock-1" in aban.log.events[2].text
+    assert deliver(aban, order, notify) == ALREADY_HANDLED
+    assert len(aban.log.events) == 4
+    assert notified == [order]
+    assert stock_rows(aban) == [(1, 1, BUYER, order), (2, 0, None, None)]
+
+
+def test_finalize_refuses_orders_that_are_not_pending(aban):
+    rejected = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    processing = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    conn = sqlite3.connect(aban.db_path)
+    try:
+        conn.execute("UPDATE orders SET status='rejected' WHERE id=?", (rejected,))
+        conn.execute("UPDATE orders SET status='processing' WHERE id=?", (processing,))
+        conn.commit()
+    finally:
+        conn.close()
+    assert deliver(aban, rejected) == ALREADY_HANDLED
+    assert deliver(aban, processing) == ALREADY_HANDLED
+    assert order_status(aban, rejected) == "rejected"
+    assert order_status(aban, processing) == "processing"
+    assert aban.log.events == []
+    assert stock_rows(aban) == [(1, 0, None, None), (2, 0, None, None)]
+
+
+def test_finalize_out_of_stock_returns_the_order_to_pending(aban):
+    first = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    second = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    third = aban.db.create_order(BUYER, aban.product_id, 100_000)
+    assert deliver(aban, first) == DELIVERED
+    assert deliver(aban, second) == DELIVERED
+    n = len(aban.log.events)
+    text = deliver(aban, third)
+    assert text.startswith("⚠️ پرداخت تایید شد ولی موجودی")
+    assert order_status(aban, third) == "pending"
+    assert len(aban.log.events) == n
+
+
+def test_finalize_auto_provision(aban, monkeypatch):
+    product = aban.db.add_product(aban.category_id, "Auto 30d", 100_000, is_auto_provision=True, auto_provision_volume_gb=10, provision_server_id=7)
+    order = aban.db.create_order(BUYER, product, 100_000)
+    calls = []
+
+    async def failed_provision(db, product, quantity, user_id=None, order_id=None):
+        calls.append((product["id"], quantity, user_id, order_id))
+        raise DirectProvisionError("synthetic panel down")
+
+    monkeypatch.setattr(abangateway_payment, "provision_direct", failed_provision)
+    assert deliver(aban, order) == "⚠️ پرداخت تایید شد ولی ساخت خودکار کانفیگ ناموفق بود: synthetic panel down\nبا پشتیبانی تماس بگیرید."
+    assert calls == [(product, 1, BUYER, order)]
+    assert order_status(aban, order) == "pending"
+    assert aban.log.events == []
+
+    async def successful_provision(db, product, quantity, user_id=None, order_id=None):
+        return [{"subscription_url": "vless://auto-1"}]
+
+    monkeypatch.setattr(abangateway_payment, "provision_direct", successful_provision)
+    assert deliver(aban, order) == DELIVERED
+    assert order_status(aban, order) == "approved"
+    assert aban.log.trace() == [("send_photo", BUYER), ("send_message", BUYER), ("send_message", BUYER)]
+
+
+def test_finalize_renewal(aban, monkeypatch, caplog):
+    order = aban.db.create_renewal_order(BUYER, "config", 1, "full", 10, 30, 80_000)
+
+    async def renewal_error(db, order):
+        raise RenewalError("synthetic renewal failure")
+
+    monkeypatch.setattr(abangateway_payment, "execute_renewal", renewal_error)
+    assert deliver(aban, order) == "⛔️ تمدید ناموفق بود: synthetic renewal failure\nبا پشتیبانی تماس بگیرید."
+    assert order_status(aban, order) == "pending"
+
+    async def renewal_crash(db, order):
+        raise RuntimeError("synthetic crash")
+
+    monkeypatch.setattr(abangateway_payment, "execute_renewal", renewal_crash)
+    with caplog.at_level(logging.ERROR, logger="abangateway_payment"):
+        text = deliver(aban, order)
+    assert text.startswith("⛔️ خطای غیرمنتظره")
+    assert order_status(aban, order) == "pending"
+    records = [record for record in caplog.records if record.name == "abangateway_payment" and record.levelno == logging.ERROR]
+    assert len(records) == 1
+    assert records[0].exc_info
+
+    async def renewal_success(db, order):
+        return "synthetic renewal done"
+
+    monkeypatch.setattr(abangateway_payment, "execute_renewal", renewal_success)
+    assert deliver(aban, order) == "synthetic renewal done"
+    assert order_status(aban, order) == "approved"
+    assert aban.log.trace() == [("send_message", BUYER)]
+    assert aban.log.events[0].text == "synthetic renewal done"
+
+
+def test_finalize_custom_config_without_server(aban):
+    order = aban.db.create_custom_config_order(BUYER, 10, "synthetic_user", 42, 90_000)
+    assert deliver(aban, order) == "⛔️ سرور مربوط به کانفیگ شخصی یافت نشد؛ با پشتیبانی تماس بگیرید."
+    assert order_status(aban, order) == "pending"
+    assert aban.log.events == []
