@@ -177,6 +177,19 @@ def test_message_files():
     assert message.document == FakeFile("d")
 
 
+def test_message_caption_edit():
+    async def scenario():
+        log = TelegramLog()
+        empty = FakeMessage(log, 5)
+        assert empty.caption is None
+        msg = FakeMessage(log, 5, caption="c")
+        assert msg.caption == "c"
+        assert await msg.edit_caption(caption="new", reply_markup="kb") is msg
+        assert log.events[-1] == TelegramEvent("edit_caption", 5, msg.message_id, "new", None, "kb")
+
+    asyncio.run(scenario())
+
+
 def test_route_message_uses_router_filters():
     async def scenario():
         router = Router()

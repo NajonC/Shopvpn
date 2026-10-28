@@ -1,4 +1,4 @@
-"""Synthetic settings and Telegram doubles for driving legacy aiogram handlers (tasks.md T013, T014).
+"""Synthetic settings and Telegram doubles for driving legacy aiogram handlers (tasks.md T013, T014, T015).
 
 Basis:
 
@@ -163,6 +163,7 @@ class FakeMessage:
         message_id: int | None = None,
         photo: list[FakeFile] | None = None,
         document: FakeFile | None = None,
+        caption: str | None = None,
     ) -> None:
         self.log = log
         self.chat = FakeChat(chat_id)
@@ -171,6 +172,13 @@ class FakeMessage:
         self.text = text
         self.photo = photo
         self.document = document
+        self.caption = caption
+
+    async def edit_caption(self, caption=None, reply_markup=None, **kwargs) -> FakeMessage:
+        self.log.record(TelegramEvent(
+            "edit_caption", self.chat.id, self.message_id, caption, None, reply_markup
+        ))
+        return self
 
     async def edit_text(
         self, text, parse_mode=None, reply_markup=None, **kwargs
