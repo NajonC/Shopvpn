@@ -3,8 +3,7 @@
 ``provision_direct`` and ``deliver_config_to_user``, at commit ``336c1c8``.
 Reproduce with `.venv/bin/python -m pytest tests/characterization/test_order_approval.py --network=deny`.
 Telegram, the VPN panel, and individual-link fetching are substitutes, not evidence.
-reseller auto-provisioning (``provision_auto_config``) and the web panel (T015b)
-are not covered here.
+reseller auto-provisioning (``provision_auto_config``) is not covered here.
 
 The baseline pins known unsafe behavior: claim, remote step, approval and log are
 separate commits, so a crash leaves an order stuck in ``processing`` with a
@@ -16,9 +15,25 @@ the panel (13). An unexpected exception or inactive custom server keeps the
 claim forever (10, 14). Delivery failures are swallowed and the admin is told
 the config was sent (17). Any staff role, including ``support``, can approve
 (5), and only the claim stops a concurrent double approval (8).
+
+Cases 18–36 characterize ``admin_panel/server.py:api_approve_order`` (2124–2238)
+under ``require_permission("orders")`` at commit ``cde0ea7``, through the real
+app, ``execute_renewal``, ``provision_direct`` and ``deliver_config_to_user_web``,
+with Telegram, the panel and the session cookie as substitutes; known unsafe
+behaviour pinned: (f) any web admin holding ``orders``, not only the owner, can
+approve (24), and only the claim stops a double approval, also across Telegram
+and web (26, 27); (g) web approval drops the order's chosen name and duration: a
+direct order gets a random panel name and no ``custom_configs`` row (19), a
+custom order gets the settings duration (20); (h) ambiguous panel errors release
+the claim as in Telegram (30–32), and the web also releases after an unexpected
+renewal error the panel already applied (33), while an unexpected error
+elsewhere keeps the claim behind a 500 (34); (i) delivery runs in background
+tasks after the response, so a process exit loses it and a failed send is never
+reported (35, 36).
 """
 
 import asyncio
+import httpx
 import re
 import sqlite3
 import threading
@@ -26,6 +41,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from admin_panel import config_delivery_web
 import config_delivery
 import database
 import direct_panel_provision
@@ -34,9 +50,10 @@ import renewal_engine
 from panel_providers.base import PanelError, PanelUserResult, PanelUsernameTakenError
 from tests._harness.crash import CrashPlan, SimulatedCrash
 from tests._harness.legacy_bot import (
-    FakeCallbackQuery, FakeMessage, FakeUser, RecordingBot, TelegramEvent,
-    TelegramLog, find_handler,
+    FakeCallbackQuery, FakeMessage, FakeUser, RecordingBot, SYNTHETIC_BOT_TOKEN,
+    TelegramEvent, TelegramLog, find_handler,
 )
+from tests._harness.legacy_web import BotApiRecorder, drain_tasks, load_admin_panel, session_cookie
 
 OWNER = 9001
 BUYER = 1001
@@ -77,6 +94,26 @@ RECEIPT_CAPTION = '🧾 سفارش #1'
 CAPTION_STOCK = '┣ 🆔 شماره سفارش: #1\n┣ 📦 محصول: Stock 30d\n'
 CAPTION_DIRECT = '┣ 🆔 شماره سفارش: #1\n┣ 📦 محصول: Direct 50GB\n'
 CAPTION_CUSTOM = '┣ 🆔 شماره سفارش: #1\n┣ 📦 محصول: کانفیگ شخصی\n'
+WEB_OWNER = (1, "owner", "owner")
+WEB_MID = (2, "mid1", "mid")
+WEB_SUPPORT = (3, "support1", "support")
+WEB_APPROVED = '✅ خرید شما تایید شد!'
+NO_SESSION = 'نشست منقضی شده یا نامعتبر است.'
+NO_PERMISSION = 'دسترسی کافی نیست.'
+WEB_ALREADY = 'سفارش یافت نشد یا قبلاً بررسی شده.'
+WEB_SOLD_OUT = 'موجودی این محصول تمام شده است.'
+WEB_SERVER_INACTIVE = 'سرور پنل مربوطه یافت نشد یا غیرفعال است.'
+WEB_PANEL_ERROR = 'خطا در ارتباط با پنل: synthetic timeout'
+WEB_TAKEN = 'این نام کاربری روی پنل تکراری است؛ از کاربر بخواه نام دیگری انتخاب کند.'
+WEB_PROVISION_ERROR = 'خطا در ساخت کانفیگ روی پنل: synthetic timeout'
+WEB_RENEWAL_ERROR = 'تمدید ناموفق بود: synthetic timeout'
+WEB_RENEWAL_UNEXPECTED = 'خطای غیرمنتظره‌ای در تمدید رخ داد. سفارش برای بررسی دوباره آزاد شد؛ لاگ سرور را بررسی کن.'
+WEB_LOG_STOCK = 'سفارش #1 | کاربر 1001 | محصول «Stock 30d» (پنل وب - owner)'
+WEB_LOG_STOCK_MID = 'سفارش #1 | کاربر 1001 | محصول «Stock 30d» (پنل وب - mid1)'
+WEB_LOG_DIRECT = 'سفارش #1 (خودکار) | کاربر 1001 | محصول «Direct 50GB» (پنل وب - owner)'
+WEB_LOG_CUSTOM = 'سفارش شخصی #1 | کاربر 1001 | یوزرنیم «alicustom» | 20 گیگ | مبلغ: 80,000 (پنل وب - owner)'
+WEB_LOG_RENEWAL = 'سفارش تمدید #1 | کاربر 1001 | مبلغ: 50,000 (پنل وب - owner)'
+DIRECT_NAME = r"d[a-z0-9]{8}"
 
 
 class FakePanel:
@@ -604,3 +641,325 @@ def test_blocked_buyer_order_is_still_approved_and_reported_sent(shop):
     assert log.events[0].delivered is False
     assert log.events[0].text == APPROVED_STOCK
     closes(log, message, DONE_SENT, ANSWER_STOCK)
+
+
+@pytest.fixture
+def site(monkeypatch, tmp_path_factory, shop, remote):
+    web = load_admin_panel(tmp_path_factory.getbasetemp())
+    log = TelegramLog()
+    api = BotApiRecorder(log)
+    monkeypatch.setattr(web.MAIN_TENANT, "db", shop.db)
+    monkeypatch.setattr(web, "get_provider", lambda server: remote)
+    monkeypatch.setattr(web, "tg_send", api.send_message)
+    monkeypatch.setattr(config_delivery_web, "tg_send", api.send_message)
+    monkeypatch.setattr(config_delivery_web, "tg_send_photo", api.send_photo)
+
+    async def no_individual_links(link):
+        return []
+
+    async def forbidden(*args, **kwargs):
+        pytest.fail("unexpected reseller provisioning")
+
+    monkeypatch.setattr(config_delivery_web, "fetch_individual_links", no_individual_links)
+    monkeypatch.setattr(web, "provision_auto_config", forbidden)
+    for admin_id, username, role in (WEB_OWNER, WEB_MID, WEB_SUPPORT):
+        actual_id = shop.db.create_web_admin(username, "synthetic-hash", role=role)
+        assert actual_id == admin_id
+    return SimpleNamespace(log=log, api=api, panel=remote)
+
+
+async def web_approve(order_id=1, who=WEB_OWNER, drain=True):
+    web = load_admin_panel()
+    headers = {}
+    if who is not None:
+        token = session_cookie(web.ADMIN_PANEL_SECRET, *who)
+        headers["Cookie"] = f"panel_session={token}"
+    transport = httpx.ASGITransport(app=web.app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://panel.test") as client:
+        response = await client.post(f"/api/orders/{order_id}/approve", headers=headers)
+    if drain:
+        await drain_tasks()
+    return response
+
+
+def ok(response):
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+
+
+def refused(response, status, detail):
+    assert response.status_code == status
+    assert response.json() == {"detail": detail}
+
+
+def config_duration(shop):
+    with sqlite3.connect(shop.db_path) as conn:
+        return conn.execute("SELECT duration_days FROM custom_configs WHERE id=1").fetchone()[0]
+
+
+def test_web_stock_approval_claims_allocates_approves_then_delivers(site, shop, monkeypatch):
+    stock_order(shop)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    ok(asyncio.run(web_approve()))
+    assert steps == [("claim_order", 0), ("take_unused_configs", 0), ("approve_order", 0), ("log_admin_action", 0), ("reward_referrer_if_first_purchase", 0)]
+    delivered(site.log, WEB_APPROVED, CAPTION_STOCK, LINK_STOCK_1, SUMMARY_100K)
+    assert {e.chat_id for e in site.log.events} == {BUYER}
+    assert set(site.api.tokens) == {SYNTHETIC_BOT_TOKEN}
+    assert order_row(shop)["status"] == "approved" and order_row(shop)["config_id"] == 1
+    assert configs(shop)[0] == (1, 1, 1001, 1)
+    assert configs(shop)[1:] == [(2, 0, None, None), (3, 0, None, None), (4, 0, None, None), (5, 0, None, None)]
+    assert admin_logs(shop) == [(1, "order_approve", WEB_LOG_STOCK, "order", "1")]
+
+
+def test_web_direct_approval_ignores_order_name_and_records_no_config(site, shop, monkeypatch):
+    direct_order(shop)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    ok(asyncio.run(web_approve()))
+    assert names(steps) == ["claim_order", "panel.create_user", "approve_order_auto", "log_admin_action"]
+    assert all(index == 0 for _, index in steps)
+    assert len(site.panel.calls) == 1
+    name = site.panel.calls[0][1]
+    assert site.panel.calls == [("create_user", name)] and re.fullmatch(DIRECT_NAME, name)
+    assert site.panel.users == {name: 50}
+    assert custom_configs(shop) == []
+    assert order_row(shop)["status"] == "approved" and order_row(shop)["config_id"] is None
+    delivered(site.log, WEB_APPROVED, CAPTION_DIRECT, f"🔗 لینک اشتراک شما (برای کپی):\n`https://sub.example.invalid/{name}`", SUMMARY_120K)
+    assert admin_logs(shop) == [(1, "order_approve", WEB_LOG_DIRECT, "order", "1")]
+
+
+def test_web_custom_approval_uses_settings_duration(site, shop, monkeypatch):
+    shop.db.create_custom_config_order(BUYER, 20, "alicustom", shop.server_id, 80_000, custom_duration_days=60)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    ok(asyncio.run(web_approve()))
+    assert names(steps) == ["claim_order", "panel.create_user", "approve_custom_config_order", "add_custom_config", "log_admin_action"]
+    assert all(index == 0 for _, index in steps)
+    assert custom_configs(shop) == [(1001, 1, "alicustom", 20, 1, "custom_config")]
+    assert config_duration(shop) == 30
+    delivered(site.log, CUSTOM_BUILT, CAPTION_CUSTOM, LINK_CUSTOM, SUMMARY_80K)
+    assert admin_logs(shop) == [(1, "order_approve", WEB_LOG_CUSTOM, "order", "1")]
+
+
+def test_web_renewal_approval_updates_panel_before_approving(site, shop, monkeypatch):
+    renewal_order(shop, site.panel)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    ok(asyncio.run(web_approve()))
+    assert names(steps) == ["claim_order", "panel.update_user", "apply_custom_config_renewal", "approve_renewal_order", "log_admin_action"]
+    assert all(index == 0 for _, index in steps)
+    assert site.log.trace() == [("send_message", 1001)]
+    assert site.log.events[0].text == RENEWED
+    assert site.panel.users["ren1"] == 40 and renewal_volume(shop) == 40
+    assert order_row(shop)["status"] == "approved"
+    assert admin_logs(shop) == [(1, "renewal_approve", WEB_LOG_RENEWAL, "order", "1")]
+
+
+def test_web_approval_requires_a_session(site, shop, monkeypatch):
+    stock_order(shop)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    refused(asyncio.run(web_approve(who=None)), 401, NO_SESSION)
+    assert steps == [] and order_row(shop)["status"] == "pending" and site.log.events == []
+
+
+def test_web_staff_without_orders_permission_is_refused(site, shop, monkeypatch):
+    stock_order(shop)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    refused(asyncio.run(web_approve(who=WEB_SUPPORT)), 403, NO_PERMISSION)
+    assert steps == [] and order_row(shop)["status"] == "pending"
+    assert site.log.events == []
+
+
+def test_web_staff_with_orders_permission_can_approve(site, shop):
+    stock_order(shop)
+    ok(asyncio.run(web_approve(who=WEB_MID)))
+    assert order_row(shop)["status"] == "approved"
+    assert admin_logs(shop) == [(2, "order_approve", WEB_LOG_STOCK_MID, "order", "1")]
+
+
+def test_web_invalid_missing_and_claimed_orders_are_refused(site, shop, monkeypatch):
+    stock_order(shop)
+    shop.db.claim_order(1)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    refused(asyncio.run(web_approve(order_id=99)), 400, WEB_ALREADY)
+    refused(asyncio.run(web_approve(order_id=1)), 400, WEB_ALREADY)
+    assert asyncio.run(web_approve(order_id="abc")).status_code == 422
+    assert steps == [] and order_row(shop)["status"] == "processing"
+    assert all(row[1] == 0 for row in configs(shop)) and site.log.events == []
+
+
+def test_web_concurrent_approvals_settle_once(site, shop, monkeypatch):
+    stock_order(shop)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    hold_first_two(monkeypatch, shop.db, "get_order")
+
+    async def scenario():
+        responses = await asyncio.gather(
+            web_approve(who=WEB_OWNER, drain=False), web_approve(who=WEB_MID, drain=False)
+        )
+        await drain_tasks()
+        return responses
+
+    responses = asyncio.run(scenario())
+    assert sorted(r.status_code for r in responses) == [200, 400]
+    refused(next(r for r in responses if r.status_code == 400), 400, WEB_ALREADY)
+    assert order_row(shop)["status"] == "approved"
+    assert configs(shop)[0] == (1, 1, 1001, 1)
+    assert configs(shop)[1:] == [(2, 0, None, None), (3, 0, None, None), (4, 0, None, None), (5, 0, None, None)]
+    assert len(admin_logs(shop)) == 1 and admin_logs(shop)[0][1] == "order_approve"
+    assert admin_logs(shop)[0][0] in {1, 2}
+    assert len(site.log.select(kind="send_photo")) == 1
+    assert names(steps).count("claim_order") == 2
+    assert names(steps).count("take_unused_configs") == names(steps).count("approve_order") == 1
+
+
+def test_telegram_and_web_approvals_settle_once(site, shop, monkeypatch):
+    stock_order(shop)
+    hold_first_two(monkeypatch, shop.db, "get_order")
+    tlog = TelegramLog()
+
+    async def scenario():
+        result = await asyncio.gather(
+            web_approve(drain=False),
+            asyncio.to_thread(asyncio.run, approve(shop, tlog, RecordingBot(tlog))),
+        )
+        await drain_tasks()
+        return result[0]
+
+    response = asyncio.run(scenario())
+    assert order_row(shop)["status"] == "approved"
+    assert configs(shop)[0] == (1, 1, 1001, 1)
+    assert configs(shop)[1:] == [(2, 0, None, None), (3, 0, None, None), (4, 0, None, None), (5, 0, None, None)]
+    assert admin_logs(shop) in (
+        [(9001, "order_approve", LOG_STOCK, None, None)],
+        [(1, "order_approve", WEB_LOG_STOCK, "order", "1")],
+    )
+    if response.status_code == 200:
+        assert [e.text for e in answers(tlog)] == [ALREADY]
+        assert tlog.select(chat_id=BUYER) == []
+    else:
+        refused(response, 400, WEB_ALREADY)
+        assert site.log.events == []
+        assert tlog.select(chat_id=BUYER)[0].text == APPROVED_STOCK
+    assert len(site.log.select(kind="send_photo")) + len(tlog.select(kind="send_photo")) == 1
+
+
+def test_web_sold_out_releases_claim(site, shop, monkeypatch):
+    product_id = shop.db.add_product(shop.category_id, "Empty", 10_000)
+    shop.db.create_order(BUYER, product_id, 10_000)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    refused(asyncio.run(web_approve()), 400, WEB_SOLD_OUT)
+    assert names(steps) == ["claim_order", "take_unused_configs", "release_order_claim"]
+    assert order_row(shop)["status"] == "pending" and site.log.events == []
+
+
+def test_web_inactive_custom_server_releases_claim(site, shop, monkeypatch):
+    server_id = shop.db.add_panel_server("Panel B", "pasarguard", "https://panel-b.example.invalid", "synthetic-user", "synthetic-pass")
+    shop.db.update_panel_server(server_id, is_active=0)
+    custom_order(shop, server_id=server_id)
+    steps = track(monkeypatch, shop.db, site.panel, site.log)
+    refused(asyncio.run(web_approve()), 400, WEB_SERVER_INACTIVE)
+    assert names(steps) == ["claim_order", "release_order_claim"]
+    assert site.panel.calls == [] and order_row(shop)["status"] == "pending"
+
+
+def test_web_ambiguous_custom_error_releases_claim_and_blocks_retry(site, shop, monkeypatch):
+    custom_order(shop)
+    site.panel.fail_after_apply = PanelError("synthetic timeout")
+    refused(asyncio.run(web_approve()), 400, WEB_PANEL_ERROR)
+    assert order_row(shop)["status"] == "pending" and site.panel.users == {"alicustom": 20}
+    assert custom_configs(shop) == []
+    refused(asyncio.run(web_approve()), 400, WEB_TAKEN)
+    assert order_row(shop)["status"] == "pending" and site.panel.users == {"alicustom": 20}
+    assert custom_configs(shop) == [] and site.log.events == []
+
+
+def test_web_ambiguous_direct_error_leaves_orphan_and_retry_creates_another(site, shop):
+    direct_order(shop)
+    site.panel.fail_after_apply = PanelError("synthetic timeout")
+    refused(asyncio.run(web_approve()), 400, WEB_PROVISION_ERROR)
+    assert order_row(shop)["status"] == "pending"
+    assert len(site.panel.calls) == 1
+    first = site.panel.calls[0][1]
+    assert site.panel.calls == [("create_user", first)] and re.fullmatch(DIRECT_NAME, first)
+    ok(asyncio.run(web_approve()))
+    second = site.panel.calls[1][1]
+    assert site.panel.calls[1:] == [("create_user", second)]
+    assert re.fullmatch(DIRECT_NAME, second) and second != first
+    assert set(site.panel.users) == {first, second}
+    assert custom_configs(shop) == []
+    assert [e.text for e in user_events(site.log) if e.text and e.text.startswith("🔗")] == [
+        f"🔗 لینک اشتراک شما (برای کپی):\n`https://sub.example.invalid/{second}`"
+    ]
+
+
+def test_web_ambiguous_renewal_error_applies_twice_on_retry(site, shop):
+    renewal_order(shop, site.panel)
+    site.panel.fail_after_apply = PanelError("synthetic timeout")
+    refused(asyncio.run(web_approve()), 400, WEB_RENEWAL_ERROR)
+    assert order_row(shop)["status"] == "pending"
+    assert site.panel.users["ren1"] == 40 and renewal_volume(shop) == 30
+    ok(asyncio.run(web_approve()))
+    assert site.panel.users["ren1"] == 50 and renewal_volume(shop) == 40
+    assert admin_logs(shop) == [(1, "renewal_approve", WEB_LOG_RENEWAL, "order", "1")]
+
+
+def test_web_unexpected_renewal_error_releases_claim(site, shop):
+    renewal_order(shop, site.panel)
+    site.panel.fail_after_apply = RuntimeError("synthetic")
+    refused(asyncio.run(web_approve()), 400, WEB_RENEWAL_UNEXPECTED)
+    assert order_row(shop)["status"] == "pending"
+    assert site.panel.users["ren1"] == 40 and renewal_volume(shop) == 30
+    assert site.log.events == []
+
+
+@pytest.mark.parametrize("kind", ["direct", "custom"])
+def test_web_unexpected_error_keeps_claim(site, shop, kind):
+    if kind == "direct":
+        direct_order(shop)
+    else:
+        custom_order(shop)
+    site.panel.fail_after_apply = RuntimeError("synthetic")
+    response = asyncio.run(web_approve())
+    assert response.status_code == 500 and response.text == "Internal Server Error"
+    assert order_row(shop)["status"] == "processing" and site.log.events == []
+    refused(asyncio.run(web_approve()), 400, WEB_ALREADY)
+
+
+def test_web_returns_before_delivery_and_a_lost_task_is_never_resent(site, shop, monkeypatch):
+    stock_order(shop)
+    gate = asyncio.Event()
+
+    async def held_photo(*args, **kwargs):
+        await gate.wait()
+        return await site.api.send_photo(*args, **kwargs)
+
+    monkeypatch.setattr(config_delivery_web, "tg_send_photo", held_photo)
+
+    async def scenario():
+        response = await asyncio.wait_for(web_approve(drain=False), timeout=5)
+        ok(response)
+        for _ in range(5):
+            await asyncio.sleep(0)
+        assert order_row(shop)["status"] == "approved"
+        assert configs(shop)[0] == (1, 1, 1001, 1)
+        assert len(admin_logs(shop)) == 1
+        assert site.log.select(kind="send_photo") == []
+        tasks = [task for task in asyncio.all_tasks() if task is not asyncio.current_task()]
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    asyncio.run(scenario())
+    assert order_row(shop)["status"] == "approved"
+    assert site.log.select(kind="send_photo") == []
+    assert LINK_STOCK_1 not in [e.text for e in site.log.events]
+
+
+def test_web_blocked_buyer_is_still_approved(site, shop):
+    stock_order(shop)
+    site.api.blocked_chat_ids.add(BUYER)
+    ok(asyncio.run(web_approve()))
+    assert order_row(shop)["status"] == "approved"
+    assert [e.kind for e in site.log.events] == ["send_message", "send_photo", "send_message", "send_message", "send_message"]
+    assert site.log.events[1].text == site.log.events[2].text
+    assert site.log.events[2].parse_mode is None
+    assert [site.log.events[i].text for i in (0, 3, 4)] == [WEB_APPROVED, LINK_STOCK_1, SUMMARY_100K]
+    assert all(e.delivered is False and e.chat_id == BUYER for e in site.log.events)

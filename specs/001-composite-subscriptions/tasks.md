@@ -124,7 +124,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - the FSM path, `handlers_user.py:receive_receipt:1560`;
   - the fallback at `handlers_user.py:5173` → `database.py:get_latest_pending_order_awaiting_receipt:3515`, which filters by actor and excludes orders with a crypto invoice.
   Cases: lost or stale FSM, several pending orders, another actor's order and duplicate uploads
-- [ ] T015 [P] Characterize order approval in `tests/characterization/test_order_approval.py` (FR-014; PC-093):
+- [X] T015 [P] Characterize order approval in `tests/characterization/test_order_approval.py` (FR-014; PC-093):
   - `handlers_admin.py:cb_order_approve:1777`: claim, then renew/provision/allocate, then approve, then deliver;
   - `admin_only:214` accepting staff;
   - `admin_panel/server.py:api_approve_order:2125` under `require_permission("orders")`;
