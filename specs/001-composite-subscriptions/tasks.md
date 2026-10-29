@@ -180,7 +180,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `_build_sftp_connect_kwargs:384` with `known_hosts=None`;
   - both reseller archive names, `reseller_<id>.db` and `reseller_<id>_level<N>.db`;
   - the restore callers `handlers_admin.py:8675` and `9092`, `admin_panel/server.py:1967` and `manage.sh:1752`
-- [ ] T027 [P] Characterize destructive operations in `tests/characterization/test_destructive_ops.py` (FR-075; FR-083):
+- [X] T027 [P] Characterize destructive operations in `tests/characterization/test_destructive_ops.py` (FR-075; FR-083):
   - `database.py` `factory_reset:1330`, `delete_panel_server:6818` with force, `wipe_agent_state:1930` and `switch_agent_tier:1955`;
   - `transfer_reseller_ownership:4824`: commits main, then updates the tenant best-effort;
   - the `bot_manager.py` deferred purge
