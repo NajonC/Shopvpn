@@ -191,7 +191,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
 
 ### 2B — Transactions, schema and migrations
 
-- [ ] T032 [P] Write `tests/integration/test_repository_transactions.py` before T033 (RD-02; constitution II/VI). Cover:
+- [X] T032 [P] Write `tests/integration/test_repository_transactions.py` before T033 (RD-02; constitution II/VI). Cover:
   - two writer processes on a synthetic main file;
   - a crash before and after commit;
   - read-back of the `synchronous=FULL`, foreign-key and WAL pragmas;
