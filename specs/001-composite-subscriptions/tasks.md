@@ -197,7 +197,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - read-back of the `synchronous=FULL`, foreign-key and WAL pragmas;
   - busy overload surfaced as a typed error;
   - an indeterminate commit resolved by querying the unique effect key, never by retrying
-- [ ] T033 Implement `composite/repository.py` (RD-02; FR-011; FR-085). Tests: T032.
+- [X] T033 Implement `composite/repository.py` (RD-02; FR-011; FR-085). Tests: T032.
   - Dedicated connection ownership, with an explicit `BEGIN IMMEDIATE` per command.
   - Foreign keys and WAL on; `synchronous=FULL` verified for every affected main writer.
   - A 1-second busy wait with bounded retries that surface overload.
