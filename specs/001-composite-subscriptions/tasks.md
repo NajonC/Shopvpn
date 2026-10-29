@@ -174,7 +174,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `extra_gateway_payment.py:process_stars_payment:371`
 - [X] T024 [P] Characterize background job ownership in `tests/characterization/test_background_jobs.py`: `main.py:main:30`; in `bot_manager.py`, `start_bot:191` with its jobs at lines 276–284, `stop_bot:296`, `reconcile_resellers_loop:401` and the deferred purge near line 517; and the exclusion of tenants without a running bot (FR-085 startup/shutdown)
 - [X] T025 [P] Characterize the SQLite foundations in `database.py`, in `tests/characterization/test_database_init.py` (FR-083): the `_connect:473` pragmas (WAL, foreign keys, 4-second busy timeout, `synchronous=NORMAL`), `_get_conn:500`, `init_db:584`, `_migrate_columns:1369` and `replace_file:527`
-- [ ] T026 [P] Characterize backup and restore in `tests/characterization/test_backup_restore.py` (FR-076; FR-083):
+- [X] T026 [P] Characterize backup and restore in `tests/characterization/test_backup_restore.py` (FR-076; FR-083):
   - `backup.py` `create_backup:29`, `create_full_backup:62` and `_sqlite_safe_copy:144`;
   - `restore_full_backup:157`: main replaced before tenants are validated; missing tenants invisible;
   - `_build_sftp_connect_kwargs:384` with `known_hosts=None`;
