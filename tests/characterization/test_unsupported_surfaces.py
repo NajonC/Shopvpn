@@ -3,7 +3,7 @@
 Baseline: ``.venv/bin/python -m pytest tests/characterization/test_unsupported_surfaces.py --network=deny``.
 Every database is a SQLite file under ``tmp_path``; no panel, payment service or Telegram is contacted.
 
-Pins (FR-005; NG-01): (a) the Mini App serves the main store and every active reseller store whose Mini App is on, chosen by the `b` query value (cases 1–3); (b) initData must be signed with that store's bot token, but initData without `auth_date` never expires (cases 4, 5); (c) a purchase debits the wallet at once, before any payment, and a wallet-paid purchase hands out stock at once (cases 6, 7); (d) a reseller store sells its own catalog through the Mini App (case 9); (e) invoice and retrieval endpoints check the owning Telegram ID, and an automatic card-to-card invoice is issued although that mode is off (cases 10, 11); (f) a reseller's own web panel spends the main store's GB credit or one fixed-product unit only after the panel creates the user, undoes the panel user and the spend when either step after it fails, takes the tenant from the signed session only, and accepts any active auto-provision product the reseller holds units of (cases 12–21).
+Pins (FR-005; NG-01): (a) the Mini App serves the main store and every active reseller store whose Mini App is on, chosen by the `b` query value (cases 1–3); (b) initData must be signed with that store's bot token, but initData without `auth_date` never expires (cases 4, 5); (c) a purchase debits the wallet at once, before any payment, and a wallet-paid purchase hands out stock at once (cases 6, 7); (d) a reseller store sells its own catalog through the Mini App (case 9); (e) invoice and retrieval endpoints check the owning Telegram ID, and an automatic card-to-card invoice is issued although that mode is off (cases 10, 11); (f) a reseller's own web panel spends the main store's GB credit or one fixed-product unit only after the panel creates the user, undoes the panel user and the spend when either step after it fails, takes the tenant from the signed session only, and accepts any active auto-provision product the reseller holds units of (cases 12–21); (g) reseller supply through reseller_auto_provision.py spends the main store's GB credit or fixed-product units only after every panel user exists, deletes the built users when a later unit or the spend fails, keeps the sale when the reseller's local record fails, prefers the reseller panel over the product's server, spends credit in fractions for test configs, crashes on a store product row under fixed-product supply, and builds a reseller's own fixed product without any local record (cases 22–31).
 """
 
 import asyncio
@@ -25,6 +25,7 @@ from fastapi import HTTPException
 
 import config
 import database
+import reseller_auto_provision
 from panel_providers.base import PanelError, PanelUserResult, PanelUsernameTakenError
 from tests._harness.legacy_bot import SYNTHETIC_BOT_TOKEN
 from tests._harness.legacy_web import load_admin_panel, session_cookie
@@ -646,3 +647,389 @@ def test_fixed_build_undoes_the_panel_user_on_a_unit_race_or_a_local_failure(rwe
     assert _rows(t, "SELECT id, mirror_source_id FROM panel_servers") == [(1, 1)]
     assert _count(t, "custom_configs") == 0
     assert _count(m, "admin_logs") == 0
+
+
+# --- reseller_auto_provision.py supply (T029c) ---
+
+BAD_QTY = "تعداد درخواستی نامعتبر است."
+NO_OWNER = "مالک این بات مشخص نیست؛ با پشتیبانی تماس بگیرید."
+AUTO_NO_VOLUME = "حجم این محصول تنظیم نشده است."
+AUTO_NOT_RESELLER = "دسترسی اعتبار حجمی برای مالک این بات فعال نیست؛ با پشتیبانی تماس بگیرید."
+NO_FIXED_PRODUCT = "محصول موجودیِ این نمایندگی مشخص نیست؛ با پشتیبانی تماس بگیرید."
+UNITS_1_0 = "موجودی محصول نماینده کافی نیست (نیاز: 1، باقیمانده: 0)."
+AUTO_CREDIT_2000_1500 = "اعتبار حجمی نماینده کافی نیست (نیاز: 2,000 گیگ، باقیمانده: 1,500 گیگ)."
+AUTO_NO_PANEL = "برای این محصول هیچ پنل فعالی برای ساخت کانفیگ نمایندگی پیدا نشد."
+AUTO_NO_NAME = "ساخت نام کاربری یکتا روی پنل ناموفق بود؛ دوباره تلاش کنید."
+AUTO_PANEL_BOOM = "خطا در ساخت کانفیگ روی پنل: boom"
+AUTO_CREDIT_RACE = "اعتبار حجمی هم\u200cزمان توسط یک خرید دیگر مصرف شد؛ دوباره تلاش کنید."
+REASON_AP_2 = "خرید خودکار مشتری - محصول «AP» × 2"
+REASON_T1_1 = "خرید خودکار مشتری - محصول «T1» × 1"
+FIXED_NOT_RESELLER = "این کاربر نماینده فعال نیست."
+FIXED_NOT_READY = "محصول انتخاب\u200cشده برای ساخت خودکار آماده نیست."
+FIXED_NOT_ENOUGH = "موجودی این محصول کافی نیست."
+FIXED_NO_VOLUME = "حجم محصول تنظیم نشده است."
+FIXED_NO_PANEL = "پنل فعال برای ساخت این محصول پیدا نشد؛ پنل نمایندگی یا پنل خود محصول را بررسی کنید."
+FIXED_NO_NAME = "ساخت نام کاربری یکتا ناموفق بود؛ دوباره تلاش کنید."
+FIXED_PANEL_BOOM = "خطا در ساخت کانفیگ: boom"
+FIXED_RACE = "موجودی محصول هم\u200cزمان توسط خرید دیگری مصرف شد؛ دوباره تلاش کنید."
+GRANT_1_OF_1 = "تخصیص 1 عدد از محصول #1"
+GRANT_1_OF_2 = "تخصیص 1 عدد از محصول #2"
+GRANT_1_OF_3 = "تخصیص 1 عدد از محصول #3"
+GRANT_3_OF_1 = "تخصیص 3 عدد از محصول #1"
+AUTO_NAME = r"r[a-z0-9]{8}"
+LOG = "SELECT user_id, delta_gb, reason, admin_id FROM reseller_credit_log ORDER BY id"
+
+
+def _run(coro):
+    return asyncio.run(coro)
+
+
+def _raises_message(call, expected):
+    with pytest.raises(reseller_auto_provision.ProvisionError) as exc:
+        _run(call)
+    assert str(exc.value) == expected
+
+
+@pytest.fixture
+def rap(monkeypatch, tmp_path):
+    main = database.Database(str(tmp_path / "main.db"))
+    main.init_db(OWNER)
+    monkeypatch.setattr(reseller_auto_provision, "MAIN_DB_PATH", main.db_path)
+    remote = FakeRemote()
+    servers = []
+    def get_provider(server):
+        servers.append(server["id"])
+        return remote
+    monkeypatch.setattr(reseller_auto_provision, "get_provider", get_provider)
+    tenant = _reseller(main, tmp_path / "reseller_dbs")
+    main.add_or_update_user(5001, "u5001", "R1")
+    main.set_reseller_status(5001, True)
+    assert main.add_panel_server(
+        "RP", "3xui", "https://rp.example.invalid", "api-user", "synthetic-pass"
+    ) == 1
+    main.update_panel_server(1, used_for_reseller=1)
+    cat = tenant.add_category("C")
+    assert tenant.add_product(
+        cat, "AP", 50000, duration_days=60, is_auto_provision=True,
+        auto_provision_volume_gb=10,
+    ) == 1
+    yield SimpleNamespace(main=main, tenant=tenant, remote=remote, servers=servers)
+    tenant.close()
+    main.close()
+
+
+def AUTO(u, vol, days):
+    return {"username": u, "subscription_url": f"https://sub.example.invalid/{u}", "volume_gb": vol, "duration_days": days}
+
+
+
+
+# Case 22
+
+
+def test_auto_config_spends_main_store_credit_after_the_panel_builds_every_unit(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.adjust_reseller_credit(5001, 50, reason="seed")
+    b = _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 2, user_id=7001, order_id=77))
+    u1, u2 = b[0]["username"], b[1]["username"]
+    assert re.fullmatch(AUTO_NAME, u1)
+    assert re.fullmatch(AUTO_NAME, u2)
+    assert u1 != u2
+    assert b == [AUTO(u1, 10, 60), AUTO(u2, 10, 60)]
+    assert r.calls == [("create_user", u1, 10, 60), ("create_user", u2, 10, 60)]
+    assert rap.servers == [1]
+    assert m.get_reseller_credit(5001) == 30
+    assert _rows(m, LOG) == [(5001, 50, "seed", None), (5001, -20, REASON_AP_2, None)]
+    assert _rows(t, "SELECT order_id, user_id, panel_server_id, username, volume_gb, duration_days, subscription_url, source, product_id, expires_at IS NOT NULL FROM custom_configs ORDER BY id") == [(77, 7001, 1, u1, 10, 60, f"https://sub.example.invalid/{u1}", "direct_product", None, 1), (77, 7001, 1, u2, 10, 60, f"https://sub.example.invalid/{u2}", "direct_product", None, 1)]
+    assert _rows(t, "SELECT id, name, mirror_source_id, is_mirror FROM panel_servers") == [(1, "RP", 1, 1)]
+    assert _count(m, "custom_configs") == 0
+    assert len(_run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 1))) == 1
+    assert _count(t, "custom_configs") == 2
+    assert m.get_reseller_credit(5001) == 20
+
+
+
+
+# Case 23
+
+
+def test_auto_config_refusals_spend_nothing(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.adjust_reseller_credit(5001, 1500, reason="seed")
+    cat = t.add_category("D")
+    assert t.add_product(cat, "NV", 1000, is_auto_provision=True) == 2
+    _raises_message(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 0), BAD_QTY)
+    _raises_message(reseller_auto_provision.provision_auto_config(t, t.get_product(2), 1), AUTO_NO_VOLUME)
+    _raises_message(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 200), AUTO_CREDIT_2000_1500)
+    m.set_reseller_status(5001, False)
+    _raises_message(reseller_auto_provision.provision_auto_config(t, t.get_product(1)), AUTO_NOT_RESELLER)
+    m.set_reseller_status(5001, True)
+    m.update_panel_server(1, is_active=0)
+    _raises_message(reseller_auto_provision.provision_auto_config(t, t.get_product(1)), AUTO_NO_PANEL)
+    m.update_panel_server(1, is_active=1)
+    with t._get_conn() as conn:
+        conn.execute("DELETE FROM admins WHERE role='owner'")
+    _raises_message(reseller_auto_provision.provision_auto_config(t, t.get_product(1)), NO_OWNER)
+    assert r.calls == []
+    assert m.get_reseller_credit(5001) == 1500
+    assert _rows(m, LOG) == [(5001, 1500, "seed", None)]
+    assert _count(t, "custom_configs") == 0
+    assert _count(t, "panel_servers") == 0
+
+
+
+
+# Case 24
+
+
+def test_auto_config_prefers_the_reseller_panel_over_the_products_server(rap):
+    m, t = rap.main, rap.tenant
+    m.adjust_reseller_credit(5001, 50, reason="seed")
+    assert m.add_panel_server("PP", "3xui", "https://pp.example.invalid", "api-user", "synthetic-pass") == 2
+    assert t.add_product(1, "AP2", 50000, is_auto_provision=True, auto_provision_volume_gb=5, provision_server_id=2) == 2
+    _run(reseller_auto_provision.provision_auto_config(t, t.get_product(2), 1, user_id=7001))
+    assert rap.servers == [1]
+    m.update_panel_server(1, is_active=0)
+    _run(reseller_auto_provision.provision_auto_config(t, t.get_product(2), 1, user_id=7001))
+    assert rap.servers == [1, 2]
+    assert _rows(t, "SELECT id, name, mirror_source_id FROM panel_servers ORDER BY id") == [(1, "RP", 1), (2, "PP", 2)]
+    assert _rows(t, "SELECT panel_server_id, volume_gb, duration_days FROM custom_configs ORDER BY id") == [(1, 5, 30), (2, 5, 30)]
+    assert m.get_reseller_credit(5001) == 40
+    m.set_reseller_panel(5001, 2)
+    m.update_panel_server(1, is_active=1)
+    _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 1))
+    assert rap.servers == [1, 2, 2]
+
+
+
+
+# Case 25
+
+
+def test_auto_config_deletes_built_units_when_a_later_unit_fails(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.adjust_reseller_credit(5001, 50, reason="seed")
+    r.on_create = lambda: setattr(r, "error", PanelError("boom")) if len(r.users) == 2 else None
+    with pytest.raises(reseller_auto_provision.ProvisionError) as e:
+        _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 3, user_id=7001))
+    assert str(e.value) == AUTO_PANEL_BOOM
+    n = [c[1] for c in r.calls[:3]]
+    assert r.calls == [("create_user", n[0], 10, 60), ("create_user", n[1], 10, 60), ("create_user", n[2], 10, 60), ("delete_user", n[0]), ("delete_user", n[1])]
+    assert r.users == {}
+    r.calls.clear()
+    r.error = None
+    r.on_create = lambda: setattr(r, "error", PanelUsernameTakenError("x"))
+    with pytest.raises(reseller_auto_provision.ProvisionError) as e:
+        _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 2, user_id=7001))
+    assert str(e.value) == AUTO_NO_NAME
+    assert len(r.calls) == 7
+    assert [c[0] for c in r.calls] == ["create_user"] * 6 + ["delete_user"]
+    assert r.calls[6] == ("delete_user", r.calls[0][1])
+    assert r.users == {}
+    assert m.get_reseller_credit(5001) == 50
+    assert _rows(m, LOG) == [(5001, 50, "seed", None)]
+    assert _count(t, "custom_configs") == 0
+    assert _count(t, "panel_servers") == 0
+
+
+
+
+# Case 26
+
+
+def test_auto_config_deletes_the_units_when_credit_runs_out_meanwhile(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.adjust_reseller_credit(5001, 50, reason="seed")
+    r.on_create = lambda: m.adjust_reseller_credit(5001, -45, reason="other sale")
+    with pytest.raises(reseller_auto_provision.ProvisionError) as e:
+        _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 1, user_id=7001))
+    assert str(e.value) == AUTO_CREDIT_RACE
+    u = r.calls[0][1]
+    assert r.calls == [("create_user", u, 10, 60), ("delete_user", u)]
+    assert r.users == {}
+    assert m.get_reseller_credit(5001) == 5
+    assert _rows(m, LOG) == [(5001, 50, "seed", None), (5001, -45, "other sale", None)]
+    assert _count(t, "custom_configs") == 0
+    assert _count(t, "panel_servers") == 0
+
+
+
+
+# Case 27
+
+
+def test_auto_config_keeps_the_sale_when_the_local_record_fails(rap, monkeypatch):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.adjust_reseller_credit(5001, 50, reason="seed")
+    monkeypatch.setattr(database.Database, "add_custom_config", _failing_add_custom_config)
+    b = _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 2, user_id=7001))
+    assert len(b) == 2
+    assert sorted(r.users) == sorted(i["username"] for i in b)
+    assert m.get_reseller_credit(5001) == 30
+    assert _count(t, "custom_configs") == 0
+    assert _rows(t, "SELECT id, mirror_source_id FROM panel_servers") == [(1, 1)]
+    monkeypatch.setattr(database.Database, "get_or_create_mirror_panel_server", _failing_add_custom_config)
+    with t._get_conn() as conn:
+        conn.execute("DELETE FROM panel_servers")
+    b = _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 1, user_id=7001))
+    assert len(b) == 1
+    assert len(r.users) == 3
+    assert m.get_reseller_credit(5001) == 20
+    assert _count(t, "custom_configs") == 0
+    assert _count(t, "panel_servers") == 0
+    assert [c[0] for c in r.calls] == ["create_user"] * 3
+
+
+
+
+# Case 28
+
+
+def test_auto_config_fixed_product_supply_crashes_on_a_store_product_row(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.set_reseller_supply_model(5001, "fixed_product", 1)
+    m.grant_reseller_product_credit(5001, 1, 3)
+    with pytest.raises(AttributeError, match="'sqlite3.Row' object has no attribute 'get'"):
+        _run(reseller_auto_provision.provision_auto_config(t, t.get_product(1), 1, user_id=7001))
+    assert r.calls == []
+    assert m.get_reseller_product_credit(5001, 1) == 3
+    assert _count(t, "custom_configs") == 0
+
+
+
+
+# Case 29
+
+
+def test_test_config_spends_credit_in_fractions_or_a_fixed_unit(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    m.adjust_reseller_credit(5001, 50, reason="seed")
+    plan = {"id": 4, "name": "T1", "name_prefix": "tst", "volume_mb": 512, "duration_hours": 12}
+    res = _run(reseller_auto_provision.provision_test_config(t, plan, user_id=7001))
+    u = res["username"]
+    assert re.fullmatch(r"tst[a-z0-9]{8}", u)
+    assert res == AUTO(u, 0.5, 0.5)
+    assert r.calls == [("create_user", u, 0.5, 0.5)]
+    assert m.get_reseller_credit(5001) == 49.5
+    assert _rows(m, LOG) == [(5001, 50, "seed", None), (5001, -0.5, REASON_T1_1, None)]
+    assert _rows(t, "SELECT user_id, username, volume_gb, duration_days, source, product_id, order_id, expires_at IS NOT NULL FROM custom_configs") == [(7001, u, 0.5, 0.5, "test", 4, None, 1)]
+    m.set_reseller_supply_model(5001, "fixed_product")
+    with pytest.raises(reseller_auto_provision.ProvisionError) as e:
+        _run(reseller_auto_provision.provision_test_config(t, plan, user_id=7001))
+    assert str(e.value) == NO_FIXED_PRODUCT
+    m.set_reseller_supply_model(5001, "fixed_product", 1)
+    m.grant_reseller_product_credit(5001, 1, 1)
+    _run(reseller_auto_provision.provision_test_config(t, plan, user_id=7001))
+    assert m.get_reseller_product_credit(5001, 1) == 0
+    assert m.get_reseller_credit(5001) == 49.5
+    assert _count(t, "custom_configs") == 2
+    with pytest.raises(reseller_auto_provision.ProvisionError) as e:
+        _run(reseller_auto_provision.provision_test_config(t, plan, user_id=7001))
+    assert str(e.value) == UNITS_1_0
+    assert len(r.calls) == 2
+    assert _rows(m, LOG) == [(5001, 50, "seed", None), (5001, -0.5, REASON_T1_1, None), (5001, 0, GRANT_1_OF_1, None)]
+
+
+
+
+# Case 30
+
+
+def test_reseller_fixed_product_spends_units_without_a_local_record(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    c = m.add_category("C")
+    assert m.add_product(c, "FP", 100000, duration_days=0, is_auto_provision=True, auto_provision_volume_gb=20) == 1
+    m.grant_reseller_product_credit(5001, 1, 3)
+    b = _run(reseller_auto_provision.provision_reseller_fixed_product(m, 5001, 1, 2, username_prefix="p", username="mine1"))
+    u2 = b[1]["username"]
+    assert re.fullmatch(r"p[a-z0-9]{8}", u2)
+    assert b == [dict(AUTO("mine1", 20, 0), product_id=1, product_name="FP"), dict(AUTO(u2, 20, 0), product_id=1, product_name="FP")]
+    assert r.calls == [("create_user", "mine1", 20, 0), ("create_user", "mine1", 20, 0), ("create_user", u2, 20, 0)]
+    assert rap.servers == [1]
+    assert m.get_reseller_product_credit(5001, 1) == 1
+    assert m.get_reseller_credit(5001) == 0
+    assert _rows(m, LOG) == [(5001, 0, GRANT_3_OF_1, None)]
+    assert _count(m, "custom_configs") == 0
+    assert _count(t, "custom_configs") == 0
+    assert m.add_panel_server("PP", "3xui", "https://pp.example.invalid", "api-user", "synthetic-pass") == 2
+    assert m.add_product(c, "FP2", 100000, duration_days=7, is_auto_provision=True, auto_provision_volume_gb=5, provision_server_id=2) == 2
+    m.grant_reseller_product_credit(5001, 2, 2)
+    _run(reseller_auto_provision.provision_reseller_fixed_product(m, 5001, 2))
+    assert rap.servers == [1, 1]
+    m.update_panel_server(1, is_active=0)
+    b = _run(reseller_auto_provision.provision_reseller_fixed_product(m, 5001, 2))
+    assert b == [dict(AUTO(b[0]["username"], 5, 7), product_id=2, product_name="FP2")]
+    assert rap.servers == [1, 1, 2]
+    assert m.get_reseller_product_credit(5001, 2) == 0
+
+
+
+
+# Case 31
+
+
+def test_reseller_fixed_product_refusals_and_rollbacks(rap):
+    m, t, r = rap.main, rap.tenant, rap.remote
+    c = m.add_category("C")
+    assert m.add_product(c, "FP", 100000, is_auto_provision=True, auto_provision_volume_gb=20) == 1
+    assert m.add_product(c, "Plain", 100000) == 2
+    assert m.add_product(c, "NV", 100000, is_auto_provision=True) == 3
+    for pid in (1, 2, 3):
+        m.grant_reseller_product_credit(5001, pid, 1)
+    P = reseller_auto_provision.provision_reseller_fixed_product
+    _raises_message(P(m, 5001, 1, 0), BAD_QTY)
+    _raises_message(P(m, 5001, 99), FIXED_NOT_READY)
+    _raises_message(P(m, 5001, 2), FIXED_NOT_READY)
+    _raises_message(P(m, 5001, 1, 2), FIXED_NOT_ENOUGH)
+    _raises_message(P(m, 5001, 3), FIXED_NO_VOLUME)
+    m.toggle_product(1)
+    _raises_message(P(m, 5001, 1), FIXED_NOT_READY)
+    m.toggle_product(1)
+    m.set_reseller_status(5001, False)
+    _raises_message(P(m, 5001, 1), FIXED_NOT_RESELLER)
+    m.set_reseller_status(5001, True)
+    m.update_panel_server(1, is_active=0)
+    _raises_message(P(m, 5001, 1), FIXED_NO_PANEL)
+    m.update_panel_server(1, is_active=1)
+    assert r.calls == []
+    r.error = PanelError("boom")
+    _raises_message(P(m, 5001, 1), FIXED_PANEL_BOOM)
+    assert r.calls == [("create_user", r.calls[0][1], 20, 30)]
+    r.error = None
+    r.calls.clear()
+    r.on_create = lambda: m.consume_reseller_product_credit(5001, 1, 1)
+    _raises_message(P(m, 5001, 1), FIXED_RACE)
+    u = r.calls[0][1]
+    assert r.calls == [("create_user", u, 20, 30), ("delete_user", u)]
+    assert r.users == {}
+    assert m.get_reseller_product_credit(5001, 1) == 0
+    r.on_create = None
+    r.calls.clear()
+    m.grant_reseller_product_credit(5001, 1, 1)
+    r.error = PanelUsernameTakenError("x")
+    _raises_message(P(m, 5001, 1, username="mine2"), FIXED_NO_NAME)
+    assert len(r.calls) == 8
+    assert r.calls[0] == ("create_user", "mine2", 20, 30)
+    assert all(c[0] == "create_user" for c in r.calls)
+    assert m.get_reseller_product_credit(5001, 1) == 1
+    r.error = None
+    r.calls.clear()
+    m.grant_reseller_product_credit(5001, 1, 1)
+    r.on_create = lambda: setattr(r, "error", PanelError("boom"))
+    _raises_message(P(m, 5001, 1, 2), FIXED_PANEL_BOOM)
+    u = r.calls[0][1]
+    assert r.calls == [
+        ("create_user", u, 20, 30),
+        ("create_user", r.calls[1][1], 20, 30),
+        ("delete_user", u),
+    ]
+    assert r.users == {}
+    assert m.get_reseller_product_credit(5001, 1) == 2
+    assert _rows(m, LOG) == [
+        (5001, 0, GRANT_1_OF_1, None),
+        (5001, 0, GRANT_1_OF_2, None),
+        (5001, 0, GRANT_1_OF_3, None),
+        (5001, 0, GRANT_1_OF_1, None),
+        (5001, 0, GRANT_1_OF_1, None),
+    ]
+    assert _count(t, "custom_configs") == 0
