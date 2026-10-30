@@ -213,7 +213,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Each database owns its transactions explicitly: no nested committing `Database` helpers and no implicit commit from `executescript`.
   - Add `service_kind` (default `'legacy'`) and an optional unique composite reference to `products`, `test_config_plans` and `orders`.
   - Affected reseller files receive only the compatibility metadata they need, and no composite eligibility
-- [ ] T036 Add the data-model §1 DDL to `composite/migrations.py` (FR-004; FR-033). Tests: T034.
+- [X] T036 Add the data-model §1 DDL to `composite/migrations.py` (FR-004; FR-033). Tests: T034.
   - `composite_physical_panels`: provider `3xui` only; TLS trust reference; recorded panel and core version; capability-manifest revision; route-namespace version; write-path stall state; and the last verified `restartXrayOnClientDisable` value with its check time ("must be off … on or unreadable blocks new binding").
   - `composite_panel_aliases`, unique on `(database_installation_id, tenant_id, local_panel_server_id)`.
   - `composite_prepared_bindings`.

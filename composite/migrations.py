@@ -18,6 +18,47 @@ from composite.repository import BUSY_TIMEOUT_S
 SCHEMA_VERSION = 1
 KIND_TABLES = ("products", "test_config_plans", "orders")
 
+# data-model.md §1: physical panels, aliases and prepared bindings. A panel
+# with restartXrayOnClientDisable on or unreadable blocks new binding (RX-D2).
+_PANEL_DDL = (
+    """CREATE TABLE composite_physical_panels (
+    physical_panel_id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL CHECK (provider = '3xui'),
+    authority_fingerprint TEXT NOT NULL,
+    endpoint_ref TEXT NOT NULL,
+    tls_trust_ref TEXT NOT NULL,
+    panel_version TEXT,
+    core_version TEXT,
+    capability_manifest_revision TEXT,
+    route_namespace_version INTEGER,
+    restart_xray_on_client_disable TEXT
+        CHECK (restart_xray_on_client_disable IN ('off', 'on', 'unreadable')),
+    restart_xray_on_client_disable_checked_at INTEGER,
+    write_stall_misses INTEGER NOT NULL DEFAULT 0
+        CHECK (typeof(write_stall_misses) = 'integer' AND write_stall_misses >= 0),
+    write_stall_escalation_ref TEXT,
+    CHECK ((restart_xray_on_client_disable IS NULL) = (restart_xray_on_client_disable_checked_at IS NULL))
+)""",
+    """CREATE TABLE composite_panel_aliases (
+    alias_id TEXT PRIMARY KEY,
+    physical_panel_id TEXT NOT NULL
+        REFERENCES composite_physical_panels (physical_panel_id) ON DELETE RESTRICT,
+    database_installation_id TEXT NOT NULL,
+    tenant_id TEXT NOT NULL,
+    local_panel_server_id INTEGER NOT NULL,
+    UNIQUE (database_installation_id, tenant_id, local_panel_server_id)
+)""",
+    """CREATE TABLE composite_prepared_bindings (
+    binding_id TEXT PRIMARY KEY,
+    physical_panel_id TEXT NOT NULL
+        REFERENCES composite_physical_panels (physical_panel_id) ON DELETE RESTRICT,
+    inbound_id INTEGER NOT NULL,
+    settings_fingerprint TEXT NOT NULL,
+    egress_key TEXT NOT NULL,
+    route_namespace TEXT NOT NULL
+)""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -123,6 +164,8 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
+    for statement in _PANEL_DDL:
+        conn.execute(statement)
 
 
 def _reseller_v1(conn: sqlite3.Connection) -> None:
