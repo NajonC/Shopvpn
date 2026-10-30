@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, and T034b's since T036 and T037. T034c's tests (the last section) check the data-model §5–§7 tables and fail until T038 adds them.
+T034a's tests pass since T035, and T034b's since T036 and T037. T034c's tests check the data-model §5–§7 tables and fail until T038 adds them; T034d's tests (the last section) check the §8–§9 tables and fail until T039 adds them.
 """
 
 from collections import Counter
@@ -1813,3 +1813,608 @@ def test_reminder_due_time_and_acceptance_are_final(main_db):
         main_db.execute("DELETE FROM composite_reminders WHERE reminder_id='rm-1'")
     _put(main_db, "composite_reminders", reminder_id="rm-q", reminder_type="quota", expiry_threshold_seconds=None, quota_mode="percent", quota_percent=80)
     main_db.execute("UPDATE composite_reminders SET status='cancelled' WHERE reminder_id='rm-q'")
+
+
+# Data-model §8–§9 tables (T034d: checks for T039)
+
+QUOTE_RULES = '{"rate": "10/1", "charges": [2000], "offset": 0, "rounding": "none"}'
+# One valid row per table, in parent-before-child order. _chain89(conn) supplies the parents.
+ROWS_8_9 = {
+    "composite_checkouts": {"checkout_id": "ck-1", "order_id": 101, "tenant_installation_id": "inst-main", "customer_telegram_id": 50001, "offer_id": "of-1", "kind": "initial", "target_subscription_id": None, "principal": "telegram:50001", "request_key": "confirm-1", "status": "awaiting_payment", "final_price": 225_000, "wallet_amount": 30_000, "authorization_source": None, "authorized_at": None, "deadline_at": None, "original_receipt_id": None, "fulfillment_operation_id": None, "terminal_reason": None, "terminal_at": None, "created_at": T0},
+    "composite_payment_attempts": {"attempt_id": "pa-1", "checkout_id": "ck-1", "method": "card_to_card", "provider": "manual-card", "merchant_namespace": "card-ns-1", "config_version": "cfg-1", "creation_intent": "intent-pa-1", "provider_invoice_ref": "inv-1", "create_state": "created", "native_amount": 1_970_000, "currency": "IRR", "minor_unit_scale": 0, "store_remainder": 195_000, "invoice_value": 197_000, "quote_rules": QUOTE_RULES, "quote_version": "quote-v1", "quote_accepted_at": T0 + 1_000, "valid_until": None, "recovery_ref": None, "status": "open"},
+    "composite_manual_decisions": {"decision_id": "md-1", "attempt_id": "pa-1", "principal": "web:owner-1", "principal_role": "owner", "interface": "web", "provider_reference": "bank-ref-1", "evidence_digest": "evidence-md-1", "tenant_installation_id": "inst-main", "customer_telegram_id": 50001, "amount": 1_970_000, "currency": "IRR", "method": "card_to_card", "decision": "approved", "reason": None, "decided_at": T0 + 60_000, "idempotency_key": "decide-1"},
+    "composite_payment_receipts": {"receipt_id": "rc-1", "attempt_id": "pa-1", "checkout_id": "ck-1", "provider": "manual-card", "merchant_namespace": "card-ns-1", "transaction_reference": "bank-ref-1", "tenant_installation_id": "inst-main", "beneficiary_telegram_id": 50001, "native_amount": 1_970_000, "currency": "IRR", "invoice_value": 197_000, "verification_source": "manual", "manual_decision_id": "md-1", "evidence_digest": "evidence-rc-1", "verified_at": T0 + 60_000, "outcome": "original_funding"},
+    "financial_obligations": {"obligation_id": "fo-1", "effect_key": "wallet_debit:ck-1", "tenant_installation_id": "inst-main", "beneficiary_telegram_id": 50001, "kind": "wallet_debit", "amount": 30_000, "evidence_ref": None, "checkout_id": "ck-1", "receipt_id": None, "batch_ref": None, "member_ref": None, "triggered_at": T0, "due_at": T0, "state": "owed", "ledger_seq": None, "settled_at": None},
+    "wallet_effects": {"ledger_seq": 1, "obligation_id": "fo-1", "beneficiary_telegram_id": 50001, "kind": "wallet_debit", "amount": 30_000, "balance_before": 42_000, "balance_after": 12_000, "applied_at": T0},
+    "composite_campaigns": {"campaign_id": "cmp-1", "plan_id": "cp-camp", "plan_kind": "campaign", "lifetime_cap": 150, "served_count": 0, "closed_at": None, "history_verified_at": T0},
+    "composite_test_claims": {"claim_id": "tc-1", "tenant_installation_id": "inst-main", "customer_telegram_id": 50001, "offer_id": "of-t1", "campaign_id": "cmp-1", "accepted_seq": 1, "accepted_at": T0, "deadline_at": T0 + 900_000, "status": "fulfilled", "fulfilled_at": T0 + 300_000, "retrieval_evidence": "retrieved-tc-1", "terminal_at": None, "terminal_reason": None},
+    "resource_reservations": {"reservation_id": "rr-1", "resource": "coupon", "checkout_id": "ck-1", "claim_id": None, "legacy_order_id": None, "legacy_test_ref": None, "tenant_installation_id": "inst-main", "customer_telegram_id": 50001, "coupon_code_id": 7, "campaign_id": None, "sequence": 1, "accepted_at": T0, "state": "held", "transition_key": None, "transitioned_at": None},
+    "composite_campaign_recipients": {"campaign_id": "cmp-1", "customer_telegram_id": 50001, "claim_id": "tc-1", "claim_status": "fulfilled", "fulfilled_at": T0 + 300_000},
+}
+CLAIM_HOLD = {"checkout_id": None, "coupon_code_id": None, "claim_id": "tc-1", "state": "consumed", "transition_key": "fulfil:tc-1", "transitioned_at": T0 + 300_000}
+# _chain89 inserts these in order: rr-2 and rr-3 are tc-1's ordinary-test and campaign-place holds.
+CHAIN_8_9 = (("composite_checkouts", {}), ("composite_payment_attempts", {}), ("composite_manual_decisions", {}), ("composite_payment_receipts", {}), ("financial_obligations", {}), ("wallet_effects", {}), ("composite_campaigns", {}), ("composite_test_claims", {}), ("resource_reservations", {}), ("resource_reservations", {"reservation_id": "rr-2", "resource": "ordinary_test", "sequence": 2, **CLAIM_HOLD}), ("resource_reservations", {"reservation_id": "rr-3", "resource": "campaign_place", "campaign_id": "cmp-1", "sequence": 3, **CLAIM_HOLD}), ("composite_campaign_recipients", {}))
+EXPECTED_FKS_8_9 = (
+    ("composite_checkouts", ("order_id",), "orders", ("id",)), ("composite_checkouts", ("offer_id",), "composite_offers", ("offer_id",)), ("composite_checkouts", ("target_subscription_id",), "composite_subscriptions", ("subscription_id",)), ("composite_checkouts", ("original_receipt_id", "checkout_id"), "composite_payment_receipts", ("receipt_id", "checkout_id")),
+    ("composite_payment_attempts", ("checkout_id",), "composite_checkouts", ("checkout_id",)), ("composite_manual_decisions", ("attempt_id",), "composite_payment_attempts", ("attempt_id",)), ("composite_payment_receipts", ("attempt_id", "checkout_id"), "composite_payment_attempts", ("attempt_id", "checkout_id")), ("composite_payment_receipts", ("manual_decision_id", "attempt_id"), "composite_manual_decisions", ("decision_id", "attempt_id")), ("financial_obligations", ("checkout_id",), "composite_checkouts", ("checkout_id",)), ("financial_obligations", ("receipt_id", "checkout_id"), "composite_payment_receipts", ("receipt_id", "checkout_id")), ("financial_obligations", ("ledger_seq", "obligation_id"), "wallet_effects", ("ledger_seq", "obligation_id")), ("wallet_effects", ("obligation_id", "beneficiary_telegram_id", "kind", "amount"), "financial_obligations", ("obligation_id", "beneficiary_telegram_id", "kind", "amount")), ("composite_campaigns", ("plan_id", "plan_kind"), "composite_plans", ("plan_id", "kind")), ("composite_test_claims", ("offer_id",), "composite_offers", ("offer_id",)), ("composite_test_claims", ("campaign_id",), "composite_campaigns", ("campaign_id",)), ("resource_reservations", ("checkout_id",), "composite_checkouts", ("checkout_id",)), ("resource_reservations", ("claim_id",), "composite_test_claims", ("claim_id",)), ("resource_reservations", ("claim_id", "campaign_id"), "composite_test_claims", ("claim_id", "campaign_id")), ("resource_reservations", ("legacy_order_id",), "orders", ("id",)), ("composite_campaign_recipients", ("campaign_id",), "composite_campaigns", ("campaign_id",)), ("composite_campaign_recipients", ("claim_id", "campaign_id", "customer_telegram_id", "claim_status"), "composite_test_claims", ("claim_id", "campaign_id", "customer_telegram_id", "status")),
+)
+
+WALLET_AUTH = {"status": "authorized", "final_price": 225_000, "wallet_amount": 225_000, "authorization_source": "wallet", "authorized_at": T0 + 1_000, "deadline_at": T0 + 901_000}
+ZERO_AUTH = {"status": "authorized", "final_price": 0, "wallet_amount": 0, "authorization_source": "zero_price", "authorized_at": T0 + 1_000, "deadline_at": T0 + 901_000}
+CHECKOUT_STATES = {"quoted": {"status": "quoted"}, "awaiting_payment": {}, "manual_review": {"status": "manual_review"}, "authorized": WALLET_AUTH, "fulfilling": {**WALLET_AUTH, "status": "fulfilling", "fulfillment_operation_id": "op-f1"}, "fulfilled": {**WALLET_AUTH, "status": "fulfilled", "fulfillment_operation_id": "op-f1"}, "rejected": {"status": "rejected", "terminal_reason": "owner_rejected", "terminal_at": T0 + 5_000}, "cancelled": {"status": "cancelled", "terminal_reason": "customer_cancelled", "terminal_at": T0 + 5_000}, "failed": {**WALLET_AUTH, "status": "failed", "terminal_reason": "deadline_missed", "terminal_at": T0 + 901_000}}
+RENEWAL_1 = {"checkout_id": "ck-r1", "order_id": 102, "offer_id": "of-2", "kind": "renewal", "target_subscription_id": "sub-1", "request_key": "confirm-r1"}
+PROVIDER_VERIFIED = {"verification_source": "provider", "manual_decision_id": None}
+RECEIPT_CREDIT = {"receipt_id": "rc-1", "due_at": T0 + 60_000}
+PENDING_CLAIM = {"status": "pending", "fulfilled_at": None, "retrieval_evidence": None}
+NO_COUPON = {"checkout_id": None, "coupon_code_id": None}
+TRANSITION = {"transition_key": "op-t1", "transitioned_at": T0 + 1_000}
+SETTLE = "UPDATE financial_obligations SET state = 'settled', ledger_seq = ?, settled_at = ? WHERE obligation_id = ?"
+MOVE = "UPDATE resource_reservations SET state = ?, transition_key = ?, transitioned_at = ? WHERE reservation_id = ?"
+
+def _put89(conn, table, **changes):
+    row = {**ROWS_8_9[table], **changes}
+    cols = tuple(row)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()))
+
+def _order(conn, order_id):
+    conn.execute("INSERT INTO orders (id, user_id, product_id, status, service_kind, composite_ref) VALUES (?, 1, 1, 'pending', 'composite', ?)", (order_id, f"order-ref-{order_id}"))
+
+def _offer(conn, offer_id):
+    _insert(conn, "composite_offers", offer_id=offer_id)
+
+def _test_offer(conn, offer_id):
+    _insert(conn, "composite_offers", offer_id=offer_id, plan_version_id="cpv-camp-1", allowance_bytes=16_106_127_360, duration_seconds=1_296_000, base_price=0, payable_price=0)
+
+def _chain89(conn, until=None):
+    assert until is None or until in ROWS_8_9
+    _chain(conn)
+    _order(conn, 101)
+    _insert(conn, "composite_plans", plan_id="cp-camp", kind="campaign")
+    _insert(conn, "composite_plan_versions", plan_version_id="cpv-camp-1", plan_id="cp-camp", kind="campaign", allowance_bytes=16_106_127_360, duration_seconds=1_296_000, base_price=0)
+    _test_offer(conn, "of-t1")
+    for table, changes in CHAIN_8_9:
+        if table == until: break
+        _put89(conn, table, **changes)
+
+def _checkout2(conn):
+    _order(conn, 102)
+    _offer(conn, "of-2")
+    _put89(conn, "composite_checkouts", checkout_id="ck-2", order_id=102, offer_id="of-2", request_key="confirm-2")
+
+def _campaign2(conn):
+    _insert(conn, "composite_plans", plan_id="cp-camp2", kind="campaign")
+    _put89(conn, "composite_campaigns", campaign_id="cmp-2", plan_id="cp-camp2")
+
+def _trigger_refuses(conn, sql, args=()):
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        conn.execute(sql, args)
+    assert "constraint failed" not in str(error.value)
+
+def test_main_gets_the_section_8_to_9_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        tables = _tables(conn)
+        for table, row in ROWS_8_9.items():
+            assert table in tables
+            assert set(row) <= set(_columns(conn, table))
+
+def test_section_8_to_9_foreign_keys_are_restrict(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in ROWS_8_9:
+            groups = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                groups.setdefault(row[0], []).append(row)
+            for rows in groups.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                cols = tuple(row[4] for row in rows)
+                if any(col is None for col in cols):
+                    cols = tuple(r[1] for r in sorted((r for r in conn.execute(f"PRAGMA table_info({parent})") if r[5] > 0), key=lambda r: r[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS_8_9) <= found
+
+def test_rows_in_every_section_8_to_9_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain89(conn)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert _one(conn, "SELECT count(*) FROM resource_reservations")[0] == 3
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in ROWS_8_9 if table != "resource_reservations")
+
+@pytest.mark.parametrize("case", ["checkout-order", "legacy-order-reservation", "campaign-plan"], ids=["checkout-order", "legacy-order-reservation", "campaign-plan"])
+def test_section_8_to_9_parents_cannot_be_deleted(main_db, case):
+    _chain89(main_db)
+    if case == "legacy-order-reservation":
+        _put89(main_db, "resource_reservations", reservation_id="rr-l", checkout_id=None, legacy_order_id=2, sequence=9)
+        sql = "DELETE FROM orders WHERE id=2"
+    elif case == "campaign-plan":
+        _campaign2(main_db)
+        sql = "DELETE FROM composite_plans WHERE plan_id='cp-camp2'"
+    else:
+        sql = "DELETE FROM orders WHERE id=101"
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        main_db.execute(sql)
+    if case == "campaign-plan":
+        assert _one(main_db, "SELECT plan_id FROM composite_plans WHERE plan_id='cp-camp2'") == ("cp-camp2",)
+    elif case == "legacy-order-reservation":
+        assert _one(main_db, "SELECT id FROM orders WHERE id=2") == (2,)
+    else:
+        assert _one(main_db, "SELECT id FROM orders WHERE id=101") == (101,)
+
+@pytest.mark.parametrize("fk", EXPECTED_FKS_8_9, ids=[f"{x[0]}-{i}" for i, x in enumerate(EXPECTED_FKS_8_9, 1)])
+def test_section_8_to_9_child_row_needs_its_parent(main_db, fk):
+    table = fk[0]
+    _chain89(main_db, until=table)
+    cases = (
+        {"order_id": 999}, {"offer_id": "of-missing"}, {"kind": "renewal", "target_subscription_id": "sub-missing"},
+        {"status": "authorized", "authorization_source": "receipt", "authorized_at": T0 + 60_000, "deadline_at": T0 + 960_000, "original_receipt_id": "rc-missing"},
+        {"checkout_id": "ck-missing"}, {"attempt_id": "pa-missing"}, {"attempt_id": "pa-missing"}, {"manual_decision_id": "md-missing"},
+        {"checkout_id": "ck-missing"}, {"kind": "extra_credit", "effect_key": "extra_credit:rc-missing", "receipt_id": "rc-missing", "due_at": T0 + 60_000},
+        {"state": "settled", "ledger_seq": 999, "settled_at": T0}, {"obligation_id": "fo-missing"}, {"plan_id": "cp-missing"},
+        {"offer_id": "of-missing"}, {"campaign_id": "cmp-missing"}, {"checkout_id": "ck-missing"},
+        {"resource": "ordinary_test", "checkout_id": None, "coupon_code_id": None, "claim_id": "tc-missing"},
+        {"resource": "campaign_place", "checkout_id": None, "coupon_code_id": None, "claim_id": "tc-missing", "campaign_id": "cmp-1"},
+        {"checkout_id": None, "legacy_order_id": 999}, {"campaign_id": "cmp-missing"}, {"claim_id": "tc-missing"},
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put89(main_db, table, **cases[EXPECTED_FKS_8_9.index(fk)])
+
+def _case_error(conn, table, changes, expected):
+    if expected == "accepted":
+        _put89(conn, table, **changes)
+        return
+    with pytest.raises(sqlite3.IntegrityError, match=expected):
+        _put89(conn, table, **changes)
+
+
+def _case_id(value):
+    if isinstance(value, dict):
+        return ",".join(f"{key}={item}" for key, item in value.items())[:72]
+    return str(value)
+
+
+CHECK = "CHECK constraint failed"
+FK = "FOREIGN KEY constraint failed"
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"kind": "renewal", "target_subscription_id": "sub-1"}, "accepted"),
+    ({"kind": "conversion", "target_subscription_id": "sub-1"}, "accepted"),
+    ({"status": "quoted"}, "accepted"), ({"status": "manual_review"}, "accepted"),
+    ({"wallet_amount": 0}, "accepted"), ({"wallet_amount": 225_000}, "accepted"),
+    ({"kind": "gift", "target_subscription_id": "sub-1"}, CHECK), ({"status": "expired"}, CHECK), ({"status": "pending"}, CHECK),
+    ({"final_price": -1}, CHECK), ({"final_price": 1.5}, CHECK), ({"final_price": "n/a"}, CHECK),
+    ({"wallet_amount": -1}, CHECK), ({"wallet_amount": 225_001}, CHECK), ({"wallet_amount": 0.5}, CHECK),
+    ({"kind": "initial", "target_subscription_id": "sub-1"}, CHECK), ({"kind": "renewal"}, CHECK), ({"kind": "conversion"}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_checkouts.{col}")) for col in ("order_id", "tenant_installation_id", "customer_telegram_id", "offer_id", "kind", "principal", "request_key", "status", "final_price", "created_at")],
+], ids=["renewal", "conversion", "quoted", "review", "wallet-zero", "wallet-full", "bad-kind", "bad-expired", "bad-pending", "negative-price", "float-price", "text-price", "negative-wallet", "over-wallet", "float-wallet", "initial-target", "renewal-no-target", "conversion-no-target"] + [f"null-{c}" for c in ("order_id", "tenant_installation_id", "customer_telegram_id", "offer_id", "kind", "principal", "request_key", "status", "final_price", "created_at")])
+def test_checkout_column_values(main_db, changes, expected):
+    _chain89(main_db, until="composite_checkouts")
+    _case_error(main_db, "composite_checkouts", changes, expected)
+
+
+@pytest.mark.parametrize("changes, expected", [(WALLET_AUTH, "accepted"), (ZERO_AUTH, "accepted"), *[(CHECKOUT_STATES[s], "accepted") for s in ("fulfilling", "fulfilled", "failed", "rejected", "cancelled")], ({**WALLET_AUTH, "status": "cancelled", "terminal_reason": "subscription_cancelled", "terminal_at": T0 + 5_000}, "accepted"),
+    ({**WALLET_AUTH, "wallet_amount": 224_999}, CHECK), ({**WALLET_AUTH, "final_price": 0, "wallet_amount": 0}, CHECK), ({**ZERO_AUTH, "final_price": 225_000}, CHECK), ({**ZERO_AUTH, "final_price": 225_000, "wallet_amount": 225_000}, CHECK), ({**WALLET_AUTH, "authorized_at": None, "deadline_at": None}, CHECK), ({**WALLET_AUTH, "authorization_source": None}, CHECK),
+    *[({**WALLET_AUTH, "deadline_at": v}, CHECK) for v in (T0 + 901_001, T0 + 900_999, None)], ({"deadline_at": T0 + 901_000}, CHECK), ({"status": "authorized"}, CHECK), *[({**WALLET_AUTH, "status": s}, CHECK) for s in ("awaiting_payment", "quoted", "manual_review")], ({**CHECKOUT_STATES["rejected"], **WALLET_AUTH, "status": "rejected"}, CHECK), ({"status": "failed", "terminal_reason": "deadline_missed", "terminal_at": T0 + 5_000}, CHECK), ({"status": "fulfilled", "fulfillment_operation_id": "op-f1"}, CHECK), ({**WALLET_AUTH, "status": "fulfilling"}, CHECK), ({**WALLET_AUTH, "status": "fulfilled"}, CHECK), ({"status": "cancelled"}, CHECK), ({"status": "cancelled", "terminal_at": T0 + 5_000}, CHECK), ({"status": "cancelled", "terminal_reason": "customer_cancelled"}, CHECK), ({"terminal_reason": "customer_cancelled", "terminal_at": T0 + 5_000}, CHECK), ({**WALLET_AUTH, "authorization_source": "receipt"}, CHECK), ({**WALLET_AUTH, "authorization_source": "card"}, CHECK), ({"status": "authorized", "authorization_source": "receipt", "authorized_at": T0 + 60_000, "deadline_at": T0 + 960_000}, CHECK), ({**WALLET_AUTH, "original_receipt_id": "rc-missing"}, CHECK), ({**WALLET_AUTH, "authorization_source": "receipt", "original_receipt_id": "rc-missing"}, CHECK)], ids=lambda value: _case_id(value))
+def test_checkout_authorization_and_deadline(main_db, changes, expected):
+    _chain89(main_db, until="composite_checkouts")
+    _case_error(main_db, "composite_checkouts", changes, expected)
+
+
+def test_checkout_order_offer_and_request_are_unique(main_db):
+    _chain89(main_db, until="composite_payment_attempts")
+    _order(main_db, 102)
+    _offer(main_db, "of-2")
+    cases = [({"offer_id": "of-2", "request_key": "confirm-2"}, "UNIQUE constraint failed: composite_checkouts.order_id"), ({"order_id": 102, "request_key": "confirm-2"}, "UNIQUE constraint failed: composite_checkouts.offer_id"), ({"order_id": 102, "offer_id": "of-2"}, "UNIQUE constraint failed: composite_checkouts.principal, composite_checkouts.request_key"), ({"order_id": 102, "offer_id": "of-2", "principal": "telegram:50002", "customer_telegram_id": 50002}, "accepted")]
+    for changes, expected in cases:
+        if expected == "accepted":
+            _put89(main_db, "composite_checkouts", checkout_id="ck-2", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected)):
+                _put89(main_db, "composite_checkouts", checkout_id="ck-2", **changes)
+
+
+def test_checkout_is_authorized_by_its_own_original_receipt(main_db):
+    _chain89(main_db, until="financial_obligations")
+    _checkout2(main_db)
+    auth = "UPDATE composite_checkouts SET status = 'authorized', authorization_source = 'receipt', authorized_at = ?, deadline_at = ?, original_receipt_id = ? WHERE checkout_id = ?"
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        main_db.execute(auth, (T0 + 60_000, T0 + 960_000, "rc-1", "ck-2"))
+    main_db.execute(auth, (T0 + 60_000, T0 + 960_000, "rc-1", "ck-1"))
+    _put89(main_db, "composite_payment_receipts", receipt_id="rc-2", transaction_reference="bank-ref-2", outcome="extra_credit", **PROVIDER_VERIFIED)
+    for sql, args in [("UPDATE composite_checkouts SET original_receipt_id = 'rc-2' WHERE checkout_id = 'ck-1'", ()), ("UPDATE composite_checkouts SET authorized_at = ?, deadline_at = ? WHERE checkout_id = 'ck-1'", (T0 + 70_000, T0 + 970_000)), ("UPDATE composite_checkouts SET authorization_source = 'wallet' WHERE checkout_id = 'ck-1'", ()), ("UPDATE composite_checkouts SET status = 'awaiting_payment', authorization_source = NULL, authorized_at = NULL, deadline_at = NULL, original_receipt_id = NULL WHERE checkout_id = 'ck-1'", ())]:
+        _trigger_refuses(main_db, sql, args)
+    assert _one(main_db, "SELECT status, authorization_source, authorized_at, deadline_at, original_receipt_id FROM composite_checkouts WHERE checkout_id='ck-1'") == ("authorized", "receipt", T0 + 60_000, T0 + 960_000, "rc-1")
+    main_db.execute("UPDATE composite_checkouts SET status = 'fulfilling', fulfillment_operation_id = 'op-f1' WHERE checkout_id = 'ck-1'")
+
+
+@pytest.mark.parametrize("state", (*CHECKOUT_STATES, "other-subscription"), ids=(*CHECKOUT_STATES, "other-subscription"))
+def test_one_open_renewal_or_conversion_per_subscription(main_db, state):
+    _chain89(main_db, until="composite_payment_attempts")
+    for order_id in (102, 103, 104):
+        _order(main_db, order_id)
+    for offer_id in ("of-2", "of-3", "of-4"):
+        _offer(main_db, offer_id)
+    if state == "other-subscription":
+        _sub2(main_db)
+        _put89(main_db, "composite_checkouts", **RENEWAL_1)
+        _put89(main_db, "composite_checkouts", checkout_id="ck-r2", order_id=103, offer_id="of-3", kind="renewal", target_subscription_id="sub-2", request_key="confirm-r2")
+        _put89(main_db, "composite_checkouts", checkout_id="ck-i2", order_id=104, offer_id="of-4", request_key="confirm-i2")
+        return
+    _put89(main_db, "composite_checkouts", **{**RENEWAL_1, **CHECKOUT_STATES[state]})
+    open_state = state in ("quoted", "awaiting_payment", "manual_review", "authorized", "fulfilling")
+    changes = {"checkout_id": "ck-r2", "order_id": 103, "offer_id": "of-3", "kind": "renewal", "target_subscription_id": "sub-1", "request_key": "confirm-r2"}
+    if open_state:
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_checkouts.target_subscription_id")):
+            _put89(main_db, "composite_checkouts", **changes)
+    else:
+        _put89(main_db, "composite_checkouts", **changes)
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_checkouts.target_subscription_id")):
+        _put89(main_db, "composite_checkouts", checkout_id="ck-c", order_id=104, offer_id="of-4", kind="conversion", target_subscription_id="sub-1", request_key="confirm-c")
+
+
+@pytest.mark.parametrize("column, value", [("kind", "conversion"), ("target_subscription_id", "sub-2"), ("offer_id", "of-3"), ("order_id", 103), ("tenant_installation_id", "inst-other"), ("customer_telegram_id", 50002), ("final_price", 200_000), ("wallet_amount", 20_000), ("principal", "web:owner-1"), ("request_key", "confirm-x"), ("created_at", T0 + 1)], ids=["kind", "target", "offer", "order", "tenant", "customer", "price", "wallet", "principal", "request", "created"])
+def test_checkout_terms_never_change(main_db, column, value):
+    _chain89(main_db, until="composite_payment_attempts")
+    _order(main_db, 102)
+    _order(main_db, 103)
+    _offer(main_db, "of-2")
+    _offer(main_db, "of-3")
+    _sub2(main_db)
+    _put89(main_db, "composite_checkouts", **RENEWAL_1)
+    _trigger_refuses(main_db, f"UPDATE composite_checkouts SET {column} = ? WHERE checkout_id = 'ck-r1'", (value,))
+
+
+@pytest.mark.parametrize("scenario", ["fulfilled", "failed", "rejected", "cancelled", "delete", "manual-review-cancel"], ids=["fulfilled", "failed", "rejected", "cancelled", "delete", "manual-review-cancel"])
+def test_finished_checkouts_never_reopen(main_db, scenario):
+    if scenario in ("fulfilled", "failed", "rejected", "cancelled"):
+        _chain89(main_db, until="composite_checkouts")
+        sql = {"fulfilled": "UPDATE composite_checkouts SET status = 'fulfilling' WHERE checkout_id = 'ck-1'", "failed": "UPDATE composite_checkouts SET status = 'authorized', terminal_reason = NULL, terminal_at = NULL WHERE checkout_id = 'ck-1'", "rejected": "UPDATE composite_checkouts SET status = 'quoted', terminal_reason = NULL, terminal_at = NULL WHERE checkout_id = 'ck-1'", "cancelled": "UPDATE composite_checkouts SET status = 'awaiting_payment', terminal_reason = NULL, terminal_at = NULL WHERE checkout_id = 'ck-1'"}[scenario]
+        _put89(main_db, "composite_checkouts", **CHECKOUT_STATES[scenario])
+        _trigger_refuses(main_db, sql)
+    elif scenario == "delete":
+        _chain89(main_db, until="composite_payment_attempts")
+        _trigger_refuses(main_db, "DELETE FROM composite_checkouts WHERE checkout_id = 'ck-1'")
+    else:
+        _chain89(main_db, until="composite_payment_attempts")
+        main_db.execute("UPDATE composite_checkouts SET status = 'manual_review' WHERE checkout_id = 'ck-1'")
+        main_db.execute("UPDATE composite_checkouts SET status = 'cancelled', terminal_reason = 'customer_cancelled', terminal_at = ? WHERE checkout_id = 'ck-1'", (T0 + 5_000,))
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"create_state": "pending", "provider_invoice_ref": None}, "accepted"), ({"create_state": "uncertain", "provider_invoice_ref": None}, "accepted"), ({"create_state": "failed", "provider_invoice_ref": None}, "accepted"),
+    ({"status": "verified"}, "accepted"), ({"status": "expired"}, "accepted"), ({"status": "closed"}, "accepted"), ({"valid_until": T0 + 1_001}, "accepted"), ({"invoice_value": 195_000}, "accepted"), ({"minor_unit_scale": 2}, "accepted"),
+    ({"create_state": "created", "provider_invoice_ref": None}, CHECK), ({"create_state": "pending"}, CHECK), ({"create_state": "uncertain"}, CHECK), ({"create_state": "unknown", "provider_invoice_ref": None}, CHECK), ({"status": "paid"}, CHECK), ({"native_amount": 0}, CHECK), ({"native_amount": -1}, CHECK), ({"native_amount": 1.5}, CHECK), ({"native_amount": "n/a"}, CHECK), ({"store_remainder": 0}, CHECK), ({"invoice_value": 194_999}, CHECK), ({"invoice_value": 197_000.5}, CHECK), ({"minor_unit_scale": -1}, CHECK), ({"valid_until": T0 + 1_000}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_payment_attempts.{col}")) for col in ("checkout_id", "method", "provider", "merchant_namespace", "config_version", "creation_intent", "currency", "quote_rules", "quote_version", "quote_accepted_at", "invoice_value")],
+], ids=lambda value: _case_id(value))
+def test_attempt_column_values(main_db, changes, expected):
+    _chain89(main_db, until="composite_payment_attempts")
+    _case_error(main_db, "composite_payment_attempts", changes, expected)
+
+
+def test_attempt_intent_and_invoice_are_unique(main_db):
+    _chain89(main_db, until="composite_manual_decisions")
+    cases = [({"attempt_id": "pa-2", "provider_invoice_ref": "inv-2"}, "UNIQUE constraint failed: composite_payment_attempts.creation_intent"), ({"attempt_id": "pa-3", "creation_intent": "intent-pa-3"}, "UNIQUE constraint failed: composite_payment_attempts.provider, composite_payment_attempts.merchant_namespace, composite_payment_attempts.provider_invoice_ref"), ({"attempt_id": "pa-4", "creation_intent": "intent-pa-4", "merchant_namespace": "card-ns-2"}, None), ({"attempt_id": "pa-5", "creation_intent": "intent-pa-5", "provider_invoice_ref": None, "create_state": "uncertain"}, None), ({"attempt_id": "pa-6", "creation_intent": "intent-pa-6", "provider_invoice_ref": None, "create_state": "uncertain"}, None)]
+    for changes, expected in cases:
+        if expected is None:
+            _put89(main_db, "composite_payment_attempts", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected)):
+                _put89(main_db, "composite_payment_attempts", **changes)
+
+
+@pytest.mark.parametrize("column, value", [("native_amount", 1_960_000), ("currency", "USD"), ("minor_unit_scale", 2), ("store_remainder", 190_000), ("invoice_value", 198_000), ("quote_rules", '{"rate": "11/1"}'), ("quote_version", "quote-v2"), ("quote_accepted_at", T0 + 2_000), ("valid_until", T0 + 3_600_000), ("checkout_id", "ck-2"), ("creation_intent", "intent-x"), ("provider_invoice_ref", "inv-x"), ("method", "crypto"), ("provider", "other"), ("merchant_namespace", "card-ns-2"), ("config_version", "cfg-2")], ids=["native", "currency", "scale", "remainder", "invoice", "rules", "version", "accepted", "validity", "checkout", "intent", "provider-ref", "method", "provider", "namespace", "config"])
+def test_attempt_quote_never_changes(main_db, column, value):
+    _chain89(main_db, until="composite_manual_decisions")
+    _checkout2(main_db)
+    _trigger_refuses(main_db, f"UPDATE composite_payment_attempts SET {column} = ? WHERE attempt_id = 'pa-1'", (value,))
+
+
+@pytest.mark.parametrize("scenario", ["verify-reconcile-delete"], ids=["verify-reconcile-delete"])
+def test_attempt_verification_reconciliation_and_delete(main_db, scenario):
+    _chain89(main_db, until="composite_manual_decisions")
+    main_db.execute("UPDATE composite_payment_attempts SET status = 'verified' WHERE attempt_id = 'pa-1'")
+    _put89(main_db, "composite_payment_attempts", attempt_id="pa-2", creation_intent="intent-pa-2", provider_invoice_ref=None, create_state="uncertain")
+    main_db.execute("UPDATE composite_payment_attempts SET create_state = 'created', provider_invoice_ref = 'inv-2' WHERE attempt_id = 'pa-2'")
+    _trigger_refuses(main_db, "DELETE FROM composite_payment_attempts WHERE attempt_id = 'pa-2'")
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"interface": "telegram", "principal": "telegram:1001"}, "accepted"), ({"decision": "rejected", "reason": "amount does not match", "provider_reference": None, "amount": None}, "accepted"), ({"decision": "mismatch_hold", "reason": "amount differs from the quote", "amount": 1_000_000}, "accepted"), ({"reason": "checked against bank statement"}, "accepted"),
+    ({"principal_role": "staff"}, CHECK), ({"principal_role": "admin"}, CHECK), ({"interface": "mini_app"}, CHECK), ({"decision": "pending", "reason": "waiting for the bank"}, CHECK), ({"provider_reference": None}, CHECK), ({"amount": None}, CHECK), ({"decision": "rejected"}, CHECK), ({"decision": "mismatch_hold"}, CHECK), ({"amount": 0}, CHECK), ({"amount": 1.5}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_manual_decisions.{col}")) for col in ("attempt_id", "principal", "principal_role", "evidence_digest", "tenant_installation_id", "customer_telegram_id", "currency", "method", "decided_at", "idempotency_key")],
+], ids=lambda value: _case_id(value))
+def test_manual_decision_values(main_db, changes, expected):
+    _chain89(main_db, until="composite_manual_decisions")
+    _case_error(main_db, "composite_manual_decisions", changes, expected)
+
+
+def test_manual_decisions_are_final(main_db):
+    _chain89(main_db, until="composite_payment_receipts")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_manual_decisions.idempotency_key")):
+        _put89(main_db, "composite_manual_decisions", decision_id="md-2", interface="telegram")
+    _trigger_refuses(main_db, "UPDATE composite_manual_decisions SET decision = 'rejected', reason = 'changed mind' WHERE decision_id = 'md-1'")
+    _trigger_refuses(main_db, "UPDATE composite_manual_decisions SET decided_at = ? WHERE decision_id = 'md-1'", (T0 + 61_000,))
+    _trigger_refuses(main_db, "DELETE FROM composite_manual_decisions WHERE decision_id = 'md-1'")
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"outcome": "extra_credit"}, "accepted"), ({"outcome": "terminal_late_credit"}, "accepted"), ({"outcome": "mismatch_hold", "invoice_value": None}, "accepted"), ({**PROVIDER_VERIFIED}, "accepted"),
+    ({"outcome": "refund"}, CHECK), ({"verification_source": "client", "manual_decision_id": None}, CHECK), ({"verification_source": "provider"}, CHECK), ({"manual_decision_id": None}, CHECK), ({"native_amount": 0}, CHECK), ({"native_amount": 1.5}, CHECK), ({"invoice_value": None}, CHECK), ({"outcome": "extra_credit", "invoice_value": None}, CHECK), ({"invoice_value": 0}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_payment_receipts.{col}")) for col in ("transaction_reference", "provider", "merchant_namespace", "tenant_installation_id", "beneficiary_telegram_id", "currency", "evidence_digest", "verified_at", "outcome")],
+], ids=lambda value: _case_id(value))
+def test_receipt_values(main_db, changes, expected):
+    _chain89(main_db, until="composite_payment_receipts")
+    _case_error(main_db, "composite_payment_receipts", changes, expected)
+
+
+def test_transaction_reference_settles_one_context(main_db):
+    _chain89(main_db, until="financial_obligations")
+    _checkout2(main_db)
+    _put89(main_db, "composite_payment_attempts", attempt_id="pa-2", checkout_id="ck-2", creation_intent="intent-pa-2", provider_invoice_ref="inv-2")
+    cases = [
+        ({"receipt_id": "rc-2", "attempt_id": "pa-2", "checkout_id": "ck-2", **PROVIDER_VERIFIED}, "UNIQUE constraint failed: composite_payment_receipts.provider, composite_payment_receipts.merchant_namespace, composite_payment_receipts.transaction_reference"),
+        ({"receipt_id": "rc-3", "checkout_id": "ck-2", "transaction_reference": "bank-ref-3", **PROVIDER_VERIFIED}, FK),
+        ({"receipt_id": "rc-4", "attempt_id": "pa-2", "checkout_id": "ck-2", "transaction_reference": "bank-ref-4"}, FK),
+        ({"receipt_id": "rc-5", "attempt_id": "pa-2", "checkout_id": "ck-2", "merchant_namespace": "card-ns-2", **PROVIDER_VERIFIED}, None),
+        ({"receipt_id": "rc-6", "transaction_reference": "bank-ref-6", **PROVIDER_VERIFIED}, "UNIQUE constraint failed: composite_payment_receipts.checkout_id"),
+        ({"receipt_id": "rc-7", "transaction_reference": "bank-ref-7", "outcome": "extra_credit", **PROVIDER_VERIFIED}, None),
+        ({"receipt_id": "rc-8", "transaction_reference": "bank-ref-8", "outcome": "extra_credit", **PROVIDER_VERIFIED}, None),
+    ]
+    for changes, expected in cases:
+        if expected is None:
+            _put89(main_db, "composite_payment_receipts", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected) if expected.startswith("UNIQUE") else expected):
+                _put89(main_db, "composite_payment_receipts", **changes)
+
+
+@pytest.mark.parametrize("column, value", [("provider", "other"), ("merchant_namespace", "card-ns-2"), ("transaction_reference", "bank-ref-9"), ("tenant_installation_id", "inst-other"), ("beneficiary_telegram_id", 50002), ("native_amount", 1_000_000), ("currency", "USD"), ("invoice_value", 100_000), ("evidence_digest", "evidence-x"), ("verified_at", T0 + 70_000), ("outcome", "extra_credit"), ("outcome", "mismatch_hold")], ids=["provider", "namespace", "reference", "tenant", "beneficiary", "amount", "currency", "value", "digest", "verified", "extra", "mismatch"])
+def test_receipts_are_kept_and_their_evidence_never_changes(main_db, column, value):
+    _chain89(main_db, until="financial_obligations")
+    _trigger_refuses(main_db, f"UPDATE composite_payment_receipts SET {column} = ? WHERE receipt_id = 'rc-1'", (value,))
+
+
+@pytest.mark.parametrize("scenario", ["delete-original", "extra-to-late"], ids=["delete-original", "extra-to-late"])
+def test_receipt_deletion_and_credit_outcome_are_final(main_db, scenario):
+    _chain89(main_db, until="financial_obligations")
+    if scenario == "delete-original":
+        _trigger_refuses(main_db, "DELETE FROM composite_payment_receipts WHERE receipt_id = 'rc-1'")
+    else:
+        _put89(main_db, "composite_payment_receipts", receipt_id="rc-2", transaction_reference="bank-ref-2", outcome="extra_credit", **PROVIDER_VERIFIED)
+        _trigger_refuses(main_db, "UPDATE composite_payment_receipts SET outcome = 'terminal_late_credit' WHERE receipt_id = 'rc-2'")
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"kind": "wallet_release", "due_at": T0 + 60_000}, "accepted"), ({"kind": "full_refund", "amount": 227_000, "due_at": T0 + 60_000}, "accepted"), ({"kind": "late_credit", **RECEIPT_CREDIT}, "accepted"), ({"kind": "extra_credit", **RECEIPT_CREDIT}, "accepted"), ({"kind": "support_compensation", "checkout_id": None, "due_at": T0 + 86_400_000}, "accepted"), ({"kind": "topup_credit", "checkout_id": None}, "accepted"), ({"kind": "support_compensation"}, "accepted"), ({"state": "evidence_hold"}, "accepted"), ({"due_at": T0 + 1}, "accepted"),
+    ({"kind": "debit"}, CHECK), ({"amount": 0}, CHECK), ({"amount": -1}, CHECK), ({"amount": 1.5}, CHECK), ({"state": "queued"}, CHECK), ({"state": "settled"}, CHECK), ({"settled_at": T0}, CHECK), ({"checkout_id": None}, CHECK), ({"kind": "wallet_release", "checkout_id": None, "due_at": T0 + 60_000}, CHECK), ({"kind": "full_refund", "checkout_id": None, "due_at": T0 + 60_000}, CHECK), ({"kind": "extra_credit", "due_at": T0 + 60_000}, CHECK), ({"kind": "late_credit", "due_at": T0 + 60_000}, CHECK), ({"kind": "support_compensation", "receipt_id": "rc-1"}, CHECK), ({"kind": "full_refund", **RECEIPT_CREDIT}, CHECK), ({"kind": "extra_credit", **RECEIPT_CREDIT, "checkout_id": None}, CHECK), ({"kind": "full_refund", "due_at": T0 + 60_001}, CHECK), ({"kind": "wallet_release", "due_at": T0 + 59_999}, CHECK), ({"kind": "extra_credit", **RECEIPT_CREDIT, "due_at": T0 + 120_000}, CHECK), ({"due_at": T0 - 1}, CHECK), ({"kind": "topup_credit", "checkout_id": None, "due_at": T0 - 1}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: financial_obligations.{col}")) for col in ("effect_key", "tenant_installation_id", "beneficiary_telegram_id", "kind", "amount", "triggered_at", "due_at", "state")],
+], ids=lambda value: _case_id(value))
+def test_obligation_column_values(main_db, changes, expected):
+    _chain89(main_db, until="financial_obligations")
+    _case_error(main_db, "financial_obligations", changes, expected)
+
+
+def test_each_financial_effect_happens_once(main_db):
+    _chain89(main_db, until="wallet_effects")
+    cases = [
+        ({"obligation_id": "fo-2", "kind": "support_compensation", "amount": 5_000, "checkout_id": None}, "UNIQUE constraint failed: financial_obligations.effect_key"),
+        ({"obligation_id": "fo-3", "effect_key": "wallet_debit:ck-1:again"}, "UNIQUE constraint failed: financial_obligations.checkout_id, financial_obligations.kind"),
+        ({"obligation_id": "fo-4", "effect_key": "full_refund:ck-1", "kind": "full_refund", "amount": 227_000, "due_at": T0 + 60_000}, None),
+        ({"obligation_id": "fo-5", "effect_key": "full_refund:ck-1:again", "kind": "full_refund", "amount": 227_000, "due_at": T0 + 60_000}, "UNIQUE constraint failed: financial_obligations.checkout_id, financial_obligations.kind"),
+        ({"obligation_id": "fo-6", "effect_key": "wallet_release:ck-1", "kind": "wallet_release", "due_at": T0 + 60_000}, None),
+        ({"obligation_id": "fo-7", "effect_key": "wallet_release:ck-1:again", "kind": "wallet_release", "due_at": T0 + 60_000}, "UNIQUE constraint failed: financial_obligations.checkout_id, financial_obligations.kind"),
+        ({"obligation_id": "fo-8", "effect_key": "extra_credit:rc-1", "kind": "extra_credit", "amount": 197_000, **RECEIPT_CREDIT}, None),
+        ({"obligation_id": "fo-9", "effect_key": "late_credit:rc-1", "kind": "late_credit", "amount": 197_000, **RECEIPT_CREDIT}, "UNIQUE constraint failed: financial_obligations.receipt_id"),
+        ({"obligation_id": "fo-10", "effect_key": "support:1", "kind": "support_compensation", "amount": 5_000}, None),
+        ({"obligation_id": "fo-11", "effect_key": "support:2", "kind": "support_compensation", "amount": 5_000}, None),
+    ]
+    for changes, expected in cases:
+        if expected is None:
+            _put89(main_db, "financial_obligations", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected)):
+                _put89(main_db, "financial_obligations", **changes)
+
+
+@pytest.mark.parametrize("changes, expected", [({"amount": 20_000, "balance_after": 22_000}, FK), ({"beneficiary_telegram_id": 50002}, FK), ({"kind": "wallet_release", "balance_after": 72_000}, FK), ({"balance_before": 20_000, "balance_after": -10_000}, CHECK), ({"balance_before": 20_000, "balance_after": 0}, CHECK), ({"balance_after": 12_001}, CHECK), ({"balance_after": 72_000}, CHECK), ({"balance_before": 30_000, "balance_after": 0}, "accepted")], ids=["amount-mismatch", "beneficiary-mismatch", "kind-mismatch", "negative", "clamped-zero", "wrong-after", "debit-added", "exact-debit"])
+def test_wallet_effect_must_settle_exact_amount(main_db, changes, expected):
+    _chain89(main_db, until="wallet_effects")
+    _case_error(main_db, "wallet_effects", changes, expected)
+
+
+@pytest.mark.parametrize("scenario", ["unique-and-settle", "same-entry-only"], ids=["unique-and-settle", "same-entry-only"])
+def test_settlement_needs_its_own_unclamped_ledger_entry(main_db, scenario):
+    _chain89(main_db, until="wallet_effects")
+    if scenario == "unique-and-settle":
+        with pytest.raises(sqlite3.IntegrityError, match=FK):
+            main_db.execute(SETTLE, (1, T0, "fo-1"))
+        _put89(main_db, "wallet_effects")
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: wallet_effects.obligation_id")):
+            _put89(main_db, "wallet_effects", ledger_seq=2, balance_before=30_000, balance_after=0)
+        main_db.execute(SETTLE, (1, T0, "fo-1"))
+        _put89(main_db, "financial_obligations", obligation_id="fo-2", effect_key="support:1", kind="support_compensation", amount=5_000, checkout_id=None)
+        _put89(main_db, "wallet_effects", ledger_seq=2, obligation_id="fo-2", kind="support_compensation", amount=5_000, balance_before=12_000, balance_after=17_000, applied_at=T0 + 1_000)
+        _put89(main_db, "financial_obligations", obligation_id="fo-3", effect_key="support:2", kind="support_compensation", amount=5_000, checkout_id=None)
+        with pytest.raises(sqlite3.IntegrityError, match=FK):
+            main_db.execute(SETTLE, (2, T0 + 1_000, "fo-3"))
+        main_db.execute(SETTLE, (2, T0 + 1_000, "fo-2"))
+    else:
+        _put89(main_db, "wallet_effects")
+        main_db.execute(SETTLE, (1, T0, "fo-1"))
+        _put89(main_db, "financial_obligations", obligation_id="fo-2", effect_key="support:1", kind="support_compensation", amount=5_000, checkout_id=None)
+        _put89(main_db, "wallet_effects", ledger_seq=2, obligation_id="fo-2", kind="support_compensation", amount=5_000, balance_before=12_000, balance_after=17_000, applied_at=T0 + 1_000)
+        _put89(main_db, "financial_obligations", obligation_id="fo-3", effect_key="support:2", kind="support_compensation", amount=5_000, checkout_id=None)
+        with pytest.raises(sqlite3.IntegrityError, match=FK):
+            main_db.execute(SETTLE, (2, T0 + 1_000, "fo-3"))
+        main_db.execute(SETTLE, (2, T0 + 1_000, "fo-2"))
+
+
+@pytest.mark.parametrize("column, value", [("amount", 6_000), ("beneficiary_telegram_id", 50002), ("effect_key", "support:x"), ("kind", "topup_credit"), ("tenant_installation_id", "inst-other"), ("checkout_id", "ck-1"), ("evidence_ref", "ticket-9"), ("triggered_at", T0 - 1_000), ("due_at", T0 + 1_000), ("batch_ref", "batch-1"), ("member_ref", "member-1")], ids=["amount", "beneficiary", "key", "kind", "tenant", "checkout", "evidence", "triggered", "due", "batch", "member"])
+def test_obligation_evidence_is_permanent(main_db, column, value):
+    _chain89(main_db, until="wallet_effects")
+    _put89(main_db, "wallet_effects")
+    main_db.execute(SETTLE, (1, T0, "fo-1"))
+    _put89(main_db, "financial_obligations", obligation_id="fo-2", effect_key="support:1", kind="support_compensation", amount=5_000, checkout_id=None, state="evidence_hold")
+    _trigger_refuses(main_db, f"UPDATE financial_obligations SET {column} = ? WHERE obligation_id = 'fo-2'", (value,))
+
+
+def test_obligations_and_ledger_entries_are_permanent(main_db):
+    _chain89(main_db, until="wallet_effects")
+    _put89(main_db, "wallet_effects")
+    main_db.execute(SETTLE, (1, T0, "fo-1"))
+    _put89(main_db, "financial_obligations", obligation_id="fo-2", effect_key="support:1", kind="support_compensation", amount=5_000, checkout_id=None, state="evidence_hold")
+    main_db.execute("UPDATE financial_obligations SET state = 'owed' WHERE obligation_id = 'fo-2'")
+    main_db.execute("UPDATE financial_obligations SET state = 'evidence_hold' WHERE obligation_id = 'fo-2'")
+    _trigger_refuses(main_db, "UPDATE financial_obligations SET state = 'owed', ledger_seq = NULL, settled_at = NULL WHERE obligation_id = 'fo-1'")
+    _trigger_refuses(main_db, "UPDATE financial_obligations SET settled_at = ? WHERE obligation_id = 'fo-1'", (T0 + 1,))
+    _trigger_refuses(main_db, "DELETE FROM financial_obligations WHERE obligation_id = 'fo-2'")
+    _trigger_refuses(main_db, "UPDATE wallet_effects SET applied_at = ? WHERE ledger_seq = 1", (T0 + 1,))
+    _trigger_refuses(main_db, "DELETE FROM wallet_effects WHERE ledger_seq = 1")
+
+
+@pytest.mark.parametrize("changes, expected", [({"served_count": 149}, "accepted"), ({"served_count": 150, "closed_at": T0 + 1_000}, "accepted"), ({"history_verified_at": None}, "accepted"), ({"lifetime_cap": 151}, CHECK), ({"lifetime_cap": 149}, CHECK), ({"served_count": 151}, CHECK), ({"served_count": -1}, CHECK), ({"served_count": 1.5}, CHECK), ({"served_count": 150}, CHECK), ({"served_count": 149, "closed_at": T0}, CHECK), ({"plan_kind": "test"}, CHECK), ({"plan_id": "cp-paid"}, FK), *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_campaigns.{col}")) for col in ("plan_id", "lifetime_cap", "served_count")]], ids=lambda value: _case_id(value))
+def test_campaign_values(main_db, changes, expected):
+    _chain89(main_db, until="composite_campaigns")
+    _case_error(main_db, "composite_campaigns", changes, expected)
+
+
+def test_campaign_places_never_return(main_db):
+    _chain89(main_db, until="composite_test_claims")
+    _insert(main_db, "composite_plans", plan_id="cp-camp2", kind="campaign")
+    main_db.execute("UPDATE composite_campaigns SET served_count = 1 WHERE campaign_id = 'cmp-1'")
+    _trigger_refuses(main_db, "UPDATE composite_campaigns SET served_count = 0 WHERE campaign_id = 'cmp-1'")
+    _trigger_refuses(main_db, "UPDATE composite_campaigns SET plan_id = 'cp-camp2' WHERE campaign_id = 'cmp-1'")
+    main_db.execute("UPDATE composite_campaigns SET served_count = 150, closed_at = ? WHERE campaign_id = 'cmp-1'", (T0 + 9_000,))
+    _trigger_refuses(main_db, "UPDATE composite_campaigns SET closed_at = ? WHERE campaign_id = 'cmp-1'", (T0 + 10_000,))
+    _trigger_refuses(main_db, "UPDATE composite_campaigns SET served_count = 149, closed_at = NULL WHERE campaign_id = 'cmp-1'")
+    _trigger_refuses(main_db, "DELETE FROM composite_campaigns WHERE campaign_id = 'cmp-1'")
+
+
+@pytest.mark.parametrize("changes, expected", [
+    (PENDING_CLAIM, "accepted"), ({**PENDING_CLAIM, "campaign_id": None}, "accepted"), ({"campaign_id": None}, "accepted"), ({**PENDING_CLAIM, "status": "failed", "terminal_at": T0 + 120_000, "terminal_reason": "remote_create_rejected"}, "accepted"), ({**PENDING_CLAIM, "status": "uncertain", "terminal_at": T0 + 900_000, "terminal_reason": "deadline_unknown_outcome"}, "accepted"), ({"fulfilled_at": T0 + 899_999}, "accepted"), ({"accepted_at": T0 + 5_000, "deadline_at": T0 + 905_000, "fulfilled_at": T0 + 904_000}, "accepted"),
+    ({"deadline_at": T0 + 900_001}, CHECK), ({"deadline_at": T0 + 899_999}, CHECK), ({"fulfilled_at": T0 + 900_001}, CHECK), ({"retrieval_evidence": None}, CHECK), ({"fulfilled_at": None}, CHECK), ({**PENDING_CLAIM, "fulfilled_at": T0 + 300_000, "retrieval_evidence": "retrieved-tc-1"}, CHECK), ({**PENDING_CLAIM, "status": "failed"}, CHECK), ({**PENDING_CLAIM, "terminal_at": T0 + 120_000, "terminal_reason": "remote_create_rejected"}, CHECK), ({**PENDING_CLAIM, "status": "failed", "terminal_at": T0 + 120_000}, CHECK), ({**PENDING_CLAIM, "status": "cancelled"}, CHECK), ({"accepted_seq": 0}, CHECK), ({"accepted_seq": 1.5}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_test_claims.{col}")) for col in ("tenant_installation_id", "customer_telegram_id", "offer_id", "accepted_seq", "accepted_at", "deadline_at", "status")],
+], ids=lambda value: _case_id(value))
+def test_claim_values(main_db, changes, expected):
+    _chain89(main_db, until="composite_test_claims")
+    _case_error(main_db, "composite_test_claims", changes, expected)
+
+
+def test_one_pending_claim_per_customer(main_db):
+    _chain89(main_db, until="resource_reservations")
+    for offer_id in ("of-t2", "of-t3", "of-t4", "of-t5"):
+        _test_offer(main_db, offer_id)
+    cases = [({"claim_id": "tc-2", "offer_id": "of-t2", "accepted_seq": 2, **PENDING_CLAIM}, None), ({"claim_id": "tc-3", "offer_id": "of-t3", "accepted_seq": 3, **PENDING_CLAIM}, "UNIQUE constraint failed: composite_test_claims.customer_telegram_id"), ({"claim_id": "tc-4", "offer_id": "of-t3", "accepted_seq": 4, "customer_telegram_id": 50002, **PENDING_CLAIM}, None), ({"claim_id": "tc-5", "offer_id": "of-t4", "accepted_seq": 5, **{**PENDING_CLAIM, "status": "uncertain", "terminal_at": T0 + 900_000, "terminal_reason": "deadline_unknown_outcome"}}, None), ({"claim_id": "tc-6", "offer_id": "of-t2", "accepted_seq": 6, "customer_telegram_id": 50003, **PENDING_CLAIM}, "UNIQUE constraint failed: composite_test_claims.offer_id"), ({"claim_id": "tc-7", "offer_id": "of-t5", "accepted_seq": 2, "customer_telegram_id": 50003, **PENDING_CLAIM}, "UNIQUE constraint failed: composite_test_claims.accepted_seq")]
+    for changes, expected in cases:
+        if expected is None:
+            _put89(main_db, "composite_test_claims", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected)):
+                _put89(main_db, "composite_test_claims", **changes)
+
+
+@pytest.mark.parametrize("scenario", ["uncertain-failure", "pending-fulfillment"], ids=["uncertain-failure", "pending-fulfillment"])
+def test_claim_deadline_and_outcome_are_final(main_db, scenario):
+    _chain89(main_db, until="resource_reservations")
+    _test_offer(main_db, "of-t2")
+    _put89(main_db, "composite_test_claims", claim_id="tc-2", offer_id="of-t2", accepted_seq=2, accepted_at=T0 + 10_000, deadline_at=T0 + 910_000, **PENDING_CLAIM)
+    _campaign2(main_db)
+    if scenario == "pending-fulfillment":
+        main_db.execute("UPDATE composite_test_claims SET status = 'fulfilled', fulfilled_at = ?, retrieval_evidence = 'retrieved-tc-2' WHERE claim_id = 'tc-2'", (T0 + 600_000,))
+        return
+    for sql, args in [("UPDATE composite_test_claims SET accepted_at = ?, deadline_at = ? WHERE claim_id = 'tc-2'", (T0 + 70_000, T0 + 970_000)), ("UPDATE composite_test_claims SET customer_telegram_id = ? WHERE claim_id = 'tc-2'", (50002,)), ("UPDATE composite_test_claims SET offer_id = ? WHERE claim_id = 'tc-2'", ("of-t1",)), ("UPDATE composite_test_claims SET campaign_id = ? WHERE claim_id = 'tc-2'", ("cmp-2",)), ("UPDATE composite_test_claims SET campaign_id = ? WHERE claim_id = 'tc-2'", (None,)), ("UPDATE composite_test_claims SET accepted_seq = ? WHERE claim_id = 'tc-2'", (9,)), ("UPDATE composite_test_claims SET tenant_installation_id = ? WHERE claim_id = 'tc-2'", ("inst-other",))]:
+        _trigger_refuses(main_db, sql, args)
+    main_db.execute("UPDATE composite_test_claims SET status = 'uncertain', terminal_at = ?, terminal_reason = 'deadline_unknown_outcome' WHERE claim_id = 'tc-2'", (T0 + 910_000,))
+    _trigger_refuses(main_db, "UPDATE composite_test_claims SET status = 'fulfilled', fulfilled_at = ?, retrieval_evidence = 'late', terminal_at = NULL, terminal_reason = NULL WHERE claim_id = 'tc-2'", (T0 + 909_000,))
+    _trigger_refuses(main_db, "UPDATE composite_test_claims SET status = 'pending', terminal_at = NULL, terminal_reason = NULL WHERE claim_id = 'tc-2'")
+    main_db.execute("UPDATE composite_test_claims SET status = 'failed', terminal_reason = 'remote_confirmed_absent' WHERE claim_id = 'tc-2'")
+    _trigger_refuses(main_db, "UPDATE composite_test_claims SET status = 'pending', terminal_at = NULL, terminal_reason = NULL WHERE claim_id = 'tc-2'")
+    _trigger_refuses(main_db, "UPDATE composite_test_claims SET status = 'uncertain' WHERE claim_id = 'tc-2'")
+    _trigger_refuses(main_db, "UPDATE composite_test_claims SET status = 'failed', fulfilled_at = NULL, retrieval_evidence = NULL, terminal_at = ?, terminal_reason = 'revoked' WHERE claim_id = 'tc-1'", (T0 + 400_000,))
+    _trigger_refuses(main_db, "DELETE FROM composite_test_claims WHERE claim_id = 'tc-1'")
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"checkout_id": None, "legacy_order_id": 2}, "accepted"), ({**NO_COUPON, "resource": "ordinary_test", "claim_id": "tc-1"}, "accepted"), ({**NO_COUPON, "resource": "ordinary_test", "legacy_test_ref": "legacy-test-50001-1"}, "accepted"), ({**NO_COUPON, "resource": "campaign_place", "claim_id": "tc-1", "campaign_id": "cmp-1"}, "accepted"), ({"state": "consumed", **TRANSITION}, "accepted"), ({"state": "released", **TRANSITION}, "accepted"), ({"state": "release_pending_refund", **TRANSITION}, "accepted"), ({**NO_COUPON, "resource": "ordinary_test", "claim_id": "tc-1", "state": "uncertain_hold", **TRANSITION}, "accepted"), ({**NO_COUPON, "resource": "campaign_place", "claim_id": "tc-1", "campaign_id": "cmp-1", "state": "uncertain_hold", **TRANSITION}, "accepted"),
+    ({**NO_COUPON, "resource": "wallet", "claim_id": "tc-1", "campaign_id": "cmp-1"}, CHECK), ({"state": "pending", **TRANSITION}, CHECK), ({"checkout_id": None}, CHECK), ({"legacy_order_id": 2}, CHECK), ({"claim_id": "tc-1"}, CHECK), ({"legacy_test_ref": "legacy-test-50001-1"}, CHECK), ({"coupon_code_id": None}, CHECK), ({"campaign_id": "cmp-1"}, CHECK), ({"checkout_id": None, "claim_id": "tc-1"}, CHECK), ({"resource": "ordinary_test"}, CHECK), ({**NO_COUPON, "resource": "ordinary_test", "claim_id": "tc-1", "coupon_code_id": 7}, CHECK), ({**NO_COUPON, "resource": "ordinary_test", "claim_id": "tc-1", "campaign_id": "cmp-1"}, CHECK), ({**NO_COUPON, "resource": "ordinary_test", "legacy_order_id": 2}, CHECK), ({**NO_COUPON, "resource": "campaign_place", "claim_id": "tc-1"}, CHECK), ({**NO_COUPON, "resource": "campaign_place", "legacy_test_ref": "legacy-test-50001-1", "campaign_id": "cmp-1"}, CHECK), ({**NO_COUPON, "resource": "campaign_place", "claim_id": "tc-1", "campaign_id": "cmp-1", "coupon_code_id": 7}, CHECK), ({**TRANSITION}, CHECK), ({"state": "consumed"}, CHECK), ({"state": "consumed", "transition_key": "op-t1"}, CHECK), ({"transitioned_at": T0 + 1_000}, CHECK), ({**NO_COUPON, "resource": "ordinary_test", "claim_id": "tc-1", "state": "release_pending_refund", **TRANSITION}, CHECK), ({"state": "uncertain_hold", **TRANSITION}, CHECK), ({"sequence": 0}, CHECK), ({"sequence": 1.5}, CHECK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: resource_reservations.{col}")) for col in ("resource", "tenant_installation_id", "customer_telegram_id", "sequence", "accepted_at", "state")],
+], ids=lambda value: _case_id(value))
+def test_reservation_values(main_db, changes, expected):
+    _chain89(main_db, until="resource_reservations")
+    _case_error(main_db, "resource_reservations", changes, expected)
+
+
+def test_reservation_is_unique_per_holder_and_resource(main_db):
+    _chain89(main_db, until="composite_campaign_recipients")
+    _test_offer(main_db, "of-t2")
+    _put89(main_db, "composite_test_claims", claim_id="tc-2", offer_id="of-t2", accepted_seq=2, customer_telegram_id=50002, **PENDING_CLAIM)
+    _campaign2(main_db)
+    cases = [({"reservation_id": "rr-4", "sequence": 4, "coupon_code_id": 8}, "UNIQUE constraint failed: resource_reservations.checkout_id, resource_reservations.resource"), ({"reservation_id": "rr-5", "resource": "ordinary_test", "sequence": 5, **CLAIM_HOLD}, "UNIQUE constraint failed: resource_reservations.claim_id, resource_reservations.resource"), ({"reservation_id": "rr-6", "checkout_id": None, "legacy_order_id": 2, "customer_telegram_id": 50002, "sequence": 6}, None), ({"reservation_id": "rr-7", "checkout_id": None, "legacy_order_id": 2, "customer_telegram_id": 50002, "sequence": 7, "coupon_code_id": 8}, "UNIQUE constraint failed: resource_reservations.legacy_order_id, resource_reservations.resource"), ({"reservation_id": "rr-8", "resource": "ordinary_test", "checkout_id": None, "coupon_code_id": None, "legacy_test_ref": "legacy-test-50002-1", "customer_telegram_id": 50002, "sequence": 8}, None), ({"reservation_id": "rr-9", "resource": "ordinary_test", "checkout_id": None, "coupon_code_id": None, "legacy_test_ref": "legacy-test-50002-1", "customer_telegram_id": 50002, "sequence": 9}, "UNIQUE constraint failed: resource_reservations.legacy_test_ref, resource_reservations.resource"), ({"reservation_id": "rr-10", "resource": "ordinary_test", "checkout_id": None, "coupon_code_id": None, "legacy_test_ref": "legacy-test-50002-2", "customer_telegram_id": 50002, "sequence": 1}, "UNIQUE constraint failed: resource_reservations.sequence"), ({"reservation_id": "rr-11", "resource": "campaign_place", "checkout_id": None, "coupon_code_id": None, "claim_id": "tc-2", "customer_telegram_id": 50002, "sequence": 11, "campaign_id": "cmp-2"}, FK), ({"reservation_id": "rr-12", "resource": "campaign_place", "checkout_id": None, "coupon_code_id": None, "claim_id": "tc-2", "customer_telegram_id": 50002, "sequence": 12, "campaign_id": "cmp-1"}, None)]
+    for changes, expected in cases:
+        if expected is None:
+            _put89(main_db, "resource_reservations", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected) if expected.startswith("UNIQUE") else expected):
+                _put89(main_db, "resource_reservations", **changes)
+
+
+def test_finished_reservations_never_change(main_db):
+    _chain89(main_db, until="composite_campaign_recipients")
+    _checkout2(main_db)
+    _put89(main_db, "resource_reservations", reservation_id="rr-4", checkout_id="ck-2", sequence=4, state="release_pending_refund", **TRANSITION)
+    main_db.execute(MOVE, ("consumed", "fulfil:ck-1", T0 + 2_000, "rr-1"))
+    for args in [("released", "release:ck-1", T0 + 3_000, "rr-1"), ("held", None, None, "rr-1"), ("held", None, None, "rr-4"), ("consumed", "fulfil:ck-2", T0 + 3_000, "rr-4")]:
+        _trigger_refuses(main_db, MOVE, args)
+    main_db.execute(MOVE, ("released", "refund-settled:ck-2", T0 + 3_000, "rr-4"))
+    for args in [("held", None, None, "rr-4"), ("release_pending_refund", "x", T0 + 4_000, "rr-4")]:
+        _trigger_refuses(main_db, MOVE, args)
+    _put89(main_db, "resource_reservations", reservation_id="rr-5", resource="ordinary_test", checkout_id=None, coupon_code_id=None, legacy_test_ref="legacy-test-50001-1", sequence=5)
+    main_db.execute(MOVE, ("uncertain_hold", "deadline:legacy-test-50001-1", T0 + 900_000, "rr-5"))
+    main_db.execute(MOVE, ("released", "confirmed-failure:legacy-test-50001-1", T0 + 950_000, "rr-5"))
+
+
+@pytest.mark.parametrize("column, value", [("coupon_code_id", 8), ("sequence", 40), ("checkout_id", "ck-2"), ("customer_telegram_id", 50002), ("tenant_installation_id", "inst-other"), ("accepted_at", T0 + 1), ("resource", "ordinary_test"), ("campaign_id", "cmp-1")], ids=["coupon", "sequence", "checkout", "customer", "tenant", "accepted", "resource", "campaign"])
+def test_reservation_holder_and_resource_never_change(main_db, column, value):
+    _chain89(main_db, until="composite_campaign_recipients")
+    _trigger_refuses(main_db, f"UPDATE resource_reservations SET {column} = ? WHERE reservation_id = 'rr-1'", (value,))
+
+
+def test_reservations_and_recipients_are_permanent(main_db):
+    _chain89(main_db, until="composite_campaign_recipients")
+    _trigger_refuses(main_db, "UPDATE resource_reservations SET campaign_id = 'cmp-1', resource = 'campaign_place' WHERE reservation_id = 'rr-2'")
+    _trigger_refuses(main_db, "DELETE FROM resource_reservations WHERE reservation_id = 'rr-1'")
+
+
+def test_campaign_recipient_once_per_user_and_claim(main_db):
+    _chain89(main_db, until="composite_campaign_recipients")
+    for offer_id in ("of-t2", "of-t3", "of-t4", "of-t5"):
+        _test_offer(main_db, offer_id)
+    _put89(main_db, "composite_test_claims", claim_id="tc-p", offer_id="of-t2", accepted_seq=2, customer_telegram_id=50002, **PENDING_CLAIM)
+    _put89(main_db, "composite_test_claims", claim_id="tc-o", offer_id="of-t3", accepted_seq=3, customer_telegram_id=50003, campaign_id=None)
+    _put89(main_db, "composite_test_claims", claim_id="tc-2", offer_id="of-t4", accepted_seq=4)
+    _campaign2(main_db)
+    _put89(main_db, "composite_test_claims", claim_id="tc-3", offer_id="of-t5", accepted_seq=5, campaign_id="cmp-2")
+    cases = [({"customer_telegram_id": 50002, "claim_id": "tc-p"}, FK), ({"customer_telegram_id": 50002, "claim_id": "tc-p", "claim_status": "pending"}, CHECK), ({"customer_telegram_id": 50003, "claim_id": "tc-o"}, FK), ({"customer_telegram_id": 50002, "claim_id": "tc-2"}, FK), ({}, None), ({"claim_id": "tc-2"}, "UNIQUE constraint failed: composite_campaign_recipients.campaign_id, composite_campaign_recipients.customer_telegram_id"), ({"campaign_id": "cmp-2", "claim_id": "tc-1"}, "UNIQUE constraint failed: composite_campaign_recipients.claim_id"), ({"campaign_id": "cmp-2", "claim_id": "tc-3"}, None)]
+    for changes, expected in cases:
+        if expected is None:
+            _put89(main_db, "composite_campaign_recipients", **changes)
+        else:
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape(expected) if expected.startswith("UNIQUE") else expected):
+                _put89(main_db, "composite_campaign_recipients", **changes)
+
+
+def test_campaign_recipients_are_permanent(main_db):
+    _chain89(main_db)
+    _trigger_refuses(main_db, "UPDATE composite_campaign_recipients SET fulfilled_at = ? WHERE claim_id = 'tc-1'", (T0 + 1,))
+    _trigger_refuses(main_db, "DELETE FROM composite_campaign_recipients WHERE claim_id = 'tc-1'")
+    assert _one(main_db, "SELECT campaign_id, customer_telegram_id, claim_id, fulfilled_at FROM composite_campaign_recipients WHERE claim_id='tc-1'") == ("cmp-1", 50001, "tc-1", T0 + 300_000)
