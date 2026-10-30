@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035. T034b's tests (the last section) check the data-model §1–§4 tables and fail until T036 and T037 add them.
+T034a's tests pass since T035, and T034b's since T036 and T037. T034c's tests (the last section) check the data-model §5–§7 tables and fail until T038 adds them.
 """
 
 from collections import Counter
@@ -1296,3 +1296,520 @@ def test_published_generation_was_verified(main_db, case):
             values["verified_at"] = None if case == "published-unverified" else vt
         with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
             _insert(main_db, "composite_config_generations", **values)
+
+
+# Data-model §5–§7 tables (T034c: checks for T038)
+
+SECRET_BLOB = bytes(range(60))  # stands in for an AES-GCM nonce, ciphertext and tag
+PREVIOUS_EXPIRY = T0 + 2_592_000_000  # ep-1's expiry
+CARRY = {"carried_bytes": 21_474_836_480, "available_bytes": 75_161_927_680}  # 20 GiB carried onto 50 GiB
+
+# One valid row per table, in parent-before-child order. _chain(conn) supplies the §1-§4 parents.
+ROWS_5_7 = {
+    "composite_meters": {"meter_id": "m-1", "subscription_id": "sub-1", "physical_panel_id": "pp-a", "traffic_key": "cmp1-c7f3a9", "serving_class": "serving", "required_current": 1, "upload_epoch": 0, "download_epoch": 0, "last_observation_id": None, "last_observed_at": None, "failure_state": None, "restart_loss_annotations": None},
+    "composite_children": {"child_id": "ch-1", "subscription_id": "sub-1", "logical_node_key": "node-a1", "credential_generation": 1, "physical_panel_id": "pp-a", "remote_email": "cmp1-c7f3a9", "protocol": "vless", "encrypted_secret": SECRET_BLOB, "secret_key_id": "key-v1", "secret_fingerprint": "secret-fp-1", "sub_id_ref": None, "meter_id": "m-1", "desired_state": "enabled", "desired_revision": 1, "confirmed_access": "unknown", "confirmed_at": None, "retired_at": None, "retire_reason": None},
+    "composite_child_attachments": {"attachment_id": "att-1", "child_id": "ch-1", "physical_panel_id": "pp-a", "binding_id": "pb-a1", "settings_fingerprint": "settings-fp-a1", "egress_key": "out-de", "expected_member": 1, "confirmed_member": "unknown"},
+    "composite_cleanup_obligations": {"obligation_id": "co-1", "child_id": "ch-1", "meter_id": "m-1", "responsible_actor": "main:inst-main", "reason": "terminal_revocation", "desired_outcome": "removed", "status": "open", "disabled_at": None, "final_upload_bytes": None, "final_download_bytes": None, "deleted_at": None, "still_growing_at_delete": None, "next_check_at": None, "escalation_ref": None},
+    "composite_observations": {"observation_id": "obs-1", "meter_id": "m-1", "upload_epoch": 0, "download_epoch": 0, "upload_bytes": 1_000, "download_bytes": 8_000, "dispatched_at": T0 - 400, "received_at": T0, "outcome": "accepted", "restart_evidence": None, "evidence_hash": "evidence-1"},
+    "composite_entitlement_periods": {"period_id": "ep-1", "subscription_id": "sub-1", "operation_id": "op-1", "grant_kind": "initial_paid", "offer_id": "of-1", "authorized_at": T0 - 60_000, "effective_at": T0, "previous_period_id": None, "previous_expires_at": None, "timely_payment": 0, "purchased_bytes": 53_687_091_200, "purchased_seconds": 2_592_000, "carried_bytes": 0, "carried_ms": 0, "forfeited_ms": 0, "available_bytes": 53_687_091_200, "expires_at": PREVIOUS_EXPIRY, "uncertainty": None},
+    "composite_meter_deltas": {"delta_id": "d-1", "meter_id": "m-1", "direction": "upload", "epoch": 0, "predecessor_observation_id": "obs-1", "current_observation_id": "obs-2", "delta_bytes": 500, "interval_start_at": T0, "interval_end_at": T0 + 15_000, "child_id": "ch-1", "period_id": "ep-1", "allocation_state": "attributed"},
+    "composite_usage_gaps": {"gap_id": "gap-1", "meter_id": "m-1", "subscription_id": "sub-1", "direction": "download", "before_observation_id": "obs-1", "after_observation_id": "obs-2", "lower_bound_bytes": 0, "upper_bound_bytes": None, "reason": "missing_history", "state": "unresolved", "settled_by": None, "settled_at": None, "settlement_reason": None, "accepted_risk": None, "remaining_uncertainty": None},
+    "composite_boundary_readings": {"period_id": "ep-1", "meter_id": "m-1", "direction": "upload", "epoch": 0, "observation_id": "obs-1", "cumulative_bytes": 1_000, "received_at": T0, "age_ms": 0, "required_current": 1},
+    "composite_reminder_periods": {"reminder_period_id": "rp-1", "period_id": "ep-1", "grant_kind": "initial_paid", "allowance_bytes": 53_687_091_200, "expires_at": PREVIOUS_EXPIRY},
+    "composite_reminders": {"reminder_id": "rm-1", "reminder_period_id": "rp-1", "reminder_type": "expiry", "expiry_threshold_seconds": 432_000, "quota_mode": None, "quota_percent": None, "quota_remaining_bytes": None, "status": "armed", "condition_met_at": None, "due_at": None},
+}
+CHAIN_5_7 = (
+    ("composite_meters", {}), ("composite_children", {}), ("composite_child_attachments", {}),
+    ("composite_cleanup_obligations", {}), ("composite_observations", {}),
+    ("composite_observations", {"observation_id": "obs-2", "upload_bytes": 1_500, "download_bytes": 9_000, "dispatched_at": T0 + 14_600, "received_at": T0 + 15_000, "evidence_hash": "evidence-2"}),
+    ("composite_entitlement_periods", {}), ("composite_meter_deltas", {}), ("composite_usage_gaps", {}),
+    ("composite_boundary_readings", {}), ("composite_reminder_periods", {}), ("composite_reminders", {}),
+)
+EXPECTED_FKS_5_7 = (
+    ("composite_meters", ("subscription_id",), "composite_subscriptions", ("subscription_id",)),
+    ("composite_meters", ("physical_panel_id",), "composite_physical_panels", ("physical_panel_id",)),
+    ("composite_meters", ("last_observation_id",), "composite_observations", ("observation_id",)),
+    ("composite_children", ("subscription_id", "logical_node_key"), "composite_subscription_nodes", ("subscription_id", "logical_node_key")),
+    ("composite_children", ("physical_panel_id",), "composite_physical_panels", ("physical_panel_id",)),
+    ("composite_children", ("meter_id", "subscription_id"), "composite_meters", ("meter_id", "subscription_id")),
+    ("composite_child_attachments", ("child_id", "physical_panel_id"), "composite_children", ("child_id", "physical_panel_id")),
+    ("composite_child_attachments", ("binding_id", "physical_panel_id"), "composite_prepared_bindings", ("binding_id", "physical_panel_id")),
+    ("composite_cleanup_obligations", ("child_id",), "composite_children", ("child_id",)),
+    ("composite_cleanup_obligations", ("meter_id",), "composite_meters", ("meter_id",)),
+    ("composite_observations", ("meter_id",), "composite_meters", ("meter_id",)),
+    ("composite_entitlement_periods", ("subscription_id",), "composite_subscriptions", ("subscription_id",)),
+    ("composite_entitlement_periods", ("offer_id",), "composite_offers", ("offer_id",)),
+    ("composite_entitlement_periods", ("previous_period_id",), "composite_entitlement_periods", ("period_id",)),
+    ("composite_meter_deltas", ("predecessor_observation_id", "meter_id"), "composite_observations", ("observation_id", "meter_id")),
+    ("composite_meter_deltas", ("current_observation_id", "meter_id"), "composite_observations", ("observation_id", "meter_id")),
+    ("composite_meter_deltas", ("child_id",), "composite_children", ("child_id",)),
+    ("composite_meter_deltas", ("period_id",), "composite_entitlement_periods", ("period_id",)),
+    ("composite_usage_gaps", ("meter_id", "subscription_id"), "composite_meters", ("meter_id", "subscription_id")),
+    ("composite_usage_gaps", ("before_observation_id", "meter_id"), "composite_observations", ("observation_id", "meter_id")),
+    ("composite_usage_gaps", ("after_observation_id", "meter_id"), "composite_observations", ("observation_id", "meter_id")),
+    ("composite_boundary_readings", ("period_id",), "composite_entitlement_periods", ("period_id",)),
+    ("composite_boundary_readings", ("observation_id", "meter_id"), "composite_observations", ("observation_id", "meter_id")),
+    ("composite_reminder_periods", ("period_id", "grant_kind"), "composite_entitlement_periods", ("period_id", "grant_kind")),
+    ("composite_reminders", ("reminder_period_id",), "composite_reminder_periods", ("reminder_period_id",)),
+)
+
+def _put(conn, table, **changes):
+    row = {**ROWS_5_7[table], **changes}
+    cols = tuple(row)
+    marks = ", ".join("?" for _ in cols)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({marks})", tuple(row.values()))
+
+
+def _chain57(conn, until=None):
+    assert until is None or until in ROWS_5_7
+    _chain(conn)
+    for table, changes in CHAIN_5_7:
+        if table == until:
+            return
+        _put(conn, table, **changes)
+
+
+def _panel_b(conn):
+    _insert(conn, "composite_physical_panels", physical_panel_id="pp-b", authority_fingerprint="authority-fp-b")
+
+
+def _renewal(remaining, carried_ms, forfeited_ms, expires_extra=0, **changes):
+    """A renewal period ep-r after ep-1, applied `remaining` ms before ep-1's expiry."""
+    effective = PREVIOUS_EXPIRY - remaining
+    row = {"period_id": "ep-r", "operation_id": "op-r", "grant_kind": "renewal", "previous_period_id": "ep-1", "previous_expires_at": PREVIOUS_EXPIRY, "effective_at": effective, "authorized_at": effective - 60_000, "carried_ms": carried_ms, "forfeited_ms": forfeited_ms, "expires_at": effective + 2_592_000_000 + carried_ms + expires_extra}
+    return {**row, **changes}
+
+
+def _fk_missing(conn, table, column, value):
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(conn, table, **{column: value})
+
+
+def test_main_gets_the_section_5_to_7_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        for table, row in ROWS_5_7.items():
+            assert table in _tables(conn)
+            assert set(row) <= set(_columns(conn, table))
+
+
+def test_section_5_to_7_foreign_keys_are_restrict(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in ROWS_5_7:
+            grouped = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                grouped.setdefault(row[0], []).append(row)
+            for rows in grouped.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                to_cols = tuple(row[4] for row in rows)
+                if any(col is None for col in to_cols):
+                    to_cols = tuple(r[1] for r in sorted((r for r in conn.execute(f"PRAGMA table_info({parent})") if r[5] > 0), key=lambda r: r[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, to_cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS_5_7) <= found
+
+
+def test_rows_in_every_section_5_to_7_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain57(conn)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert _one(conn, "SELECT count(*) FROM composite_observations")[0] == 2
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in ROWS_5_7 if table != "composite_observations")
+
+
+@pytest.mark.parametrize("sql, table, key", [("DELETE FROM composite_meters WHERE meter_id = 'm-1'", "composite_meters", "meter_id"), ("DELETE FROM composite_observations WHERE observation_id = 'obs-1'", "composite_observations", "observation_id"), ("DELETE FROM composite_entitlement_periods WHERE period_id = 'ep-1'", "composite_entitlement_periods", "period_id"), ("DELETE FROM composite_reminder_periods WHERE reminder_period_id = 'rp-1'", "composite_reminder_periods", "reminder_period_id"), ("DELETE FROM composite_subscription_nodes WHERE subscription_id = 'sub-1' AND logical_node_key = 'node-a1'", "composite_subscription_nodes", "subscription_id")], ids=["meter", "observation", "period", "reminder-period", "subscription-node"])
+def test_section_5_to_7_parents_cannot_be_deleted(main_db, sql, table, key):
+    _chain57(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        main_db.execute(sql)
+    assert _one(main_db, f"SELECT count(*) FROM {table} WHERE {key} = ?", "sub-1" if table == "composite_subscription_nodes" else ROWS_5_7[table][key])[0] == 1
+
+
+@pytest.mark.parametrize("child, columns, parent, parent_columns", EXPECTED_FKS_5_7)
+def test_section_5_to_7_child_row_needs_its_parent(main_db, child, columns, parent, parent_columns):
+    _chain57(main_db, until=child)
+    missing = {"composite_subscriptions": "sub-missing", "composite_subscription_nodes": "sub-missing", "composite_physical_panels": "pp-missing", "composite_observations": "obs-missing", "composite_meters": "m-missing", "composite_children": "ch-missing", "composite_prepared_bindings": "pb-missing", "composite_offers": "of-missing", "composite_entitlement_periods": "ep-missing", "composite_reminder_periods": "rp-missing"}[parent]
+    _fk_missing(main_db, child, columns[0], missing)
+
+
+def test_child_remote_identity_is_unique_per_panel(main_db):
+    _chain57(main_db, until="composite_child_attachments")
+    _panel_b(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_children.physical_panel_id, composite_children.remote_email")):
+        _put(main_db, "composite_children", child_id="ch-2", credential_generation=2, meter_id=None)
+    _put(main_db, "composite_children", child_id="ch-3", credential_generation=2, physical_panel_id="pp-b", meter_id=None)
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_children.subscription_id, composite_children.logical_node_key, composite_children.credential_generation")):
+        _put(main_db, "composite_children", child_id="ch-4", credential_generation=2, remote_email="cmp1-d4", meter_id=None)
+    _put(main_db, "composite_children", child_id="ch-5", credential_generation=3, remote_email="cmp1-d4", meter_id=None)
+
+
+@pytest.mark.parametrize("changes, error", [({"protocol": "vmess"}, None), ({"protocol": "trojan"}, None), ({"desired_state": "disabled"}, None), ({"desired_state": "removed"}, None), ({"confirmed_access": "partial"}, None), ({"confirmed_access": "confirmed_eligible"}, None), ({"confirmed_access": "confirmed_fresh_auth_denied"}, None), ({"retired_at": T0, "retire_reason": "leak_replacement"}, None), ({"meter_id": None}, None), ({"credential_generation": 0}, "CHECK constraint failed"), ({"credential_generation": -1}, "CHECK constraint failed"), ({"credential_generation": 1.5}, "CHECK constraint failed"), ({"protocol": "shadowsocks"}, "CHECK constraint failed"), ({"desired_state": "paused"}, "CHECK constraint failed"), ({"confirmed_access": "confirmed"}, "CHECK constraint failed"), ({"desired_revision": -1}, "CHECK constraint failed"), ({"retired_at": T0}, "CHECK constraint failed"), ({"retire_reason": "leak_replacement"}, "CHECK constraint failed"), ({"encrypted_secret": "plain-secret-text"}, "CHECK constraint failed"), *[({column: None}, re.escape(f"NOT NULL constraint failed: composite_children.{column}")) for column in ("encrypted_secret", "secret_key_id", "remote_email")]], ids=["vmess", "trojan", "disabled", "removed", "partial", "eligible", "denied", "retired", "no-meter", "generation-zero", "generation-negative", "generation-fractional", "protocol-invalid", "state-invalid", "access-invalid", "revision-negative", "retirement-without-reason", "reason-without-retirement", "plaintext-secret", "secret-null", "key-null", "email-null"])
+def test_child_column_values(main_db, changes, error):
+    _chain57(main_db, until="composite_children")
+    if error is None:
+        _put(main_db, "composite_children", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_children", **changes)
+
+
+@pytest.mark.parametrize("column, value, extra", [("remote_email", "cmp1-other", {}), ("physical_panel_id", "pp-b", {}), ("credential_generation", 2, {}), ("logical_node_key", "node-a2", {}), ("subscription_id", "sub-2", {"meter_id": None}), ("protocol", "vmess", {}), ("secret_fingerprint", "secret-fp-2", {})], ids=["email", "panel", "generation", "node", "subscription", "protocol", "fingerprint"])
+def test_child_identity_never_changes(main_db, column, value, extra):
+    _chain57(main_db, until="composite_child_attachments")
+    _panel_b(main_db)
+    _insert(main_db, "composite_subscription_nodes", logical_node_key="node-a2")
+    _sub2(main_db)
+    _insert(main_db, "composite_subscription_nodes", subscription_id="sub-2", logical_node_key="node-a1")
+    original = ROWS_5_7["composite_children"][column]
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute(f"UPDATE composite_children SET {column} = ?{', meter_id = NULL' if extra else ''} WHERE child_id = 'ch-1'", (value,))
+    assert _one(main_db, f"SELECT {column} FROM composite_children WHERE child_id='ch-1'")[0] == original
+
+
+def test_children_are_kept_and_their_state_changes(main_db):
+    _chain57(main_db, until="composite_child_attachments")
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("DELETE FROM composite_children WHERE child_id='ch-1'")
+    assert _one(main_db, "SELECT count(*) FROM composite_children WHERE child_id='ch-1'")[0] == 1
+    main_db.execute("UPDATE composite_children SET desired_state='disabled', desired_revision=2, confirmed_access='confirmed_fresh_auth_denied', confirmed_at=?, retired_at=?, retire_reason='cancelled' WHERE child_id='ch-1'", (T0 + 5_000, T0 + 5_000))
+    assert _one(main_db, "SELECT desired_state, desired_revision, confirmed_access, confirmed_at, retired_at, retire_reason FROM composite_children WHERE child_id='ch-1'") == ("disabled", 2, "confirmed_fresh_auth_denied", T0 + 5_000, T0 + 5_000, "cancelled")
+
+
+def test_child_meter_belongs_to_the_same_subscription(main_db):
+    _chain57(main_db, until="composite_child_attachments")
+    _sub2(main_db)
+    _insert(main_db, "composite_subscription_nodes", subscription_id="sub-2", logical_node_key="node-a1")
+    _put(main_db, "composite_meters", meter_id="m-2", subscription_id="sub-2", traffic_key="cmp1-b2")
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(main_db, "composite_children", child_id="ch-2", subscription_id="sub-2", remote_email="cmp1-b2", meter_id="m-1")
+    _put(main_db, "composite_children", child_id="ch-2", subscription_id="sub-2", remote_email="cmp1-b2", meter_id="m-2")
+    _put(main_db, "composite_children", child_id="ch-3", credential_generation=2, remote_email="cmp1-c3", meter_id=None)
+
+
+def test_attachment_inbound_is_on_the_child_panel(main_db):
+    _chain57(main_db, until="composite_child_attachments")
+    _panel_b(main_db)
+    _insert(main_db, "composite_prepared_bindings", binding_id="pb-b1", physical_panel_id="pp-b")
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(main_db, "composite_child_attachments", attachment_id="att-x", binding_id="pb-b1")
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(main_db, "composite_child_attachments", attachment_id="att-y", binding_id="pb-b1", physical_panel_id="pp-b")
+    _put(main_db, "composite_child_attachments")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_child_attachments.child_id, composite_child_attachments.binding_id")):
+        _put(main_db, "composite_child_attachments", attachment_id="att-2")
+    _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
+    _put(main_db, "composite_child_attachments", attachment_id="att-3", binding_id="pb-a2")
+
+
+@pytest.mark.parametrize("changes, error", [({"expected_member": 0}, None), ({"confirmed_member": "present"}, None), ({"confirmed_member": "absent"}, None), ({"expected_member": 2}, "CHECK constraint failed"), ({"confirmed_member": "maybe"}, "CHECK constraint failed"), ({"expected_member": None}, re.escape("NOT NULL constraint failed: composite_child_attachments.expected_member"))], ids=["not-expected", "present", "absent", "invalid-expected", "invalid-confirmed", "null-expected"])
+def test_attachment_membership_values(main_db, changes, error):
+    _chain57(main_db, until="composite_child_attachments")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_child_attachments", **changes)
+    else:
+        _put(main_db, "composite_child_attachments", **changes)
+
+
+@pytest.mark.parametrize("changes, error", [({"status": "escalated"}, None), ({"desired_outcome": "fresh_auth_denied"}, None), ({"meter_id": None}, None), ({"status": "done"}, "CHECK constraint failed"), ({"desired_outcome": "ignored"}, "CHECK constraint failed"), ({"responsible_actor": None}, re.escape("NOT NULL constraint failed: composite_cleanup_obligations.responsible_actor")), ({"reason": None}, re.escape("NOT NULL constraint failed: composite_cleanup_obligations.reason"))], ids=["escalated", "denied", "no-meter", "bad-status", "bad-outcome", "no-actor", "no-reason"])
+def test_cleanup_obligation_values(main_db, changes, error):
+    _chain57(main_db, until="composite_cleanup_obligations")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_cleanup_obligations", **changes)
+    else:
+        _put(main_db, "composite_cleanup_obligations", **changes)
+
+
+CLEANUP_ACCEPTED = [(T0, None, None, None, None), (T0, 4_000, 9_000, T0 + 120_000, 0), (T0, 4_000, 9_000, T0 + 1_800_000, 1)]
+CLEANUP_REJECTED = [(None, 4_000, 9_000, T0 + 120_000, 0), (T0, 4_000, 9_000, T0 - 1, 0), (T0, None, 9_000, T0 + 120_000, 0), (T0, 4_000, None, T0 + 120_000, 0), (T0, 4_000, 9_000, T0 + 120_000, None), (T0, 4_000, 9_000, None, 0), (T0, 4_000, 9_000, T0 + 120_000, 2), (T0, -1, 9_000, None, None)]
+
+@pytest.mark.parametrize("values, accepted", [(v, True) for v in CLEANUP_ACCEPTED] + [(v, False) for v in CLEANUP_REJECTED], ids=["valid-disabled", "valid-removed-settled", "valid-growing"] + [f"invalid-{i}" for i in range(8)])
+def test_cleanup_disables_reads_then_deletes(main_db, values, accepted):
+    _chain57(main_db, until="composite_cleanup_obligations")
+    names = ("disabled_at", "final_upload_bytes", "final_download_bytes", "deleted_at", "still_growing_at_delete")
+    changes = dict(zip(names, values))
+    if accepted:
+        _put(main_db, "composite_cleanup_obligations", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _put(main_db, "composite_cleanup_obligations", **changes)
+
+
+@pytest.mark.parametrize("outcome, values, accepted", [("removed", (T0, 4_000, 9_000, T0 + 120_000, 0), True), ("fresh_auth_denied", (T0, None, None, None, None), True), ("removed", (T0, None, None, None, None), False), ("fresh_auth_denied", (None, None, None, None, None), False)], ids=["removed-complete", "denied", "removed-incomplete", "denied-unrecorded"])
+def test_cleanup_resolution_needs_its_outcome(main_db, outcome, values, accepted):
+    _chain57(main_db, until="composite_cleanup_obligations")
+    names = ("disabled_at", "final_upload_bytes", "final_download_bytes", "deleted_at", "still_growing_at_delete")
+    if not accepted:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _put(main_db, "composite_cleanup_obligations", status="resolved", desired_outcome=outcome, **dict(zip(names, values)))
+    else:
+        _put(main_db, "composite_cleanup_obligations", status="resolved", desired_outcome=outcome, **dict(zip(names, values)))
+
+
+def test_cleanup_obligations_are_never_erased(main_db):
+    _chain57(main_db, until="composite_observations")
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("DELETE FROM composite_cleanup_obligations WHERE obligation_id='co-1'")
+    main_db.execute("UPDATE composite_subscriptions SET lifecycle='cancelled', cancel_accepted_at=?, cancel_final_started_at=? WHERE subscription_id='sub-1'", (T0, T0))
+    assert _one(main_db, "SELECT status FROM composite_cleanup_obligations WHERE obligation_id='co-1'")[0] == "open"
+    main_db.execute("UPDATE composite_cleanup_obligations SET disabled_at=?, final_upload_bytes=4000, final_download_bytes=9000, deleted_at=?, still_growing_at_delete=0, status='resolved' WHERE obligation_id='co-1'", (T0, T0 + 120_000))
+
+
+def test_meter_bucket_has_one_owner(main_db):
+    _chain57(main_db, until="composite_children")
+    _sub2(main_db)
+    _panel_b(main_db)
+    for meter_id, subscription_id in (("m-2", "sub-2"), ("m-3", "sub-1")):
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_meters.physical_panel_id, composite_meters.traffic_key")):
+            _put(main_db, "composite_meters", meter_id=meter_id, subscription_id=subscription_id)
+    _put(main_db, "composite_meters", meter_id="m-4", subscription_id="sub-2", physical_panel_id="pp-b")
+    _put(main_db, "composite_meters", meter_id="m-5", subscription_id="sub-2", traffic_key="cmp1-b5")
+
+
+@pytest.mark.parametrize("changes, error", [({"serving_class": "retired", "required_current": 0}, None), ({"serving_class": "emergency_exposure", "required_current": 0}, None), ({"serving_class": "serving", "required_current": 0}, None), ({"serving_class": "retired", "required_current": 1}, "CHECK constraint failed"), ({"serving_class": "emergency_exposure", "required_current": 1}, "CHECK constraint failed"), ({"serving_class": "stale", "required_current": 0}, "CHECK constraint failed"), ({"required_current": 2}, "CHECK constraint failed"), ({"upload_epoch": -1}, "CHECK constraint failed"), ({"download_epoch": 1.5}, "CHECK constraint failed"), ({"traffic_key": None}, re.escape("NOT NULL constraint failed: composite_meters.traffic_key")), ({"serving_class": None}, re.escape("NOT NULL constraint failed: composite_meters.serving_class"))], ids=["retired", "exposure", "serving-optional", "retired-required", "exposure-required", "bad-class", "bad-required", "upload-negative", "download-fractional", "no-key", "no-class"])
+def test_meter_values(main_db, changes, error):
+    _chain57(main_db, until="composite_meters")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_meters", **changes)
+    else:
+        _put(main_db, "composite_meters", **changes)
+
+
+@pytest.mark.parametrize("changes, error", [({"upload_bytes": 0, "download_bytes": 0}, None), ({"download_bytes": 9_223_372_036_854_775_807}, None), ({"received_at": T0 + 15_000}, None), ({"upload_bytes": -1}, "CHECK constraint failed"), ({"download_bytes": 1.5}, "CHECK constraint failed"), ({"upload_bytes": "n/a"}, "CHECK constraint failed"), ({"upload_epoch": -1}, "CHECK constraint failed"), ({"upload_bytes": None}, re.escape("NOT NULL constraint failed: composite_observations.upload_bytes")), ({"download_bytes": None}, re.escape("NOT NULL constraint failed: composite_observations.download_bytes"))], ids=["zero", "max-int", "unchanged-fresh", "negative", "fractional", "text", "epoch-negative", "upload-null", "download-null"])
+def test_observation_totals_are_signed_64_bit_integers(main_db, changes, error):
+    _chain57(main_db, until="composite_observations")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_observations", **changes)
+    else:
+        _put(main_db, "composite_observations", **changes)
+    # SQLite parses an out-of-range integer literal as REAL; bind-time overflow would bypass the constraint.
+    if changes == {"upload_epoch": -1}:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            main_db.execute("INSERT INTO composite_observations (observation_id, meter_id, upload_epoch, download_epoch, upload_bytes, download_bytes, received_at, outcome, evidence_hash) VALUES ('obs-big', 'm-1', 0, 0, 9223372036854775808, 0, ?, 'accepted', 'evidence-big')", (T0,))
+
+
+@pytest.mark.parametrize("changes, error", [({"outcome": "out_of_order"}, None), ({"dispatched_at": None}, None), ({"received_at": "2026-10-30T00:00:15Z"}, "CHECK constraint failed"), ({"received_at": T0 + 15_000.5}, "CHECK constraint failed"), ({"outcome": "failed"}, "CHECK constraint failed"), ({"outcome": "timeout"}, "CHECK constraint failed"), ({"received_at": None}, re.escape("NOT NULL constraint failed: composite_observations.received_at")), ({"outcome": None}, re.escape("NOT NULL constraint failed: composite_observations.outcome")), ({"evidence_hash": None}, re.escape("NOT NULL constraint failed: composite_observations.evidence_hash"))], ids=["late", "no-dispatch", "text-time", "fractional-time", "failed", "timeout", "no-receipt", "no-outcome", "no-evidence"])
+def test_observation_time_and_outcome(main_db, changes, error):
+    _chain57(main_db, until="composite_observations")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_observations", **changes)
+    else:
+        _put(main_db, "composite_observations", **changes)
+
+
+def test_observations_are_never_rewritten(main_db):
+    _chain57(main_db, until="composite_entitlement_periods")
+    expected = (1_500, T0 + 15_000, "accepted")
+    for sql in ("UPDATE composite_observations SET upload_bytes=1200 WHERE observation_id='obs-2'", f"UPDATE composite_observations SET received_at={T0 + 16_000} WHERE observation_id='obs-2'", "UPDATE composite_observations SET outcome='out_of_order' WHERE observation_id='obs-2'"):
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute(sql)
+        assert _one(main_db, "SELECT upload_bytes, received_at, outcome FROM composite_observations WHERE observation_id='obs-2'") == expected
+    _put(main_db, "composite_observations", observation_id="obs-3", outcome="out_of_order", upload_bytes=1_400, download_bytes=8_900, received_at=T0 + 14_000, evidence_hash="evidence-3")
+
+
+def test_delta_is_unique_per_meter_direction_epoch_and_predecessor(main_db):
+    _chain57(main_db, until="composite_usage_gaps")
+    _put(main_db, "composite_observations", observation_id="obs-3", upload_bytes=2_000, download_bytes=9_500, received_at=T0 + 30_000, evidence_hash="evidence-3")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_meter_deltas.meter_id, composite_meter_deltas.direction, composite_meter_deltas.epoch, composite_meter_deltas.predecessor_observation_id")):
+        _put(main_db, "composite_meter_deltas", delta_id="d-2", current_observation_id="obs-3")
+    _put(main_db, "composite_meter_deltas", delta_id="d-3", direction="download", delta_bytes=1_000)
+    _put(main_db, "composite_meter_deltas", delta_id="d-4", epoch=1)
+    _put(main_db, "composite_meter_deltas", delta_id="d-5", predecessor_observation_id="obs-2", current_observation_id="obs-3")
+
+
+@pytest.mark.parametrize("changes, error", [({"delta_bytes": 0}, None), ({"allocation_state": "absorbed_exposure"}, None), ({"allocation_state": "gap_affected"}, None), ({"period_id": None}, None), ({"delta_bytes": -1}, "CHECK constraint failed"), ({"delta_bytes": 1.5}, "CHECK constraint failed"), ({"allocation_state": "carried"}, "CHECK constraint failed"), ({"direction": "both"}, "CHECK constraint failed"), ({"epoch": -1}, "CHECK constraint failed"), ({"predecessor_observation_id": "obs-2"}, "CHECK constraint failed"), ({"allocation_state": None}, re.escape("NOT NULL constraint failed: composite_meter_deltas.allocation_state")), ({"child_id": None}, re.escape("NOT NULL constraint failed: composite_meter_deltas.child_id"))], ids=["zero", "exposure", "gap", "no-period", "negative", "fractional", "carried", "both", "epoch", "same-observation", "no-allocation", "no-child"])
+def test_delta_values(main_db, changes, error):
+    _chain57(main_db, until="composite_meter_deltas")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_meter_deltas", **changes)
+    else:
+        _put(main_db, "composite_meter_deltas", **changes)
+
+
+def test_delta_uses_observations_of_its_own_meter(main_db):
+    _chain57(main_db, until="composite_meter_deltas")
+    _put(main_db, "composite_meters", meter_id="m-2", traffic_key="cmp1-m2", serving_class="retired", required_current=0)
+    _put(main_db, "composite_observations", observation_id="obs-m2a", meter_id="m-2", received_at=T0, evidence_hash="evidence-m2a")
+    _put(main_db, "composite_observations", observation_id="obs-m2b", meter_id="m-2", received_at=T0 + 15_000, evidence_hash="evidence-m2b")
+    for delta_id, meter, prev, curr in (("d-x", "m-1", "obs-1", "obs-m2b"), ("d-y", "m-1", "obs-m2a", "obs-2"), ("d-z", "m-2", "obs-1", "obs-2")):
+        with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+            _put(main_db, "composite_meter_deltas", delta_id=delta_id, meter_id=meter, predecessor_observation_id=prev, current_observation_id=curr)
+    _put(main_db, "composite_meter_deltas", delta_id="d-m2", meter_id="m-2", predecessor_observation_id="obs-m2a", current_observation_id="obs-m2b")
+
+
+def test_deltas_are_kept_and_their_bytes_never_change(main_db):
+    _chain57(main_db)
+    for sql in ("DELETE FROM composite_meter_deltas WHERE delta_id='d-1'", "UPDATE composite_meter_deltas SET delta_bytes=400 WHERE delta_id='d-1'", "UPDATE composite_meter_deltas SET epoch=1 WHERE delta_id='d-1'", "UPDATE composite_meter_deltas SET direction='download' WHERE delta_id='d-1'"):
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute(sql)
+        assert _one(main_db, "SELECT delta_bytes, epoch, direction FROM composite_meter_deltas WHERE delta_id='d-1'") == (500, 0, "upload")
+    main_db.execute("UPDATE composite_meter_deltas SET allocation_state='gap_affected', period_id=NULL WHERE delta_id='d-1'")
+
+
+@pytest.mark.parametrize("changes, error", [({"reason": "decrease"}, None), ({"reason": "reset"}, None), ({"lower_bound_bytes": 500, "upper_bound_bytes": 500}, None), ({"lower_bound_bytes": 500, "upper_bound_bytes": 600}, None), ({"state": "usage_settled", "settled_by": "web:owner-1", "settled_at": T0+3_600_000, "settlement_reason": "panel history lost", "accepted_risk": "store absorbs the unknown usage"}, None), ({"before_observation_id": None, "after_observation_id": None}, None), ({"reason": "restart_loss"}, "CHECK constraint failed"), ({"state": "resolved"}, "CHECK constraint failed"), ({"direction": "both"}, "CHECK constraint failed"), ({"lower_bound_bytes": -1}, "CHECK constraint failed"), ({"lower_bound_bytes": 500, "upper_bound_bytes": 400}, "CHECK constraint failed"), *[({"state": "usage_settled", "settled_by": "web:owner-1", "settled_at": T0+3_600_000, "settlement_reason": "panel history lost", "accepted_risk": "store absorbs the unknown usage", column: None}, "CHECK constraint failed") for column in ("settled_by", "settled_at", "settlement_reason", "accepted_risk")], ({"lower_bound_bytes": None}, re.escape("NOT NULL constraint failed: composite_usage_gaps.lower_bound_bytes"))], ids=["decrease", "reset", "equal-bound", "upper-bound", "settled", "no-brackets", "restart-loss", "bad-state", "both", "negative", "upper-too-low", "no-settled-by", "no-settled-at", "no-reason", "no-risk", "no-lower-bound"])
+def test_usage_gap_values(main_db, changes, error):
+    _chain57(main_db, until="composite_usage_gaps")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_usage_gaps", **changes)
+    else:
+        _put(main_db, "composite_usage_gaps", **changes)
+
+
+def test_usage_gap_belongs_to_the_meter_owner_and_is_kept(main_db):
+    _chain57(main_db)
+    _sub2(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(main_db, "composite_usage_gaps", gap_id="gap-x", subscription_id="sub-2")
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("DELETE FROM composite_usage_gaps WHERE gap_id='gap-1'")
+    assert _one(main_db, "SELECT count(*) FROM composite_usage_gaps WHERE gap_id='gap-1'")[0] == 1
+    main_db.execute("UPDATE composite_usage_gaps SET state='usage_settled', settled_by='web:owner-1', settled_at=?, settlement_reason='panel history lost', accepted_risk='store absorbs the unknown usage' WHERE gap_id='gap-1'", (T0 + 3_600_000,))
+
+
+@pytest.mark.parametrize("kind, operation, accepted, error", [("initial_test", "op-t", True, None), ("renewal", "op-r", True, None), ("conversion", "op-c", True, None), ("refund", "op-z", False, "CHECK constraint failed"), (None, "op-z", False, re.escape("NOT NULL constraint failed: composite_entitlement_periods.grant_kind"))], ids=["test", "renewal", "conversion", "invalid", "null"])
+def test_entitlement_period_kind_and_operation(main_db, kind, operation, accepted, error):
+    _chain57(main_db, until="composite_meter_deltas")
+    if accepted:
+        _put(main_db, "composite_entitlement_periods", period_id=f"ep-{operation}", operation_id=operation, grant_kind=kind)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_entitlement_periods", period_id=f"ep-{operation}", operation_id=operation, grant_kind=kind)
+    if kind == "initial_test":
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_entitlement_periods.operation_id")):
+            _put(main_db, "composite_entitlement_periods", period_id="ep-dup", operation_id="op-1")
+
+
+@pytest.mark.parametrize("changes, accepted", [(_renewal(907_200_000, 907_200_000, 0, **CARRY), True), (_renewal(907_200_000, 907_200_000, 0, carried_bytes=21_474_836_480), False), (_renewal(907_200_000, 907_200_000, 0, **{**CARRY, "available_bytes": 75_161_927_681}), False), (_renewal(907_200_000, 907_200_000, 0, purchased_bytes=0, carried_bytes=21_474_836_480, available_bytes=21_474_836_480), False), (_renewal(907_200_000, 907_200_000, 0, carried_bytes=-1, available_bytes=53_687_091_199), False)], ids=["sum", "carry-not-added", "wrong-sum", "zero-purchased", "negative-carry"])
+def test_period_allowance_is_new_plus_carried(main_db, changes, accepted):
+    _chain57(main_db, until="composite_meter_deltas")
+    if accepted:
+        _put(main_db, "composite_entitlement_periods", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _put(main_db, "composite_entitlement_periods", **changes)
+
+
+@pytest.mark.parametrize("changes, accepted", [(_renewal(907_200_000, 907_200_000, 0), True), (_renewal(1_728_000_000, 1_296_000_000, 432_000_000), True), (_renewal(1_296_000_000, 1_296_000_000, 0), True), (_renewal(907_200_500, 907_200_500, 0), True), (_renewal(0, 0, 0), True), (_renewal(-1_000, 0, 0), True), (_renewal(907_200_500, 907_200_000, 500), False), (_renewal(1_728_000_000, 1_728_000_000, 0), False), (_renewal(1_728_000_000, 1_296_000_000, 0), False), (_renewal(907_200_000, 0, 907_200_000), False), (_renewal(907_200_000, 907_200_000, 0, expires_extra=1), False), (_renewal(907_200_000, 907_200_000, 0, expires_extra=-1), False), (_renewal(-1_000, 0, 1_000), False), ({**ROWS_5_7["composite_entitlement_periods"], "period_id": "ep-x", "operation_id": "op-x", "carried_ms": 1, "expires_at": PREVIOUS_EXPIRY + 1}, False)], ids=["10d12h", "20d-cap", "15d", "fractional-ms", "at-expiry", "expired", "fractional-forfeit", "over-cap", "missing-forfeit", "all-forfeited", "expiry-plus-ms", "expiry-minus-ms", "expired-forfeit", "initial-no-carry"])
+def test_renewal_expiry_follows_the_45_day_cap(main_db, changes, accepted):
+    _chain57(main_db, until="composite_meter_deltas")
+    if accepted:
+        _put(main_db, "composite_entitlement_periods", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _put(main_db, "composite_entitlement_periods", **changes)
+
+
+@pytest.mark.parametrize("changes, accepted", [(_renewal(907_200_000, 907_200_000, 0, **CARRY), True), (_renewal(-60_000, 0, 0, timely_payment=1, authorized_at=PREVIOUS_EXPIRY-1, **CARRY), True), (_renewal(-60_000, 0, 0, timely_payment=1, authorized_at=PREVIOUS_EXPIRY-1), True), (_renewal(-60_000, 0, 0, **CARRY), False), (_renewal(0, 0, 0, **CARRY), False), (_renewal(-60_000, 0, 0, timely_payment=1, authorized_at=PREVIOUS_EXPIRY, **CARRY), False), (_renewal(-60_000, 0, 0, timely_payment=1, authorized_at=None), False), (_renewal(907_200_000, 907_200_000, 0, timely_payment=2), False), ({**ROWS_5_7["composite_entitlement_periods"], "period_id": "ep-x", "operation_id": "op-x", "carried_bytes": 1, "available_bytes": 53_687_091_201}, False)], ids=["valid-old-term", "timely-expired-carry", "timely-no-carry", "late-carry", "at-expiry-carry", "authorized-at-expiry", "missing-authorization", "bad-flag", "bytes-carried"])
+def test_carryover_needs_a_valid_old_term_or_timely_payment(main_db, changes, accepted):
+    _chain57(main_db, until="composite_meter_deltas")
+    if accepted:
+        _put(main_db, "composite_entitlement_periods", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _put(main_db, "composite_entitlement_periods", **changes)
+
+
+def test_boundary_reading_is_unique_per_period_meter_and_direction(main_db):
+    _chain57(main_db, until="composite_reminder_periods")
+    _put(main_db, "composite_meters", meter_id="m-2", traffic_key="cmp1-m2")
+    _put(main_db, "composite_observations", observation_id="obs-m2a", meter_id="m-2", evidence_hash="evidence-m2a")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_boundary_readings.period_id, composite_boundary_readings.meter_id, composite_boundary_readings.direction")):
+        _put(main_db, "composite_boundary_readings", observation_id="obs-2", cumulative_bytes=1_500, received_at=T0+15_000)
+    _put(main_db, "composite_boundary_readings", direction="download", cumulative_bytes=8_000)
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(main_db, "composite_boundary_readings", meter_id="m-2", observation_id="obs-1")
+    _put(main_db, "composite_boundary_readings", meter_id="m-2", observation_id="obs-m2a")
+
+
+@pytest.mark.parametrize("changes, error", [({"required_current": 1, "age_ms": 60_000}, None), ({"required_current": 0, "age_ms": 120_000}, None), ({"epoch": 3}, None), ({"required_current": 1, "age_ms": 60_001}, "CHECK constraint failed"), ({"required_current": 0, "age_ms": -1}, "CHECK constraint failed"), ({"required_current": 2}, "CHECK constraint failed"), ({"direction": "both"}, "CHECK constraint failed"), ({"cumulative_bytes": -1}, "CHECK constraint failed"), ({"epoch": -1}, "CHECK constraint failed"), ({"cumulative_bytes": None}, re.escape("NOT NULL constraint failed: composite_boundary_readings.cumulative_bytes")), ({"age_ms": None}, re.escape("NOT NULL constraint failed: composite_boundary_readings.age_ms"))], ids=["fresh-required", "stale-retired", "epoch", "stale-required", "negative-age", "bad-required", "both", "negative-bytes", "negative-epoch", "no-cumulative", "no-age"])
+def test_boundary_reading_values(main_db, changes, error):
+    _chain57(main_db, until="composite_boundary_readings")
+    if error:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _put(main_db, "composite_boundary_readings", **changes)
+    else:
+        _put(main_db, "composite_boundary_readings", **changes)
+
+
+def test_boundary_readings_are_immutable(main_db):
+    _chain57(main_db)
+    for sql in ("UPDATE composite_boundary_readings SET cumulative_bytes=1500", "UPDATE composite_boundary_readings SET age_ms=5000", "UPDATE composite_boundary_readings SET observation_id='obs-2'", "DELETE FROM composite_boundary_readings"):
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute(sql)
+        assert _one(main_db, "SELECT cumulative_bytes, age_ms, observation_id FROM composite_boundary_readings") == (1_000, 0, "obs-1")
+
+
+def test_reminder_period_is_one_per_paid_period(main_db):
+    _chain57(main_db, until="composite_reminder_periods")
+    _put(main_db, "composite_reminder_periods")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_reminder_periods.period_id")):
+        _put(main_db, "composite_reminder_periods", reminder_period_id="rp-2")
+    _put(main_db, "composite_entitlement_periods", period_id="ep-t", operation_id="op-t", grant_kind="initial_test")
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        _put(main_db, "composite_reminder_periods", reminder_period_id="rp-t", period_id="ep-t", grant_kind="initial_test")
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _put(main_db, "composite_reminder_periods", reminder_period_id="rp-t2", period_id="ep-t")
+    for period_id, kind in (("ep-r", "renewal"), ("ep-c", "conversion")):
+        _put(main_db, "composite_entitlement_periods", period_id=period_id, operation_id=f"op-{kind}", grant_kind=kind)
+        _put(main_db, "composite_reminder_periods", reminder_period_id=f"rp-{kind}", period_id=period_id, grant_kind=kind)
+    _put(main_db, "composite_entitlement_periods", period_id="ep-z", operation_id="op-z")
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        _put(main_db, "composite_reminder_periods", reminder_period_id="rp-z", period_id="ep-z", allowance_bytes=0)
+
+
+def test_reminder_is_one_per_period_and_type(main_db):
+    _chain57(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_reminders.reminder_period_id, composite_reminders.reminder_type")):
+        _put(main_db, "composite_reminders", reminder_id="rm-2")
+    _put(main_db, "composite_reminders", reminder_id="rm-3", reminder_type="quota", expiry_threshold_seconds=None, quota_mode="percent", quota_percent=80)
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        _put(main_db, "composite_reminders", reminder_id="rm-4", reminder_type="renewal", expiry_threshold_seconds=None, quota_mode="percent", quota_percent=80)
+
+
+@pytest.mark.parametrize("changes, accepted", [({}, True), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "percent", "quota_percent": 80}, True), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "percent", "quota_percent": 100}, True), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "remaining_bytes", "quota_remaining_bytes": 2_147_483_648}, True), ({"quota_mode": "percent", "quota_percent": 80}, False), ({"expiry_threshold_seconds": None}, False), ({"expiry_threshold_seconds": 0}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_percent": 80}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "percent", "quota_percent": 80, "quota_remaining_bytes": 2_147_483_648}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "remaining_bytes", "quota_remaining_bytes": 2_147_483_648, "quota_percent": 80}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "percent"}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "percent", "quota_percent": 0}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "percent", "quota_percent": 101}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "remaining_bytes", "quota_remaining_bytes": 0}, False), ({"reminder_type": "quota", "expiry_threshold_seconds": None, "quota_mode": "lifetime", "quota_percent": 80}, False), ({"reminder_type": "quota", "quota_mode": "percent", "quota_percent": 80, "expiry_threshold_seconds": 432_000}, False)], ids=["expiry-base", "percent-80", "percent-100", "remaining-2gib", "expiry-with-quota", "expiry-no-threshold", "expiry-zero", "quota-no-mode", "both-quota-values", "remaining-with-percent", "percent-no-value", "percent-zero", "percent-over", "remaining-zero", "lifetime", "quota-with-expiry"])
+def test_reminder_threshold_snapshot(main_db, changes, accepted):
+    _chain57(main_db, until="composite_reminders")
+    if accepted:
+        _put(main_db, "composite_reminders", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _put(main_db, "composite_reminders", **changes)
+
+
+def test_reminder_due_time_and_acceptance_are_final(main_db):
+    _chain57(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        main_db.execute("UPDATE composite_reminders SET status='due' WHERE reminder_id='rm-1'")
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        main_db.execute(f"UPDATE composite_reminders SET condition_met_at={T0+2_000}, due_at={T0+1_000}, status='due' WHERE reminder_id='rm-1'")
+    main_db.execute(f"UPDATE composite_reminders SET condition_met_at={T0+1_000}, due_at={T0+1_000}, status='due' WHERE reminder_id='rm-1'")
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute(f"UPDATE composite_reminders SET due_at={T0+2_000} WHERE reminder_id='rm-1'")
+    assert _one(main_db, "SELECT due_at FROM composite_reminders WHERE reminder_id='rm-1'")[0] == T0 + 1_000
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        main_db.execute("UPDATE composite_reminders SET status='sent' WHERE reminder_id='rm-1'")
+    main_db.execute("UPDATE composite_reminders SET status='accepted' WHERE reminder_id='rm-1'")
+    for status in ("armed", "due", "cancelled"):
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute("UPDATE composite_reminders SET status=? WHERE reminder_id='rm-1'", (status,))
+        assert _one(main_db, "SELECT status FROM composite_reminders WHERE reminder_id='rm-1'")[0] == "accepted"
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("DELETE FROM composite_reminders WHERE reminder_id='rm-1'")
+    _put(main_db, "composite_reminders", reminder_id="rm-q", reminder_type="quota", expiry_threshold_seconds=None, quota_mode="percent", quota_percent=80)
+    main_db.execute("UPDATE composite_reminders SET status='cancelled' WHERE reminder_id='rm-q'")
