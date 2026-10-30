@@ -59,6 +59,168 @@ _PANEL_DDL = (
 )""",
 )
 
+# data-model.md §2-§4: plans and versions, plan nodes, immutable offers,
+# subscriptions with their current descriptor per logical node, URL tokens
+# and config generations. Paid versions last exactly 2,592,000 seconds at a
+# positive base price; test and campaign versions last whole hours.
+_CATALOG_DDL = (
+    """CREATE TABLE composite_plans (
+    plan_id TEXT PRIMARY KEY,
+    kind TEXT NOT NULL CHECK (kind IN ('paid', 'test', 'campaign')),
+    UNIQUE (plan_id, kind)
+)""",
+    """CREATE TABLE composite_plan_versions (
+    plan_version_id TEXT PRIMARY KEY,
+    plan_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    allowance_bytes INTEGER NOT NULL
+        CHECK (typeof(allowance_bytes) = 'integer' AND allowance_bytes > 0),
+    duration_seconds INTEGER NOT NULL
+        CHECK (typeof(duration_seconds) = 'integer' AND duration_seconds > 0),
+    base_price INTEGER NOT NULL
+        CHECK (typeof(base_price) = 'integer' AND base_price >= 0),
+    CHECK (CASE kind
+        WHEN 'paid' THEN base_price > 0 AND duration_seconds = 2592000
+        ELSE duration_seconds % 3600 = 0 END),
+    UNIQUE (plan_id, version),
+    FOREIGN KEY (plan_id, kind) REFERENCES composite_plans (plan_id, kind) ON DELETE RESTRICT
+)""",
+    """CREATE TABLE composite_plan_nodes (
+    plan_node_id TEXT PRIMARY KEY,
+    plan_version_id TEXT NOT NULL
+        REFERENCES composite_plan_versions (plan_version_id) ON DELETE RESTRICT,
+    ordinal INTEGER NOT NULL,
+    logical_node_key TEXT NOT NULL,
+    binding_id TEXT NOT NULL
+        REFERENCES composite_prepared_bindings (binding_id) ON DELETE RESTRICT,
+    protocol TEXT NOT NULL CHECK (protocol IN ('vless', 'vmess', 'trojan')),
+    transport TEXT NOT NULL,
+    security TEXT NOT NULL,
+    descriptor TEXT NOT NULL,
+    owner_pick TEXT,
+    remark TEXT,
+    egress TEXT,
+    UNIQUE (plan_version_id, ordinal),
+    UNIQUE (plan_version_id, logical_node_key)
+)""",
+    """CREATE TRIGGER composite_plan_nodes_version_fixed
+    BEFORE UPDATE OF plan_version_id ON composite_plan_nodes
+    WHEN NEW.plan_version_id IS NOT OLD.plan_version_id
+    BEGIN SELECT RAISE(ABORT, 'plan node version is immutable'); END""",
+    """CREATE TABLE composite_offers (
+    offer_id TEXT PRIMARY KEY,
+    plan_version_id TEXT NOT NULL
+        REFERENCES composite_plan_versions (plan_version_id) ON DELETE RESTRICT,
+    allowance_bytes INTEGER NOT NULL
+        CHECK (typeof(allowance_bytes) = 'integer' AND allowance_bytes > 0),
+    duration_seconds INTEGER NOT NULL
+        CHECK (typeof(duration_seconds) = 'integer' AND duration_seconds > 0),
+    base_price INTEGER NOT NULL
+        CHECK (typeof(base_price) = 'integer' AND base_price >= 0),
+    payable_price INTEGER NOT NULL
+        CHECK (typeof(payable_price) = 'integer' AND payable_price >= 0 AND payable_price <= base_price),
+    accepted_by TEXT NOT NULL,
+    accepted_at INTEGER NOT NULL
+)""",
+    """CREATE TRIGGER composite_offers_no_update BEFORE UPDATE ON composite_offers
+    BEGIN SELECT RAISE(ABORT, 'offers are immutable'); END""",
+    """CREATE TRIGGER composite_offers_no_delete BEFORE DELETE ON composite_offers
+    BEGIN SELECT RAISE(ABORT, 'offers are immutable'); END""",
+    """CREATE TABLE composite_offer_nodes (
+    offer_node_id TEXT PRIMARY KEY,
+    offer_id TEXT NOT NULL REFERENCES composite_offers (offer_id) ON DELETE RESTRICT,
+    ordinal INTEGER NOT NULL,
+    logical_node_key TEXT NOT NULL,
+    binding_id TEXT NOT NULL
+        REFERENCES composite_prepared_bindings (binding_id) ON DELETE RESTRICT,
+    protocol TEXT NOT NULL CHECK (protocol IN ('vless', 'vmess', 'trojan')),
+    transport TEXT NOT NULL,
+    security TEXT NOT NULL,
+    descriptor TEXT NOT NULL,
+    owner_pick TEXT,
+    egress TEXT,
+    UNIQUE (offer_id, ordinal),
+    UNIQUE (offer_id, logical_node_key)
+)""",
+    """CREATE TRIGGER composite_offer_nodes_no_update BEFORE UPDATE ON composite_offer_nodes
+    BEGIN SELECT RAISE(ABORT, 'offer nodes are immutable'); END""",
+    """CREATE TRIGGER composite_offer_nodes_no_delete BEFORE DELETE ON composite_offer_nodes
+    BEGIN SELECT RAISE(ABORT, 'offer nodes are immutable'); END""",
+    """CREATE TABLE composite_subscriptions (
+    subscription_id TEXT PRIMARY KEY,
+    tenant_installation_id TEXT NOT NULL,
+    customer_telegram_id INTEGER NOT NULL,
+    offer_id TEXT NOT NULL REFERENCES composite_offers (offer_id) ON DELETE RESTRICT,
+    kind TEXT NOT NULL CHECK (kind IN ('paid', 'test')),
+    lifecycle TEXT NOT NULL
+        CHECK (lifecycle IN ('preparing', 'fulfilled', 'cancel_pending', 'cancelled', 'failed_unfulfilled')),
+    available_at INTEGER,
+    expires_at INTEGER,
+    customer_disabled INTEGER NOT NULL DEFAULT 0 CHECK (customer_disabled IN (0, 1)),
+    owner_suspended INTEGER NOT NULL DEFAULT 0 CHECK (owner_suspended IN (0, 1)),
+    reporting_suspended INTEGER NOT NULL DEFAULT 0 CHECK (reporting_suspended IN (0, 1)),
+    recovery_hold_case TEXT,
+    replacement_delivery_block INTEGER NOT NULL DEFAULT 0 CHECK (replacement_delivery_block IN (0, 1)),
+    initial_delivery_block INTEGER NOT NULL DEFAULT 0 CHECK (initial_delivery_block IN (0, 1)),
+    cancel_accepted_at INTEGER,
+    cancel_wait_kind TEXT CHECK (cancel_wait_kind IN ('authorized_renewal', 'initial_provisioning')),
+    cancel_final_started_at INTEGER,
+    CHECK (cancel_wait_kind IS NULL OR cancel_accepted_at IS NOT NULL),
+    CHECK (cancel_final_started_at IS NULL
+        OR (cancel_accepted_at IS NOT NULL AND cancel_final_started_at >= cancel_accepted_at))
+)""",
+    """CREATE TRIGGER composite_subscriptions_owner_fixed
+    BEFORE UPDATE OF tenant_installation_id, customer_telegram_id ON composite_subscriptions
+    WHEN NEW.tenant_installation_id IS NOT OLD.tenant_installation_id
+        OR NEW.customer_telegram_id IS NOT OLD.customer_telegram_id
+    BEGIN SELECT RAISE(ABORT, 'subscription tenant and customer are immutable'); END""",
+    # The current descriptor per logical node: the offer node's at sale, replaced
+    # when that subscription's move publishes, unchanged by renewal (RD05-OWN-002).
+    """CREATE TABLE composite_subscription_nodes (
+    subscription_id TEXT NOT NULL
+        REFERENCES composite_subscriptions (subscription_id) ON DELETE RESTRICT,
+    logical_node_key TEXT NOT NULL,
+    descriptor TEXT NOT NULL,
+    PRIMARY KEY (subscription_id, logical_node_key)
+)""",
+    """CREATE TABLE composite_tokens (
+    token_id TEXT PRIMARY KEY,
+    subscription_id TEXT NOT NULL
+        REFERENCES composite_subscriptions (subscription_id) ON DELETE RESTRICT,
+    token_generation INTEGER NOT NULL,
+    token_digest BLOB NOT NULL UNIQUE
+        CHECK (typeof(token_digest) = 'blob' AND length(token_digest) = 32),
+    encrypted_token BLOB,
+    status TEXT NOT NULL CHECK (status IN ('candidate', 'current', 'revoked', 'superseded'))
+)""",
+    "CREATE UNIQUE INDEX composite_tokens_one_current ON composite_tokens (subscription_id) WHERE status = 'current'",
+    """CREATE TRIGGER composite_tokens_no_delete BEFORE DELETE ON composite_tokens
+    BEGIN SELECT RAISE(ABORT, 'token tombstones are kept'); END""",
+    """CREATE TRIGGER composite_tokens_digest_fixed BEFORE UPDATE OF token_digest ON composite_tokens
+    WHEN NEW.token_digest IS NOT OLD.token_digest
+    BEGIN SELECT RAISE(ABORT, 'token digest is immutable'); END""",
+    """CREATE TRIGGER composite_tokens_no_revival BEFORE UPDATE OF status ON composite_tokens
+    WHEN OLD.status IN ('revoked', 'superseded') AND NEW.status = 'current'
+    BEGIN SELECT RAISE(ABORT, 'a revoked or superseded token never returns'); END""",
+    """CREATE TABLE composite_config_generations (
+    generation_id TEXT PRIMARY KEY,
+    subscription_id TEXT NOT NULL
+        REFERENCES composite_subscriptions (subscription_id) ON DELETE RESTRICT,
+    generation INTEGER NOT NULL,
+    state TEXT NOT NULL
+        CHECK (state IN ('preparing', 'complete_verified', 'published', 'retired', 'blocked_uncertain')),
+    prepared_at INTEGER,
+    verified_at INTEGER,
+    published_at INTEGER,
+    CHECK (state NOT IN ('complete_verified', 'published') OR verified_at IS NOT NULL),
+    CHECK (state <> 'published' OR published_at IS NOT NULL),
+    UNIQUE (subscription_id, generation)
+)""",
+    "CREATE UNIQUE INDEX composite_config_generations_one_published "
+    "ON composite_config_generations (subscription_id) WHERE state = 'published'",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -164,7 +326,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL:
         conn.execute(statement)
 
 

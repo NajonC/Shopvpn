@@ -218,7 +218,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `composite_panel_aliases`, unique on `(database_installation_id, tenant_id, local_panel_server_id)`.
   - `composite_prepared_bindings`.
   - RESTRICT foreign keys, so that "A protected alias/panel cannot be force-deleted"
-- [ ] T037 Add the data-model §2–§4 DDL to `composite/migrations.py` (FR-001; FR-003; FR-008; FR-051). Tests: T034.
+- [X] T037 Add the data-model §2–§4 DDL to `composite/migrations.py` (FR-001; FR-003; FR-008; FR-051). Tests: T034.
   - `composite_plans` and `composite_plan_versions`, with the checks "Paid base price positive and duration exactly 2,592,000 seconds", "Tests use positive whole-hour durations" and "No legacy unlimited sentinel, negative duration".
   - `composite_plan_nodes`, unique on `(version, ordinal)` and on `(version, logical_node_key)`, with no maximum node count.
   - Immutable `composite_offers` and `composite_offer_nodes`.
