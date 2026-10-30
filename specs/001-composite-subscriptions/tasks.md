@@ -208,7 +208,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - legacy rows defaulting to `service_kind='legacy'`, with the owner preserved;
   - refusal of an unsupported future schema;
   - a multi-file failure leaving issuance disabled and the pre-upgrade set retained
-- [ ] T035 Implement the versioned additive migration runner in `composite/migrations.py` (contracts/operations.md "Additive upgrade"; FR-081; FR-083). Tests: T034.
+- [X] T035 Implement the versioned additive migration runner in `composite/migrations.py` (contracts/operations.md "Additive upgrade"; FR-081; FR-083). Tests: T034.
   - `composite_schema_versions`, rerun safety, and refusal of unsupported future schemas.
   - Each database owns its transactions explicitly: no nested committing `Database` helpers and no implicit commit from `executescript`.
   - Add `service_kind` (default `'legacy'`) and an optional unique composite reference to `products`, `test_config_plans` and `orders`.
