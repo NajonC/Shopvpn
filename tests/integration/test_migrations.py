@@ -69,14 +69,16 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-Until T035 exists, every test fails because the module is still empty.
+T034a's tests pass since T035. T034b's tests (the last section) check the data-model §1–§4 tables and fail until T036 and T037 add them.
 """
 
 from collections import Counter
 from contextlib import closing
 from dataclasses import dataclass
+import hashlib
 import os
 from pathlib import Path
+import re
 import sqlite3
 import time
 
@@ -788,3 +790,509 @@ def test_crash_keeps_only_committed_members(tmp_path, point, hit, committed):
     assert _outcomes(rerun) == expected
     for path in members:
         _check_clean(path)
+
+
+# Data-model §1–§4 tables (T034b: checks for T036 and T037)
+
+T0 = 1_793_318_400_000  # 2026-10-30T00:00:00Z in UTC epoch milliseconds
+DESCRIPTOR_A1 = '{"address": "a.example.invalid", "port": 443, "sni": "a.example.invalid", "fingerprint": "chrome", "flow": "xtls-rprx-vision"}'
+DESCRIPTOR_A1_NEW = '{"address": "a2.example.invalid", "port": 443, "sni": "a2.example.invalid", "fingerprint": "chrome", "flow": "xtls-rprx-vision"}'
+
+
+def _digest(n):
+    return hashlib.sha256(f"synthetic-url-token-{n}".encode()).digest()
+
+
+# One valid row per table, in parent-before-child order.
+BASE_ROWS = {
+    "composite_physical_panels": {"physical_panel_id": "pp-a", "provider": "3xui", "authority_fingerprint": "authority-fp-a", "endpoint_ref": "endpoint-ref-a", "tls_trust_ref": "tls-trust-a", "panel_version": "v3.9.0", "core_version": "v26.9.30", "capability_manifest_revision": "manifest-1", "route_namespace_version": 1, "restart_xray_on_client_disable": "off", "restart_xray_on_client_disable_checked_at": T0, "write_stall_misses": 0, "write_stall_escalation_ref": None},
+    "composite_panel_aliases": {"alias_id": "pa-main-1", "physical_panel_id": "pp-a", "database_installation_id": "inst-main", "tenant_id": "main", "local_panel_server_id": 1},
+    "composite_prepared_bindings": {"binding_id": "pb-a1", "physical_panel_id": "pp-a", "inbound_id": 1, "settings_fingerprint": "settings-fp-a1", "egress_key": "out-de", "route_namespace": "cmp1"},
+    "composite_plans": {"plan_id": "cp-paid", "kind": "paid"},
+    "composite_plan_versions": {"plan_version_id": "cpv-paid-1", "plan_id": "cp-paid", "kind": "paid", "version": 1, "allowance_bytes": 53_687_091_200, "duration_seconds": 2_592_000, "base_price": 250_000},
+    "composite_plan_nodes": {"plan_node_id": "cpn-1", "plan_version_id": "cpv-paid-1", "ordinal": 1, "logical_node_key": "node-a1", "binding_id": "pb-a1", "protocol": "vless", "transport": "tcp", "security": "reality", "descriptor": DESCRIPTOR_A1, "owner_pick": None, "remark": "A1", "egress": "out-de"},
+    "composite_offers": {"offer_id": "of-1", "plan_version_id": "cpv-paid-1", "allowance_bytes": 53_687_091_200, "duration_seconds": 2_592_000, "base_price": 250_000, "payable_price": 225_000, "accepted_by": "telegram:50001", "accepted_at": T0},
+    "composite_offer_nodes": {"offer_node_id": "ofn-1", "offer_id": "of-1", "ordinal": 1, "logical_node_key": "node-a1", "binding_id": "pb-a1", "protocol": "vless", "transport": "tcp", "security": "reality", "descriptor": DESCRIPTOR_A1, "owner_pick": None, "egress": "out-de"},
+    "composite_subscriptions": {"subscription_id": "sub-1", "tenant_installation_id": "inst-main", "customer_telegram_id": 50001, "offer_id": "of-1", "kind": "paid", "lifecycle": "preparing"},
+    "composite_subscription_nodes": {"subscription_id": "sub-1", "logical_node_key": "node-a1", "descriptor": DESCRIPTOR_A1},
+    "composite_tokens": {"token_id": "tok-1", "subscription_id": "sub-1", "token_generation": 1, "token_digest": _digest(1), "encrypted_token": None, "status": "current"},
+    "composite_config_generations": {"generation_id": "gen-1", "subscription_id": "sub-1", "generation": 1, "state": "preparing", "prepared_at": T0, "verified_at": None, "published_at": None},
+}
+SUBSCRIPTION_EXTRA_COLUMNS = ("available_at", "expires_at", "customer_disabled", "owner_suspended", "reporting_suspended", "recovery_hold_case", "replacement_delivery_block", "initial_delivery_block", "cancel_accepted_at", "cancel_wait_kind", "cancel_final_started_at")
+FLAGS = ("customer_disabled", "owner_suspended", "reporting_suspended", "replacement_delivery_block", "initial_delivery_block")
+# (child table, child columns, parent table, parent columns)
+EXPECTED_FKS = (
+    ("composite_panel_aliases", ("physical_panel_id",), "composite_physical_panels", ("physical_panel_id",)),
+    ("composite_prepared_bindings", ("physical_panel_id",), "composite_physical_panels", ("physical_panel_id",)),
+    ("composite_plan_versions", ("plan_id", "kind"), "composite_plans", ("plan_id", "kind")),
+    ("composite_plan_nodes", ("plan_version_id",), "composite_plan_versions", ("plan_version_id",)),
+    ("composite_plan_nodes", ("binding_id",), "composite_prepared_bindings", ("binding_id",)),
+    ("composite_offers", ("plan_version_id",), "composite_plan_versions", ("plan_version_id",)),
+    ("composite_offer_nodes", ("offer_id",), "composite_offers", ("offer_id",)),
+    ("composite_offer_nodes", ("binding_id",), "composite_prepared_bindings", ("binding_id",)),
+    ("composite_subscriptions", ("offer_id",), "composite_offers", ("offer_id",)),
+    ("composite_subscription_nodes", ("subscription_id",), "composite_subscriptions", ("subscription_id",)),
+    ("composite_tokens", ("subscription_id",), "composite_subscriptions", ("subscription_id",)),
+    ("composite_config_generations", ("subscription_id",), "composite_subscriptions", ("subscription_id",)),
+)
+
+
+def _insert(conn, table, **changes):
+    row = {**BASE_ROWS[table], **changes}
+    cols = tuple(row)
+    marks = ", ".join("?" for _ in cols)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({marks})", tuple(row.values()))
+
+
+def _chain(conn, until=None):
+    assert until is None or until in BASE_ROWS
+    for table in BASE_ROWS:
+        if table == until:
+            return
+        _insert(conn, table)
+
+
+def _one(conn, sql, *args):
+    return conn.execute(sql, args).fetchone()
+
+
+@pytest.fixture
+def main_db(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    conn = sqlite3.connect(install.main)
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def test_main_gets_the_section_1_to_4_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        tables = _tables(conn)
+        for table, row in BASE_ROWS.items():
+            assert table in tables
+            assert set(row) <= set(_columns(conn, table))
+        cols = set(_columns(conn, "composite_subscriptions"))
+        assert set(SUBSCRIPTION_EXTRA_COLUMNS) <= cols
+        assert "enabled" not in cols and "is_active" not in cols
+
+
+def test_section_1_to_4_foreign_keys_are_restrict(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in BASE_ROWS:
+            grouped = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                grouped.setdefault(row[0], []).append(row)
+            for rows in grouped.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                to_cols = tuple(row[4] for row in rows)
+                if any(col is None for col in to_cols):
+                    to_cols = tuple(r[1] for r in sorted((r for r in conn.execute(f"PRAGMA table_info({parent})") if r[5] > 0), key=lambda r: r[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, to_cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS) <= found
+
+
+def test_rows_in_every_new_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain(conn)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in BASE_ROWS)
+
+
+def test_panel_provider_is_3xui_only(main_db):
+    _insert(main_db, "composite_physical_panels")
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        _insert(main_db, "composite_physical_panels", physical_panel_id="pp-b", authority_fingerprint="fp-b", provider="pasarguard")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("NOT NULL constraint failed: composite_physical_panels.provider")):
+        _insert(main_db, "composite_physical_panels", physical_panel_id="pp-c", authority_fingerprint="fp-c", provider=None)
+
+
+@pytest.mark.parametrize("value, checked, accepted", [("off", T0, True), ("on", T0, True), ("unreadable", T0, True), (None, None, True), ("maybe", T0, False), ("off", None, False), (None, T0, False)], ids=["off-checked", "on-checked", "unreadable-checked", "not-checked", "invalid-value", "missing-time", "time-without-value"])
+def test_panel_restart_setting_is_recorded_with_its_check_time(main_db, value, checked, accepted):
+    changes = dict(physical_panel_id=f"pp-{value}-{checked}", authority_fingerprint=f"fp-{value}-{checked}", restart_xray_on_client_disable=value, restart_xray_on_client_disable_checked_at=checked)
+    if accepted:
+        _insert(main_db, "composite_physical_panels", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_physical_panels", **changes)
+
+
+@pytest.mark.parametrize("misses, accepted", [(3, True), (-1, False)], ids=["nonnegative", "negative"])
+def test_panel_write_stall_misses_are_never_negative(main_db, misses, accepted):
+    changes = {"physical_panel_id": f"pp-{misses}", "authority_fingerprint": f"fp-{misses}", "write_stall_misses": misses}
+    if accepted:
+        _insert(main_db, "composite_physical_panels", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_physical_panels", **changes)
+
+
+def test_alias_is_unique_per_installation_tenant_and_local_server(main_db):
+    _chain(main_db, until="composite_prepared_bindings")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_panel_aliases.database_installation_id, composite_panel_aliases.tenant_id, composite_panel_aliases.local_panel_server_id")):
+        _insert(main_db, "composite_panel_aliases", alias_id="pa-dup")
+    for alias_id, changes in [("pa-2", {"database_installation_id": "inst-reseller-7"}), ("pa-3", {"tenant_id": "reseller-7"}), ("pa-4", {"local_panel_server_id": 2})]:
+        _insert(main_db, "composite_panel_aliases", alias_id=alias_id, **changes)
+
+
+@pytest.mark.parametrize("column", ["database_installation_id", "tenant_id", "local_panel_server_id"])
+def test_alias_key_columns_are_required(main_db, column):
+    _chain(main_db, until="composite_panel_aliases")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape(f"NOT NULL constraint failed: composite_panel_aliases.{column}")):
+        _insert(main_db, "composite_panel_aliases", **{column: None})
+
+
+def test_one_inbound_carries_several_bindings(main_db):
+    _chain(main_db, until="composite_plans")
+    for i in range(2, 6):
+        _insert(main_db, "composite_prepared_bindings", binding_id=f"pb-a1-{i}", egress_key=f"out-{i}")
+    assert _one(main_db, "SELECT count(*) FROM composite_prepared_bindings")[0] == 5
+
+
+@pytest.mark.parametrize("sql, table, key", [("DELETE FROM composite_physical_panels WHERE physical_panel_id = 'pp-a'", "composite_physical_panels", "physical_panel_id"), ("DELETE FROM composite_prepared_bindings WHERE binding_id = 'pb-a1'", "composite_prepared_bindings", "binding_id"), ("DELETE FROM composite_plans WHERE plan_id = 'cp-paid'", "composite_plans", "plan_id"), ("DELETE FROM composite_plan_versions WHERE plan_version_id = 'cpv-paid-1'", "composite_plan_versions", "plan_version_id"), ("DELETE FROM composite_subscriptions WHERE subscription_id = 'sub-1'", "composite_subscriptions", "subscription_id")], ids=["panel", "binding", "plan", "version", "subscription"])
+def test_protected_parent_cannot_be_deleted(main_db, sql, table, key):
+    _chain(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        main_db.execute(sql)
+    assert _one(main_db, f"SELECT count(*) FROM {table} WHERE {key} = ?", BASE_ROWS[table][key])[0] == 1
+
+
+@pytest.mark.parametrize("child, columns, parent, parent_columns", EXPECTED_FKS)
+def test_child_row_needs_its_parent(main_db, child, columns, parent, parent_columns):
+    _chain(main_db, until=child)
+    missing = {"composite_physical_panels": "pp-missing", "composite_plans": "cp-missing", "composite_plan_versions": "cpv-missing", "composite_prepared_bindings": "pb-missing", "composite_offers": "of-missing", "composite_subscriptions": "sub-missing"}[parent]
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+        _insert(main_db, child, **{columns[0]: missing})
+
+
+@pytest.mark.parametrize("kind, accepted", [("paid", True), ("test", True), ("campaign", True), ("trial", False), (None, False)], ids=["paid", "test", "campaign", "invalid", "null"])
+def test_plan_kind_is_paid_test_or_campaign(main_db, kind, accepted):
+    changes = {"plan_id": f"cp-{kind}", "kind": kind}
+    if accepted:
+        _insert(main_db, "composite_plans", **changes)
+    else:
+        error = "CHECK constraint failed" if kind is not None else re.escape("NOT NULL constraint failed: composite_plans.kind")
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _insert(main_db, "composite_plans", **changes)
+
+
+@pytest.mark.parametrize("changes, accepted", [({}, True), ({"base_price": 1}, True), ({"base_price": 0}, False), ({"base_price": -1}, False), ({"base_price": 250000.5}, False), ({"duration_seconds": 2_591_999}, False), ({"duration_seconds": 2_592_001}, False), ({"duration_seconds": 2_678_400}, False), ({"duration_seconds": 0}, False), ({"allowance_bytes": 0}, False), ({"allowance_bytes": -1}, False), ({"allowance_bytes": 53_687_091_200.5}, False)], ids=["valid", "positive-price", "zero-price", "negative-price", "fractional-price", "short", "off-by-one", "too-long", "zero-duration", "zero-bytes", "negative-bytes", "fractional-bytes"])
+def test_paid_version_terms(main_db, changes, accepted):
+    _chain(main_db, until="composite_plan_versions")
+    if accepted:
+        _insert(main_db, "composite_plan_versions", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_plan_versions", **changes)
+
+
+@pytest.mark.parametrize("kind", ["test", "campaign"])
+@pytest.mark.parametrize("allowance, duration, accepted", [(209_715_200, 3_600, True), (209_715_200, 7_200, True), (16_106_127_360, 1_296_000, True), (209_715_200, 0, False), (209_715_200, -3_600, False), (209_715_200, 1_800, False), (209_715_200, 3_599, False), (209_715_200, 5_400, False), (0, 3_600, False), (-1, 3_600, False)], ids=["hour", "two-hours", "campaign-default", "zero-duration", "negative-duration", "half-hour", "non-hour", "ninety-minutes", "zero-bytes", "negative-bytes"])
+def test_test_and_campaign_version_terms(main_db, kind, allowance, duration, accepted):
+    _chain(main_db, until="composite_plan_versions")
+    _insert(main_db, "composite_plans", plan_id="cp-x", kind=kind)
+    changes = {"plan_version_id": f"cpv-x-{kind}-{allowance}-{duration}", "plan_id": "cp-x", "kind": kind, "version": 1, "allowance_bytes": allowance, "duration_seconds": duration, "base_price": 0}
+    if accepted:
+        _insert(main_db, "composite_plan_versions", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_plan_versions", **changes)
+
+
+@pytest.mark.parametrize("case", ["kind-mismatch", "duplicate-version", "next-version", "update-kind"])
+def test_version_kind_and_number(main_db, case):
+    _chain(main_db, until="composite_plan_nodes")
+    if case == "kind-mismatch":
+        with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+            _insert(main_db, "composite_plan_versions", plan_version_id="cpv-x", kind="test", version=2, allowance_bytes=209_715_200, duration_seconds=3_600, base_price=0)
+    elif case == "duplicate-version":
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_plan_versions.plan_id, composite_plan_versions.version")):
+            _insert(main_db, "composite_plan_versions", plan_version_id="cpv-dup", version=1)
+    elif case == "next-version":
+        _insert(main_db, "composite_plan_versions", plan_version_id="cpv-paid-2", version=2)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY constraint failed"):
+            main_db.execute("UPDATE composite_plans SET kind = 'test' WHERE plan_id = 'cp-paid'")
+
+
+@pytest.mark.parametrize("table", ["composite_plan_nodes", "composite_offer_nodes"], ids=["plan-nodes", "offer-nodes"])
+@pytest.mark.parametrize("case", ["ordinal", "logical-key", "different", "other-parent"])
+def test_nodes_are_unique_per_parent_by_ordinal_and_key(main_db, table, case):
+    if table == "composite_plan_nodes":
+        _chain(main_db, until="composite_offers")
+        parent, other, p = "cpv-paid-1", "cpv-paid-2", "plan_version_id"
+        _insert(main_db, "composite_plan_versions", plan_version_id=other, version=2)
+    else:
+        _chain(main_db, until="composite_subscriptions")
+        parent, other, p = "of-1", "of-2", "offer_id"
+        _insert(main_db, "composite_offers", offer_id=other)
+    changes = {p: parent, "ordinal": 2, "logical_node_key": "node-a2"}
+    if table == "composite_plan_nodes":
+        changes["plan_node_id"] = "cpn-extra"
+    else:
+        changes.update(offer_node_id="ofn-extra", binding_id="pb-a1")
+    if case == "ordinal":
+        changes.update(ordinal=1)
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape(f"UNIQUE constraint failed: {table}.{p}, {table}.ordinal")):
+            _insert(main_db, table, **changes)
+    elif case == "logical-key":
+        changes.update(logical_node_key="node-a1")
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape(f"UNIQUE constraint failed: {table}.{p}, {table}.logical_node_key")):
+            _insert(main_db, table, **changes)
+    elif case == "other-parent":
+        changes.update(**{p: other, "ordinal": 1, "logical_node_key": "node-a1"})
+        _insert(main_db, table, **changes)
+    else:
+        _insert(main_db, table, **changes)
+
+
+def test_node_sets_have_no_maximum_size(main_db):
+    _chain(main_db, until="composite_plan_nodes")
+    for i in range(1, 8):
+        _insert(main_db, "composite_plan_nodes", plan_node_id=f"cpn-{i}", ordinal=i, logical_node_key=f"node-{i}")
+    _insert(main_db, "composite_offers")
+    for i in range(1, 8):
+        _insert(main_db, "composite_offer_nodes", offer_node_id=f"ofn-{i}", ordinal=i, logical_node_key=f"node-{i}")
+    _insert(main_db, "composite_subscriptions")
+    for i in range(1, 8):
+        _insert(main_db, "composite_subscription_nodes", logical_node_key=f"node-{i}")
+    for table in ("composite_plan_nodes", "composite_offer_nodes", "composite_subscription_nodes"):
+        assert _one(main_db, f"SELECT count(*) FROM {table}")[0] == 7
+
+
+@pytest.mark.parametrize("table", ["composite_plan_nodes", "composite_offer_nodes"], ids=["plan-node", "offer-node"])
+def test_node_protocol_and_descriptor(main_db, table):
+    _chain(main_db, until="composite_plan_nodes" if table == "composite_plan_nodes" else "composite_offer_nodes")
+    id_col = "plan_node_id" if table == "composite_plan_nodes" else "offer_node_id"
+    parent_col = "plan_version_id" if table == "composite_plan_nodes" else "offer_id"
+    parent_id = "cpv-paid-1" if table == "composite_plan_nodes" else "of-1"
+    n = 1
+    for protocol in ("vless", "vmess", "trojan"):
+        _insert(main_db, table, **{id_col: f"node-{table}-{n}", parent_col: parent_id, "ordinal": n, "logical_node_key": f"node-p{n}", "protocol": protocol})
+        n += 1
+    for changes, error in [({"protocol": "shadowsocks"}, "CHECK constraint failed"), ({"protocol": None}, re.escape(f"NOT NULL constraint failed: {table}.protocol")), ({"descriptor": None}, re.escape(f"NOT NULL constraint failed: {table}.descriptor"))]:
+        base = {id_col: f"node-{table}-{n}", parent_col: parent_id, "ordinal": n, "logical_node_key": f"node-p{n}"}
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _insert(main_db, table, **base, **changes)
+        n += 1
+
+
+def test_plan_node_version_never_changes(main_db):
+    _chain(main_db, until="composite_offers")
+    _insert(main_db, "composite_plan_versions", plan_version_id="cpv-paid-2", version=2)
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("UPDATE composite_plan_nodes SET plan_version_id = 'cpv-paid-2' WHERE plan_node_id = 'cpn-1'")
+    assert _one(main_db, "SELECT plan_version_id FROM composite_plan_nodes WHERE plan_node_id = 'cpn-1'")[0] == "cpv-paid-1"
+
+
+def test_offers_and_offer_nodes_are_immutable(main_db):
+    _chain(main_db, until="composite_subscriptions")
+    _insert(main_db, "composite_offers", offer_id="of-2")
+    for sql, query, expected in [("UPDATE composite_offers SET payable_price = 0 WHERE offer_id = 'of-1'", "SELECT payable_price FROM composite_offers WHERE offer_id = 'of-1'", 225000), ("DELETE FROM composite_offers WHERE offer_id = 'of-2'", "SELECT count(*) FROM composite_offers WHERE offer_id = 'of-2'", 1), (f"UPDATE composite_offer_nodes SET descriptor = '{DESCRIPTOR_A1_NEW}' WHERE offer_node_id = 'ofn-1'", "SELECT descriptor FROM composite_offer_nodes WHERE offer_node_id = 'ofn-1'", DESCRIPTOR_A1), ("DELETE FROM composite_offer_nodes WHERE offer_node_id = 'ofn-1'", "SELECT count(*) FROM composite_offer_nodes WHERE offer_node_id = 'ofn-1'", 1)]:
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute(sql)
+        assert _one(main_db, query)[0] == expected
+
+
+@pytest.mark.parametrize("changes, accepted", [({"payable_price": 0}, True), ({"payable_price": 250_000}, True), ({"payable_price": -1}, False), ({"payable_price": 250_001}, False), ({"allowance_bytes": 0}, False), ({"duration_seconds": 0}, False), ({"allowance_bytes": 1.5}, False)], ids=["zero-payable", "full-price", "negative-price", "above-base", "zero-bytes", "zero-duration", "fractional-bytes"])
+def test_offer_terms(main_db, changes, accepted):
+    _chain(main_db, until="composite_offer_nodes")
+    if accepted:
+        _insert(main_db, "composite_offers", offer_id=f"of-{changes}", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_offers", offer_id=f"of-{changes}", **changes)
+
+
+@pytest.mark.parametrize("lifecycle, extra, accepted", [("preparing", {}, True), ("fulfilled", {"available_at": T0, "expires_at": T0 + 2_592_000_000}, True), ("cancel_pending", {"cancel_accepted_at": T0, "cancel_wait_kind": "authorized_renewal"}, True), ("cancelled", {"cancel_accepted_at": T0, "cancel_final_started_at": T0}, True), ("failed_unfulfilled", {}, True), ("active", {}, False), ("expired", {}, False), ("exhausted", {}, False), (None, {}, False)], ids=["preparing", "fulfilled", "cancel-pending", "cancelled", "failed", "active", "expired", "exhausted", "null"])
+def test_subscription_lifecycle_values(main_db, lifecycle, extra, accepted):
+    _chain(main_db, until="composite_subscription_nodes")
+    changes = {"subscription_id": f"sub-life-{lifecycle}", "lifecycle": lifecycle, **extra}
+    if accepted:
+        _insert(main_db, "composite_subscriptions", **changes)
+    else:
+        error = "CHECK constraint failed" if lifecycle is not None else re.escape("NOT NULL constraint failed: composite_subscriptions.lifecycle")
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _insert(main_db, "composite_subscriptions", **changes)
+
+
+@pytest.mark.parametrize("kind, accepted", [("paid", True), ("test", True), ("trial", False)], ids=["paid", "test", "invalid"])
+def test_subscription_kind_is_paid_or_test(main_db, kind, accepted):
+    _chain(main_db, until="composite_subscription_nodes")
+    changes = {"subscription_id": f"sub-kind-{kind}", "kind": kind}
+    if accepted:
+        _insert(main_db, "composite_subscriptions", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_subscriptions", **changes)
+
+
+def test_restrictions_are_independent(main_db):
+    _chain(main_db, until="composite_subscription_nodes")
+    assert _one(main_db, "SELECT customer_disabled, owner_suspended, reporting_suspended, recovery_hold_case, replacement_delivery_block, initial_delivery_block FROM composite_subscriptions WHERE subscription_id='sub-1'") == (0, 0, 0, None, 0, 0)
+    for flag in FLAGS:
+        _insert(main_db, "composite_subscriptions", subscription_id=f"sub-{flag}", **{flag: 1})
+        got = _one(main_db, f"SELECT {', '.join(FLAGS)} FROM composite_subscriptions WHERE subscription_id=?", f"sub-{flag}")
+        assert got == tuple(int(col == flag) for col in FLAGS)
+    _insert(main_db, "composite_subscriptions", subscription_id="sub-all", **{flag: 1 for flag in FLAGS})
+    main_db.execute("UPDATE composite_subscriptions SET customer_disabled = 0 WHERE subscription_id = 'sub-all'")
+    assert _one(main_db, f"SELECT {', '.join(FLAGS)} FROM composite_subscriptions WHERE subscription_id='sub-all'") == (0, 1, 1, 1, 1)
+    for changes, error in [({"customer_disabled": 2}, "CHECK constraint failed"), ({"owner_suspended": -1}, "CHECK constraint failed"), ({"reporting_suspended": None}, re.escape("NOT NULL constraint failed: composite_subscriptions.reporting_suspended"))]:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _insert(main_db, "composite_subscriptions", subscription_id=f"sub-bad-{changes}", **changes)
+
+
+@pytest.mark.parametrize("accepted, timestamp, wait, final", [(True, T0, "authorized_renewal", None), (True, T0, "initial_provisioning", None), (True, T0, None, T0), (True, T0, "authorized_renewal", T0 + 60_000), (False, T0, "renewal", None), (False, None, "authorized_renewal", None), (False, None, None, T0), (False, T0, None, T0 - 1)], ids=["renewal-wait", "provisioning-wait", "final", "wait-and-final", "invalid-wait", "missing-accepted", "final-without-accepted", "final-before-accepted"])
+def test_cancellation_fields(main_db, accepted, timestamp, wait, final):
+    _chain(main_db, until="composite_subscription_nodes")
+    changes = {"subscription_id": f"sub-cancel-{timestamp}-{wait}-{final}", "lifecycle": "cancel_pending", "cancel_accepted_at": timestamp, "cancel_wait_kind": wait, "cancel_final_started_at": final}
+    if accepted:
+        _insert(main_db, "composite_subscriptions", **changes)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_subscriptions", **changes)
+
+
+def test_subscription_tenant_and_customer_never_change(main_db):
+    _chain(main_db, until="composite_subscription_nodes")
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("UPDATE composite_subscriptions SET tenant_installation_id = 'inst-other' WHERE subscription_id = 'sub-1'")
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("UPDATE composite_subscriptions SET customer_telegram_id = 50002 WHERE subscription_id = 'sub-1'")
+    assert _one(main_db, "SELECT tenant_installation_id, customer_telegram_id FROM composite_subscriptions WHERE subscription_id='sub-1'") == ("inst-main", 50001)
+    main_db.execute("UPDATE composite_subscriptions SET lifecycle = 'fulfilled', available_at = ?, expires_at = ? WHERE subscription_id = 'sub-1'", (T0, T0 + 2_592_000_000))
+
+
+def test_current_descriptor_per_logical_node(main_db):
+    _chain(main_db, until="composite_tokens")
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_subscription_nodes.subscription_id, composite_subscription_nodes.logical_node_key")):
+        _insert(main_db, "composite_subscription_nodes")
+    _insert(main_db, "composite_subscription_nodes", logical_node_key="node-a2")
+    main_db.execute("UPDATE composite_subscription_nodes SET descriptor=? WHERE subscription_id='sub-1' AND logical_node_key='node-a1'", (DESCRIPTOR_A1_NEW,))
+    assert _one(main_db, "SELECT descriptor FROM composite_subscription_nodes WHERE subscription_id='sub-1' AND logical_node_key='node-a1'")[0] == DESCRIPTOR_A1_NEW
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("NOT NULL constraint failed: composite_subscription_nodes.descriptor")):
+        _insert(main_db, "composite_subscription_nodes", logical_node_key="node-a3", descriptor=None)
+
+
+def _sub2(conn):
+    _insert(conn, "composite_subscriptions", subscription_id="sub-2")
+
+
+def test_token_digest_is_a_unique_sha256_value(main_db):
+    _chain(main_db, until="composite_tokens")
+    _insert(main_db, "composite_tokens")
+    _sub2(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_tokens.token_digest")):
+        _insert(main_db, "composite_tokens", token_id="tok-dup", subscription_id="sub-2", token_generation=1, token_digest=_digest(1))
+    for digest, error in [(_digest(2)[:31], "CHECK constraint failed"), (_digest(2).hex(), "CHECK constraint failed"), (_digest(2).hex()[:32], "CHECK constraint failed"), (None, re.escape("NOT NULL constraint failed: composite_tokens.token_digest"))]:
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _insert(main_db, "composite_tokens", token_id=f"tok-invalid-{digest}", subscription_id="sub-2", token_generation=1, token_digest=digest)
+    _insert(main_db, "composite_tokens", token_id="tok-2", subscription_id="sub-2", token_generation=1, token_digest=_digest(2))
+
+
+@pytest.mark.parametrize("case, status, accepted", [("candidate", "candidate", True), ("revoked", "revoked", True), ("superseded", "superseded", True), ("second-revoked", "revoked", True), ("invalid", "expired", False), ("null", None, False)], ids=["candidate", "revoked", "superseded", "second-revoked", "invalid", "null"])
+def test_token_status_and_one_current_token(main_db, case, status, accepted):
+    _chain(main_db, until="composite_tokens")
+    _insert(main_db, "composite_tokens", token_id="tok-1")
+    _sub2(main_db)
+    changes = {"token_id": f"tok-{status}-{accepted}", "token_generation": 2, "token_digest": _digest(2), "status": status}
+    if accepted:
+        _insert(main_db, "composite_tokens", **changes)
+        if case == "second-revoked":
+            _insert(main_db, "composite_tokens", token_id="tok-revoked-again", token_generation=3, token_digest=_digest(3), status="revoked")
+    else:
+        error = "CHECK constraint failed" if status is not None else re.escape("NOT NULL constraint failed: composite_tokens.status")
+        with pytest.raises(sqlite3.IntegrityError, match=error):
+            _insert(main_db, "composite_tokens", **changes)
+    if status == "candidate":
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_tokens.subscription_id")):
+            _insert(main_db, "composite_tokens", token_id="tok-current-dup", token_generation=3, token_digest=_digest(3), status="current")
+        _insert(main_db, "composite_tokens", token_id="tok-current-sub2", subscription_id="sub-2", token_generation=1, token_digest=_digest(4), status="current")
+
+
+def test_token_tombstones_are_kept(main_db):
+    _chain(main_db)
+    for token_id, status, number in [("tok-r", "revoked", 5), ("tok-s", "superseded", 6)]:
+        _insert(main_db, "composite_tokens", token_id=token_id, token_generation=number, token_digest=_digest(number), status=status)
+    for token_id in ("tok-r", "tok-s"):
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute("DELETE FROM composite_tokens WHERE token_id=?", (token_id,))
+        assert _one(main_db, "SELECT count(*) FROM composite_tokens WHERE token_id=?", token_id)[0] == 1
+    with pytest.raises(sqlite3.IntegrityError):
+        main_db.execute("UPDATE composite_tokens SET token_digest=? WHERE token_id='tok-r'", (_digest(9),))
+    assert _one(main_db, "SELECT token_digest FROM composite_tokens WHERE token_id='tok-r'")[0] == _digest(5)
+    main_db.execute("UPDATE composite_tokens SET status='revoked' WHERE token_id='tok-1'")
+    for token_id in ("tok-r", "tok-1", "tok-s"):
+        with pytest.raises(sqlite3.IntegrityError):
+            main_db.execute("UPDATE composite_tokens SET status='current' WHERE token_id=?", (token_id,))
+    _insert(main_db, "composite_tokens", token_id="tok-c", token_generation=7, token_digest=_digest(7), status="candidate")
+    main_db.execute("UPDATE composite_tokens SET status='current' WHERE token_id='tok-c'")
+
+
+@pytest.mark.parametrize("case", ["base", "complete", "published", "retired", "second-retired", "blocked", "invalid", "null", "second-published", "other-sub", "duplicate-generation"])
+def test_generation_states_and_one_published_generation(main_db, case):
+    _chain(main_db, until="composite_config_generations")
+    _sub2(main_db)
+    vt, pt = T0 + 1_000, T0 + 2_000
+    if case == "base":
+        _insert(main_db, "composite_config_generations")
+    elif case in ("complete", "published", "retired", "second-retired", "second-published", "other-sub"):
+        state = "complete_verified" if case == "complete" else "published" if case in ("published", "second-published", "other-sub") else "retired"
+        sid = "sub-2" if case == "other-sub" else "sub-1"
+        gen = 2 if case in ("second-retired", "second-published") else 1
+        gid = f"gen-{case}"
+        if case == "other-sub":
+            _insert(main_db, "composite_config_generations", generation_id="gen-pub", generation=1, state="published", verified_at=vt, published_at=pt)
+        if case == "second-published":
+            _insert(main_db, "composite_config_generations", generation_id="gen-pub", generation=1, state="published", verified_at=vt, published_at=pt)
+            with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_config_generations.subscription_id")):
+                _insert(main_db, "composite_config_generations", generation_id=gid, subscription_id=sid, generation=gen, state=state, verified_at=vt, published_at=pt)
+        else:
+            _insert(main_db, "composite_config_generations", generation_id=gid, subscription_id=sid, generation=gen, state=state, verified_at=vt, published_at=pt if state in ("published", "retired") else None)
+            if case == "retired":
+                _insert(main_db, "composite_config_generations", generation_id="gen-retired-2", generation=2, state="retired", verified_at=vt, published_at=pt)
+    elif case == "blocked":
+        _insert(main_db, "composite_config_generations", state="blocked_uncertain")
+    elif case == "invalid":
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_config_generations", state="failed")
+    elif case == "null":
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("NOT NULL constraint failed: composite_config_generations.state")):
+            _insert(main_db, "composite_config_generations", state=None)
+    elif case == "duplicate-generation":
+        _insert(main_db, "composite_config_generations")
+        with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_config_generations.subscription_id, composite_config_generations.generation")):
+            _insert(main_db, "composite_config_generations", generation_id="gen-dup")
+
+
+@pytest.mark.parametrize("case", ["published-unverified", "published-unpublished", "complete-unverified", "transition"])
+def test_published_generation_was_verified(main_db, case):
+    _chain(main_db, until="composite_config_generations")
+    _sub2(main_db)
+    vt, pt = T0 + 1_000, T0 + 2_000
+    if case == "transition":
+        _insert(main_db, "composite_config_generations")
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            main_db.execute("UPDATE composite_config_generations SET state='published' WHERE generation_id='gen-1'")
+    else:
+        values = {"state": "complete_verified", "verified_at": None}
+        if case.startswith("published"):
+            values["state"] = "published"
+            values["published_at"] = pt if case == "published-unverified" else None
+            values["verified_at"] = None if case == "published-unverified" else vt
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            _insert(main_db, "composite_config_generations", **values)
