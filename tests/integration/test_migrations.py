@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, and T034b's since T036 and T037. T034c's tests check the data-model §5–§7 tables and fail until T038 adds them; T034d's tests (the last section) check the §8–§9 tables and fail until T039 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests (the last section) check the data-model §10 lifecycle-work, drift and discrepancy tables and fail until T040 adds them.
 """
 
 from collections import Counter
@@ -2418,3 +2418,621 @@ def test_campaign_recipients_are_permanent(main_db):
     _trigger_refuses(main_db, "UPDATE composite_campaign_recipients SET fulfilled_at = ? WHERE claim_id = 'tc-1'", (T0 + 1,))
     _trigger_refuses(main_db, "DELETE FROM composite_campaign_recipients WHERE claim_id = 'tc-1'")
     assert _one(main_db, "SELECT campaign_id, customer_telegram_id, claim_id, fulfilled_at FROM composite_campaign_recipients WHERE claim_id='tc-1'") == ("cmp-1", 50001, "tc-1", T0 + 300_000)
+
+
+# Data-model §10 lifecycle work, drift and discrepancies (T034e: checks for T040 part a)
+
+DESCRIPTOR_A1_OLD = '{"address": "a.example.invalid", "port": 8443, "sni": "a.example.invalid", "fingerprint": "chrome", "flow": "xtls-rprx-vision"}'
+ROWS_10 = {
+    "composite_operations": {"operation_id": "op-1", "business_key": "fulfil:ck-1", "kind": "fulfillment", "subscription_id": "sub-1", "checkout_id": "ck-1", "claim_id": None, "discrepancy_id": None, "actor": "system:worker", "reason": None, "desired_revision": 1, "status": "in_progress", "phase": "create_children", "accepted_at": T0 + 1_000, "authorized_at": T0 + 1_000, "ready_at": None, "final_stage_at": None, "target_at": None, "deadline_at": T0 + 901_000, "escalation_at": None, "missed_target_at": None, "prerequisite_ref": None, "recovery_evidence_ref": None, "worker_epoch": 1, "restore_epoch": 0, "last_error": None, "escalation_ref": None, "finished_at": None},
+    "composite_remote_work": {"work_id": "rw-1", "operation_id": "op-1", "child_id": "ch-1", "action": "create", "desired_revision": 1, "payload_fingerprint": "payload-fp-1", "encrypted_ref": None, "status": "dispatched", "next_attempt_at": None, "observed_state": None, "observed_at": None, "observed_matches": None, "runtime_required": 0, "runtime_evidence_ref": None, "confirmed_at": None, "hold_reason": None, "created_at": T0 + 1_000},
+    "composite_remote_attempts": {"attempt_id": "ra-1", "work_id": "rw-1", "attempt_no": 1, "dispatched_at": T0 + 2_000, "timeout_ms": 15_000, "worker_epoch": 1, "outcome": "applied", "completed_at": T0 + 2_500, "connection_closed_at": None, "quarantine_until": None, "error_ref": None},
+    "composite_drift_sweeps": {"sweep_id": "sw-1", "physical_panel_id": "pp-a", "inbound_id": 1, "started_at": T0 + 30_000, "timeout_ms": 15_000, "ended_at": None, "outcome": None, "error_ref": None},
+    "composite_discrepancies": {"discrepancy_id": "dc-1", "kind": "descriptor", "child_id": None, "binding_id": "pb-a1", "observed_values": DESCRIPTOR_A1_NEW, "observed_at": T0 + 60_000, "detected_at": T0 + 60_000, "closed_at": None, "closure_reason": None},
+    "composite_discrepancy_descriptors": {"discrepancy_id": "dc-1", "discrepancy_kind": "descriptor", "descriptor": DESCRIPTOR_A1, "recorded_at": T0 + 60_000},
+    "composite_divergences": {"divergence_id": "dv-1", "sweep_id": "sw-1", "physical_panel_id": "pp-a", "child_id": "ch-1", "kind": "state", "observed_fields": '{"enable": false}', "desired_fields": '{"enable": true}', "detected_at": T0 + 30_400, "repeat_count": 1, "repair_work_id": None, "repair_state": "pending", "repaired_at": None, "discrepancy_id": None, "exposure": "access_lost", "exposure_from": T0 + 2_500, "exposure_resolved_at": None},
+}
+EXPECTED_FKS_10 = (
+    ("composite_operations", ("subscription_id",), "composite_subscriptions", ("subscription_id",)), ("composite_operations", ("checkout_id",), "composite_checkouts", ("checkout_id",)), ("composite_operations", ("claim_id",), "composite_test_claims", ("claim_id",)), ("composite_operations", ("discrepancy_id",), "composite_discrepancies", ("discrepancy_id",)),
+    ("composite_remote_work", ("operation_id",), "composite_operations", ("operation_id",)), ("composite_remote_work", ("child_id",), "composite_children", ("child_id",)), ("composite_remote_attempts", ("work_id",), "composite_remote_work", ("work_id",)), ("composite_drift_sweeps", ("physical_panel_id",), "composite_physical_panels", ("physical_panel_id",)),
+    ("composite_discrepancies", ("child_id",), "composite_children", ("child_id",)), ("composite_discrepancies", ("binding_id",), "composite_prepared_bindings", ("binding_id",)), ("composite_discrepancy_descriptors", ("discrepancy_id", "discrepancy_kind"), "composite_discrepancies", ("discrepancy_id", "kind")),
+    ("composite_divergences", ("sweep_id", "physical_panel_id"), "composite_drift_sweeps", ("sweep_id", "physical_panel_id")), ("composite_divergences", ("child_id", "physical_panel_id"), "composite_children", ("child_id", "physical_panel_id")), ("composite_divergences", ("repair_work_id", "child_id"), "composite_remote_work", ("work_id", "child_id")), ("composite_divergences", ("discrepancy_id", "child_id"), "composite_discrepancies", ("discrepancy_id", "child_id")),
+)
+SUBSCRIPTION_KINDS = ("customer_disable", "customer_resume", "owner_suspend", "owner_resume", "reporting_suspend", "reporting_resume", "leak_replacement", "cancellation", "move", "cleanup", "drift_repair")
+ON_SUB = {"checkout_id": None, "authorized_at": None, "deadline_at": None}
+CONFIRMED = {"status": "confirmed", "observed_state": '{"enable": true}', "observed_at": T0 + 3_000, "observed_matches": 1, "confirmed_at": T0 + 3_000}
+IN_FLIGHT = {"outcome": "in_flight", "completed_at": None}
+UNCERTAIN = {"outcome": "uncertain", "completed_at": None, "connection_closed_at": T0 + 17_000, "quarantine_until": T0 + 47_000}
+CHILD_DISCREPANCY = {"kind": "repeated_divergence", "child_id": "ch-1", "binding_id": None, "observed_values": None, "observed_at": None}
+REPAIRED = {"repair_work_id": "rw-r", "repair_state": "repaired", "repaired_at": T0 + 31_000}
+NOT_REPAIRABLE = {"kind": "missing", "observed_fields": "{}", "repair_state": "not_repairable", "discrepancy_id": "dc-c1"}
+CONFIRM = "UPDATE composite_remote_work SET status = 'confirmed', observed_state = 'read-back-1', observed_at = ?, observed_matches = 1, confirmed_at = ? WHERE work_id = 'rw-1'"
+FINISH = "UPDATE composite_drift_sweeps SET ended_at = ?, outcome = ?, error_ref = ? WHERE sweep_id = ?"
+
+
+def _put10(conn, table, **changes):
+    row = {**ROWS_10[table], **changes}
+    cols = tuple(row)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()))
+
+
+def _chain10(conn, until=None):
+    assert until is None or until in ROWS_10
+    _chain57(conn, until="composite_child_attachments")
+    _order(conn, 101)
+    _put89(conn, "composite_checkouts", **WALLET_AUTH)
+    _insert(conn, "composite_plans", plan_id="cp-camp", kind="campaign")
+    _insert(conn, "composite_plan_versions", plan_version_id="cpv-camp-1", plan_id="cp-camp", kind="campaign", allowance_bytes=16_106_127_360, duration_seconds=1_296_000, base_price=0)
+    _test_offer(conn, "of-t1")
+    _put89(conn, "composite_test_claims", campaign_id=None)
+    for table in ROWS_10:
+        if table == until:
+            break
+        _put10(conn, table)
+
+
+def _child2(conn):
+    _put(conn, "composite_children", child_id="ch-2", credential_generation=2, remote_email="cmp1-d8e4b0", secret_fingerprint="secret-fp-2", meter_id=None)
+
+
+def _repair_parents(conn):
+    _put10(conn, "composite_operations", operation_id="op-r", business_key="repair:ch-1", kind="drift_repair", **ON_SUB)
+    _put10(conn, "composite_remote_work", work_id="rw-r", operation_id="op-r", action="enable")
+    _put10(conn, "composite_discrepancies", discrepancy_id="dc-c1", **CHILD_DISCREPANCY)
+
+
+def test_main_gets_the_section_10_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        tables = _tables(conn)
+        for table, row in ROWS_10.items():
+            assert table in tables
+            assert set(row) <= set(_columns(conn, table))
+
+
+def test_section_10_foreign_keys_are_restrict(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in ROWS_10:
+            groups = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                groups.setdefault(row[0], []).append(row)
+            for rows in groups.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                cols = tuple(row[4] for row in rows)
+                if any(col is None for col in cols):
+                    cols = tuple(row[1] for row in sorted((row for row in conn.execute(f"PRAGMA table_info({parent})") if row[5] > 0), key=lambda row: row[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS_10) <= found
+
+
+def test_rows_in_every_section_10_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain10(conn)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in ROWS_10)
+
+
+def _expect10(conn, table, changes, expected):
+    if expected == "accepted":
+        _put10(conn, table, **changes)
+    elif expected == "TRG":
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _put10(conn, table, **changes)
+        assert "constraint failed" not in str(error.value)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=expected):
+            _put10(conn, table, **changes)
+
+
+def _uq10(*columns):
+    return re.escape("UNIQUE constraint failed: " + ", ".join(f"{table}.{column}" for table, column in columns))
+
+
+@pytest.mark.parametrize("case", ["sweep", "binding", "panel"], ids=["sweep-with-divergence", "binding-with-discrepancy", "panel-with-sweep"])
+def test_section_10_parents_cannot_be_deleted(main_db, case):
+    _chain10(main_db)
+    if case == "sweep":
+        sql, parent, key = "DELETE FROM composite_drift_sweeps WHERE sweep_id = 'sw-1'", "composite_drift_sweeps", "sweep_id='sw-1'"
+    elif case == "binding":
+        _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
+        _put10(main_db, "composite_discrepancies", discrepancy_id="dc-2", binding_id="pb-a2")
+        sql, parent, key = "DELETE FROM composite_prepared_bindings WHERE binding_id = 'pb-a2'", "composite_prepared_bindings", "binding_id='pb-a2'"
+    else:
+        _panel_b(main_db)
+        _put10(main_db, "composite_drift_sweeps", sweep_id="sw-b", physical_panel_id="pp-b")
+        sql, parent, key = "DELETE FROM composite_physical_panels WHERE physical_panel_id = 'pp-b'", "composite_physical_panels", "physical_panel_id='pp-b'"
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        main_db.execute(sql)
+    assert _one(main_db, f"SELECT {key.split('=')[0]} FROM {parent} WHERE {key}")[0] is not None
+
+
+@pytest.mark.parametrize("index,changes", list(enumerate((
+    {"subscription_id": "sub-missing"}, {"checkout_id": "ck-missing"},
+    {"kind": "test_fulfillment", "checkout_id": None, "claim_id": "tc-missing"},
+    {"kind": "checkout_rejection", "discrepancy_id": "dc-missing"},
+    {"operation_id": "op-missing"}, {"child_id": "ch-missing"}, {"work_id": "rw-missing"},
+    {"physical_panel_id": "pp-missing"}, {**CHILD_DISCREPANCY, "child_id": "ch-missing"}, {"binding_id": "pb-missing"},
+    {"discrepancy_id": "dc-missing"}, {"sweep_id": "sw-missing"}, {"child_id": "ch-missing"},
+    {"repair_work_id": "rw-missing"}, {"discrepancy_id": "dc-missing"},
+), 1)), ids=[f"fk-{i}" for i in range(1, 16)])
+def test_section_10_child_row_needs_its_parent(main_db, index, changes):
+    table = EXPECTED_FKS_10[index - 1][0]
+    _chain10(main_db, until=table)
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        _put10(main_db, table, **changes)
+
+
+_OPERATION_CASES = [
+    ({"kind": "test_fulfillment", "business_key": "test:tc-1", "checkout_id": None, "claim_id": "tc-1"}, "accepted"),
+    ({"kind": "checkout_rejection", "business_key": "reject:ck-1", "subscription_id": None, "authorized_at": None, "deadline_at": None}, "accepted"),
+    *[({"kind": k, "business_key": f"{k}:sub-1", **ON_SUB}, "accepted") for k in SUBSCRIPTION_KINDS],
+    ({"subscription_id": None}, "accepted"), ({"status": "accepted"}, "accepted"),
+    ({"status": "manual_hold", "last_error": "attempts exhausted"}, "accepted"),
+    *[({"status": status, "finished_at": T0 + 300_000}, "accepted") for status in ("succeeded", "failed", "superseded")],
+    ({"status": "failed", "finished_at": T0 + 1_000}, "accepted"), ({"desired_revision": None}, "accepted"),
+    ({"desired_revision": 0}, "accepted"), ({"ready_at": T0 + 1_000, "final_stage_at": T0 + 1_000, "target_at": T0 + 1_000, "escalation_at": T0 + 1_000, "deadline_at": T0 + 1_000}, "accepted"),
+    ({"target_at": T0 + 61_000, "missed_target_at": T0 + 61_000}, "accepted"),
+    *[({"kind": "refund", **ON_SUB}, CHECK), ({"status": "running"}, CHECK), ({"status": "succeeded"}, CHECK), ({"finished_at": T0 + 300_000}, CHECK), ({"status": "succeeded", "finished_at": T0 + 999}, CHECK),
+      ({"checkout_id": None}, CHECK), ({"claim_id": "tc-1"}, CHECK), ({"kind": "test_fulfillment", "claim_id": "tc-1"}, CHECK), ({"kind": "test_fulfillment", "checkout_id": None}, CHECK),
+      ({"kind": "checkout_rejection", "checkout_id": None}, CHECK), ({"kind": "checkout_rejection", "claim_id": "tc-1"}, CHECK), ({"kind": "customer_disable"}, CHECK),
+      ({"kind": "customer_disable", **ON_SUB, "subscription_id": None}, CHECK), ({"kind": "customer_disable", **ON_SUB, "claim_id": "tc-1"}, CHECK),
+      *[({col: T0 + 999}, CHECK) for col in ("authorized_at", "ready_at", "final_stage_at", "target_at", "deadline_at", "escalation_at")],
+      ({"missed_target_at": T0 + 61_000}, CHECK), ({"target_at": T0 + 61_000, "missed_target_at": T0 + 60_999}, CHECK),
+      ({"desired_revision": -1}, CHECK), ({"desired_revision": 1.5}, CHECK), ({"restore_epoch": -1}, CHECK), ({"restore_epoch": "n/a"}, CHECK)],
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_operations.{col}")) for col in ("business_key", "kind", "actor", "status", "accepted_at", "restore_epoch")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _OPERATION_CASES, ids=[_case_id(changes) for changes, _ in _OPERATION_CASES])
+def test_operation_column_values(main_db, changes, expected):
+    _chain10(main_db, until="composite_operations")
+    _expect10(main_db, "composite_operations", changes, expected)
+
+
+def test_operation_command_identity_is_unique(main_db):
+    _chain10(main_db, until="composite_remote_work")
+    _checkout2(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match=re.escape("UNIQUE constraint failed: composite_operations.business_key")):
+        _put10(main_db, "composite_operations", operation_id="op-2", kind="customer_disable", **ON_SUB)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_operations", "checkout_id"), ("composite_operations", "kind"))):
+        _put10(main_db, "composite_operations", operation_id="op-3", business_key="fulfil:ck-1:again")
+    _put10(main_db, "composite_operations", operation_id="op-4", business_key="fulfil:ck-2", checkout_id="ck-2", subscription_id=None)
+    _put10(main_db, "composite_operations", operation_id="op-5", business_key="test:tc-1", kind="test_fulfillment", checkout_id=None, claim_id="tc-1")
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_operations", "claim_id"), ("composite_operations", "kind"))):
+        _put10(main_db, "composite_operations", operation_id="op-6", business_key="test:tc-1:again", kind="test_fulfillment", checkout_id=None, claim_id="tc-1")
+
+
+def _sql10(conn, sql, args=(), expected="accepted"):
+    if expected == "accepted":
+        conn.execute(sql, args)
+        return
+    if expected == "TRG":
+        _trigger_refuses(conn, sql, args)
+        return
+    with pytest.raises(sqlite3.IntegrityError, match=expected):
+        conn.execute(sql, args)
+
+
+def test_protective_commands_are_admissible_while_work_is_busy(main_db):
+    _chain10(main_db, until="composite_remote_work")
+    _sub2(main_db)
+    uq_open = _uq10(("composite_operations", "subscription_id"), ("composite_operations", "kind"))
+    for op, kind, key in (("op-d", "customer_disable", "disable:sub-1"), ("op-s", "owner_suspend", "suspend:sub-1"), ("op-c", "cancellation", "cancel:sub-1"), ("op-l", "leak_replacement", "leak:sub-1:1")):
+        _put10(main_db, "composite_operations", operation_id=op, kind=kind, business_key=key, **ON_SUB, status="accepted" if op == "op-c" else "in_progress")
+    def leak2():
+        _put10(main_db, "composite_operations", operation_id="op-l2", kind="leak_replacement", business_key="leak:sub-1:2", **ON_SUB)
+    with pytest.raises(sqlite3.IntegrityError, match=uq_open):
+        _put10(main_db, "composite_operations", operation_id="op-c2", kind="cancellation", business_key="cancel:sub-1:again", **ON_SUB)
+    with pytest.raises(sqlite3.IntegrityError, match=uq_open):
+        leak2()
+    _sql10(main_db, "UPDATE composite_operations SET status = 'manual_hold' WHERE operation_id = 'op-l'")
+    with pytest.raises(sqlite3.IntegrityError, match=uq_open):
+        leak2()
+    _sql10(main_db, "UPDATE composite_operations SET status = 'failed', finished_at = ? WHERE operation_id = 'op-l'", (T0 + 120_000,))
+    leak2()
+    _put10(main_db, "composite_operations", operation_id="op-d2", kind="customer_disable", business_key="disable:sub-1:again", **ON_SUB)
+    _put10(main_db, "composite_operations", operation_id="op-l9", kind="leak_replacement", business_key="leak:sub-2:1", **ON_SUB, subscription_id="sub-2")
+
+
+@pytest.mark.parametrize("column,value", [("authorized_at", T0 + 2_000), ("deadline_at", T0 + 902_000), ("deadline_at", None), ("subscription_id", "sub-2"), ("desired_revision", 2), ("accepted_at", T0 + 2_000), ("business_key", "fulfil:x"), ("kind", "checkout_rejection"), ("checkout_id", "ck-2"), ("claim_id", "tc-1"), ("actor", "web:owner-1")], ids=["authorized", "deadline-later", "deadline-clear", "subscription", "revision", "accepted", "business-key", "kind", "checkout", "claim", "actor"])
+def test_operation_clocks_never_restart(main_db, column, value):
+    _chain10(main_db, until="composite_remote_work")
+    _sub2(main_db)
+    _checkout2(main_db)
+    _sql10(main_db, f"UPDATE composite_operations SET {column} = ? WHERE operation_id = 'op-1'", (value,), "TRG")
+
+
+def test_operation_clock_progression_and_mutable_state(main_db):
+    _chain10(main_db, until="composite_remote_work")
+    for col, first, second in (("ready_at", T0 + 400_000, T0 + 400_001), ("final_stage_at", T0 + 500_000, T0 + 500_001), ("escalation_at", T0 + 901_000, T0 + 901_001), ("target_at", T0 + 61_000, T0 + 61_001)):
+        _sql10(main_db, f"UPDATE composite_operations SET {col} = ? WHERE operation_id = 'op-1'", (first,))
+        _sql10(main_db, f"UPDATE composite_operations SET {col} = ? WHERE operation_id = 'op-1'", (second,), "TRG")
+    _sql10(main_db, "UPDATE composite_operations SET missed_target_at = ? WHERE operation_id = 'op-1'", (T0 + 61_000,))
+    _sql10(main_db, "UPDATE composite_operations SET missed_target_at = NULL WHERE operation_id = 'op-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_operations SET status = 'manual_hold', phase = 'await_owner', last_error = 'attempts exhausted', escalation_ref = 'esc-1', worker_epoch = 2, restore_epoch = 1 WHERE operation_id = 'op-1'")
+
+
+def test_operation_subscription_can_be_set_once(main_db):
+    _chain10(main_db, until="composite_remote_work")
+    _checkout2(main_db)
+    _put10(main_db, "composite_operations", operation_id="op-n", business_key="fulfil:ck-2", checkout_id="ck-2", subscription_id=None, desired_revision=None, authorized_at=None, deadline_at=None)
+    _sql10(main_db, "UPDATE composite_operations SET subscription_id = 'sub-1', desired_revision = 3, authorized_at = ?, deadline_at = ? WHERE operation_id = 'op-n'", (T0 + 5_000, T0 + 905_000))
+
+
+@pytest.mark.parametrize("status", ["succeeded", "failed", "superseded"])
+def test_finished_operations_never_reopen(main_db, status):
+    _chain10(main_db, until="composite_remote_work")
+    _sql10(main_db, "UPDATE composite_operations SET status = ?, finished_at = ? WHERE operation_id = 'op-1'", (status, T0 + 300_000))
+    _sql10(main_db, "UPDATE composite_operations SET status = 'in_progress', finished_at = NULL WHERE operation_id = 'op-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_operations SET phase = 'x' WHERE operation_id = 'op-1'", (), "TRG")
+
+
+def test_finished_operation_cannot_be_deleted(main_db):
+    _chain10(main_db, until="composite_remote_work")
+    _sql10(main_db, "DELETE FROM composite_operations WHERE operation_id = 'op-1'", (), "TRG")
+
+
+def test_rejection_work_links_its_discrepancy(main_db):
+    _chain10(main_db, until="composite_divergences")
+    _checkout2(main_db)
+    reject = {"kind": "checkout_rejection", "checkout_id": "ck-2", "subscription_id": None, "authorized_at": None, "deadline_at": None, "discrepancy_id": "dc-1"}
+    _put10(main_db, "composite_operations", operation_id="op-x", business_key="reject:ck-2", **reject)
+    with pytest.raises(sqlite3.IntegrityError, match=CHECK):
+        _put10(main_db, "composite_operations", operation_id="op-y", business_key="disable:sub-1", kind="customer_disable", **ON_SUB, discrepancy_id="dc-1")
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_operations", "checkout_id"), ("composite_operations", "kind"))):
+        _put10(main_db, "composite_operations", operation_id="op-z", business_key="reject:ck-2:again", **reject)
+    _sql10(main_db, "UPDATE composite_operations SET discrepancy_id = NULL WHERE operation_id = 'op-x'", (), "TRG")
+
+
+_WORK_CASES = [
+    *[({"action": action}, "accepted") for action in ("enable", "disable", "delete")],
+    ({"status": "queued"}, "accepted"), ({"status": "uncertain"}, "accepted"), ({"status": "manual_hold", "hold_reason": "attempts exhausted"}, "accepted"),
+    ({"encrypted_ref": SECRET_BLOB}, "accepted"), ({"desired_revision": 0}, "accepted"), (CONFIRMED, "accepted"),
+    ({**CONFIRMED, "runtime_required": 1, "runtime_evidence_ref": "runtime-1"}, "accepted"),
+    ({"observed_state": '{"enable": false}', "observed_at": T0 + 3_000, "observed_matches": 0}, "accepted"),
+    *[({"action": "update"}, CHECK), ({"status": "safe_to_retry"}, CHECK), ({"status": "execution_hold"}, CHECK),
+      ({"status": "confirmed", "observed_state": '{"enable": true}', "observed_at": T0 + 3_000, "observed_matches": 1}, CHECK), ({"confirmed_at": T0 + 3_000}, CHECK),
+      ({**CONFIRMED, "observed_matches": 0}, CHECK), ({**CONFIRMED, "confirmed_at": T0 + 2_999}, CHECK), ({**CONFIRMED, "runtime_required": 1}, CHECK),
+      ({"status": "confirmed", "confirmed_at": T0 + 3_000}, CHECK), ({"status": "manual_hold"}, CHECK), ({"hold_reason": "attempts exhausted"}, CHECK),
+      ({"encrypted_ref": "plain-text-ref"}, CHECK), ({"desired_revision": -1}, CHECK), ({"desired_revision": 1.5}, CHECK),
+      ({"observed_state": '{"enable": true}'}, CHECK), ({"observed_at": T0 + 3_000}, CHECK), ({"observed_matches": 1}, CHECK),
+      ({"observed_state": '{"enable": true}', "observed_at": T0 + 3_000, "observed_matches": 2}, CHECK), ({"runtime_required": 2}, CHECK)],
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_remote_work.{col}")) for col in ("operation_id", "child_id", "action", "desired_revision", "payload_fingerprint", "status", "runtime_required", "created_at")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _WORK_CASES, ids=[_case_id(changes) for changes, _ in _WORK_CASES])
+def test_remote_work_column_values(main_db, changes, expected):
+    _chain10(main_db, until="composite_remote_work")
+    _expect10(main_db, "composite_remote_work", changes, expected)
+
+
+def test_remote_work_identity_is_unique(main_db):
+    _chain10(main_db, until="composite_remote_attempts")
+    _child2(main_db)
+    dupe = _uq10(("composite_remote_work", "operation_id"), ("composite_remote_work", "child_id"), ("composite_remote_work", "action"), ("composite_remote_work", "desired_revision"))
+    with pytest.raises(sqlite3.IntegrityError, match=dupe):
+        _put10(main_db, "composite_remote_work", work_id="rw-2")
+    _put10(main_db, "composite_remote_work", work_id="rw-3", desired_revision=2)
+    _put10(main_db, "composite_remote_work", work_id="rw-4", action="disable")
+    _put10(main_db, "composite_remote_work", work_id="rw-5", child_id="ch-2")
+
+
+@pytest.mark.parametrize("column,value", [("operation_id", "op-2"), ("child_id", "ch-2"), ("action", "enable"), ("desired_revision", 2), ("payload_fingerprint", "payload-fp-x"), ("created_at", T0 + 1)], ids=["operation", "child", "action", "revision", "fingerprint", "created"])
+def test_remote_work_identity_never_changes(main_db, column, value):
+    _chain10(main_db, until="composite_remote_attempts")
+    _child2(main_db)
+    _put10(main_db, "composite_operations", operation_id="op-2", business_key="disable:sub-1", kind="customer_disable", **ON_SUB)
+    _sql10(main_db, f"UPDATE composite_remote_work SET {column} = ? WHERE work_id = 'rw-1'", (value,), "TRG")
+
+
+def test_uncertain_work_can_be_rescheduled_but_not_deleted(main_db):
+    _chain10(main_db, until="composite_remote_attempts")
+    _sql10(main_db, "UPDATE composite_remote_work SET status = 'uncertain', next_attempt_at = ? WHERE work_id = 'rw-1'", (T0 + 47_500,))
+    _sql10(main_db, "DELETE FROM composite_remote_work WHERE work_id = 'rw-1'", (), "TRG")
+
+
+def test_confirmation_needs_a_read_back_after_the_latest_write(main_db):
+    _chain10(main_db, until="composite_drift_sweeps")
+    _sql10(main_db, CONFIRM, (T0 + 2_000, T0 + 2_000), "TRG")
+    _sql10(main_db, CONFIRM, (T0 + 1_500, T0 + 3_000), "TRG")
+    _put10(main_db, "composite_remote_attempts", attempt_id="ra-2", attempt_no=2, dispatched_at=T0 + 4_000, **IN_FLIGHT)
+    _sql10(main_db, CONFIRM, (T0 + 3_000, T0 + 3_000), "TRG")
+    _sql10(main_db, CONFIRM, (T0 + 4_001, T0 + 4_001))
+    _sql10(main_db, "UPDATE composite_remote_work SET status = 'dispatched', confirmed_at = NULL WHERE work_id = 'rw-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_remote_work SET observed_at = ? WHERE work_id = 'rw-1'", (T0 + 5_000,), "TRG")
+    _expect10(main_db, "composite_remote_attempts", {"attempt_id": "ra-3", "attempt_no": 3, "dispatched_at": T0 + 6_000, "completed_at": T0 + 6_500}, "TRG")
+
+
+def test_remote_work_without_writes_can_confirm_from_readback(main_db):
+    _chain10(main_db, until="composite_drift_sweeps")
+    _put10(main_db, "composite_remote_work", work_id="rw-2", desired_revision=2, **CONFIRMED)
+
+
+_ATTEMPT_CASES = [
+    (UNCERTAIN, "accepted"), (IN_FLIGHT, "accepted"), ({"outcome": "rejected_no_effect", "error_ref": "database is locked"}, "accepted"),
+    ({"attempt_no": 5}, "accepted"), ({"completed_at": T0 + 17_000}, "accepted"), ({"completed_at": T0 + 2_000}, "accepted"),
+    ({"timeout_ms": 1, "completed_at": T0 + 2_001}, "accepted"), ({**UNCERTAIN, "connection_closed_at": T0 + 2_000, "quarantine_until": T0 + 32_000}, "accepted"),
+    *[({"attempt_no": 0}, CHECK), ({"attempt_no": 6}, CHECK), ({"attempt_no": 1.5}, CHECK), ({**IN_FLIGHT, "timeout_ms": 0}, CHECK), ({**IN_FLIGHT, "timeout_ms": 15_001}, CHECK), ({"timeout_ms": 1_000.5}, CHECK), ({"worker_epoch": -1}, CHECK),
+      ({"outcome": "timeout"}, CHECK), ({"outcome": "confirmed"}, CHECK), ({"completed_at": None}, CHECK), ({"completed_at": T0 + 1_999}, CHECK), ({"completed_at": T0 + 17_001}, CHECK),
+      ({"connection_closed_at": T0 + 2_500}, CHECK), ({"quarantine_until": T0 + 32_500}, CHECK), ({**IN_FLIGHT, "completed_at": T0 + 2_500}, CHECK), ({**IN_FLIGHT, "connection_closed_at": T0 + 17_000}, CHECK), ({**IN_FLIGHT, "quarantine_until": T0 + 47_000}, CHECK),
+      ({**UNCERTAIN, "completed_at": T0 + 2_500}, CHECK), ({**UNCERTAIN, "connection_closed_at": None}, CHECK), ({**UNCERTAIN, "quarantine_until": None}, CHECK), ({**UNCERTAIN, "quarantine_until": T0 + 17_000}, CHECK), ({**UNCERTAIN, "quarantine_until": T0 + 16_999}, CHECK),
+      ({**UNCERTAIN, "connection_closed_at": T0 + 1_999, "quarantine_until": T0 + 31_999}, CHECK), ({"outcome": "rejected_no_effect"}, CHECK)],
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_remote_attempts.{col}")) for col in ("work_id", "attempt_no", "dispatched_at", "timeout_ms", "worker_epoch", "outcome")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _ATTEMPT_CASES, ids=[_case_id(changes) for changes, _ in _ATTEMPT_CASES])
+def test_attempt_values(main_db, changes, expected):
+    _chain10(main_db, until="composite_remote_attempts")
+    _expect10(main_db, "composite_remote_attempts", changes, expected)
+
+
+def test_at_most_five_attempts_per_work(main_db):
+    _chain10(main_db, until="composite_drift_sweeps")
+    for n in (2, 3, 4, 5):
+        _put10(main_db, "composite_remote_attempts", attempt_id=f"ra-{n}", attempt_no=n, dispatched_at=T0 + n * 20_000, completed_at=T0 + n * 20_000 + 500)
+    uq = _uq10(("composite_remote_attempts", "work_id"), ("composite_remote_attempts", "attempt_no"))
+    with pytest.raises(sqlite3.IntegrityError, match=uq):
+        _put10(main_db, "composite_remote_attempts", attempt_id="ra-6", attempt_no=5, dispatched_at=T0 + 120_000, completed_at=T0 + 120_500)
+    with pytest.raises(sqlite3.IntegrityError, match=CHECK):
+        _put10(main_db, "composite_remote_attempts", attempt_id="ra-6", attempt_no=6, dispatched_at=T0 + 120_000, completed_at=T0 + 120_500)
+    _put10(main_db, "composite_remote_work", work_id="rw-2", desired_revision=2)
+    _put10(main_db, "composite_remote_attempts", attempt_id="ra-7", work_id="rw-2", dispatched_at=T0 + 140_000, completed_at=T0 + 140_500)
+
+
+def test_attempt_outcome_and_quarantine_are_final(main_db):
+    _chain10(main_db, until="composite_drift_sweeps")
+    _put10(main_db, "composite_remote_attempts", attempt_id="ra-2", attempt_no=2, dispatched_at=T0 + 20_000, **IN_FLIGHT)
+    _sql10(main_db, "UPDATE composite_remote_attempts SET outcome = 'uncertain', connection_closed_at = ?, quarantine_until = ? WHERE attempt_id = 'ra-2'", (T0 + 35_000, T0 + 65_000))
+    _sql10(main_db, "UPDATE composite_remote_attempts SET quarantine_until = ? WHERE attempt_id = 'ra-2'", (T0 + 50_000,), "TRG")
+    _sql10(main_db, "UPDATE composite_remote_attempts SET outcome = 'applied', completed_at = ?, connection_closed_at = NULL, quarantine_until = NULL WHERE attempt_id = 'ra-2'", (T0 + 30_000,), "TRG")
+    _sql10(main_db, "UPDATE composite_remote_attempts SET outcome = 'uncertain', completed_at = NULL, connection_closed_at = ?, quarantine_until = ? WHERE attempt_id = 'ra-1'", (T0 + 17_000, T0 + 47_000), "TRG")
+    _sql10(main_db, "UPDATE composite_remote_attempts SET error_ref = 'x' WHERE attempt_id = 'ra-1'", (), "TRG")
+    _sql10(main_db, "DELETE FROM composite_remote_attempts WHERE attempt_id = 'ra-1'", (), "TRG")
+
+
+@pytest.mark.parametrize("column,value", [("work_id", "rw-2"), ("attempt_no", 3), ("dispatched_at", T0 + 20_001), ("timeout_ms", 10_000), ("worker_epoch", 2)], ids=["work", "number", "dispatch", "timeout", "epoch"])
+def test_attempt_identity_never_changes(main_db, column, value):
+    _chain10(main_db, until="composite_drift_sweeps")
+    _put10(main_db, "composite_remote_work", work_id="rw-2", desired_revision=2)
+    _put10(main_db, "composite_remote_attempts", attempt_id="ra-2", attempt_no=2, dispatched_at=T0 + 20_000, **IN_FLIGHT)
+    _sql10(main_db, f"UPDATE composite_remote_attempts SET {column} = ? WHERE attempt_id = 'ra-2'", (value,), "TRG")
+
+
+def test_in_flight_attempt_can_be_definitely_rejected(main_db):
+    _chain10(main_db, until="composite_drift_sweeps")
+    _put10(main_db, "composite_remote_attempts", attempt_id="ra-2", attempt_no=2, dispatched_at=T0 + 20_000, **IN_FLIGHT)
+    _sql10(main_db, "UPDATE composite_remote_attempts SET outcome = 'rejected_no_effect', completed_at = ?, error_ref = 'database is locked' WHERE attempt_id = 'ra-2'", (T0 + 30_000,))
+
+
+_SWEEP_CASES = [
+    ({"ended_at": T0 + 30_400, "outcome": "consistent"}, "accepted"), ({"ended_at": T0 + 45_000, "outcome": "consistent"}, "accepted"),
+    ({"ended_at": T0 + 45_001, "outcome": "unknown", "error_ref": "read timed out"}, "accepted"), ({"ended_at": T0 + 30_100, "outcome": "unknown", "error_ref": "tls handshake failed"}, "accepted"),
+    *[({"outcome": "drifted", "ended_at": T0 + 30_400}, CHECK), ({"outcome": "consistent"}, CHECK), ({"ended_at": T0 + 30_400}, CHECK), ({"ended_at": T0 + 29_999, "outcome": "unknown", "error_ref": "x"}, CHECK),
+      ({"ended_at": T0 + 45_001, "outcome": "consistent"}, CHECK), ({"ended_at": T0 + 30_400, "outcome": "unknown"}, CHECK), ({"ended_at": T0 + 30_400, "outcome": "consistent", "error_ref": "x"}, CHECK), ({"error_ref": "x"}, CHECK),
+      ({"timeout_ms": 0}, CHECK), ({"timeout_ms": 15_001}, CHECK), ({"timeout_ms": 1.5}, CHECK), ({"ended_at": T0 + 30_400, "outcome": "diverged"}, "TRG")],
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_drift_sweeps.{col}")) for col in ("physical_panel_id", "inbound_id", "started_at", "timeout_ms")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _SWEEP_CASES, ids=[_case_id(changes) for changes, _ in _SWEEP_CASES])
+def test_sweep_values(main_db, changes, expected):
+    _chain10(main_db, until="composite_drift_sweeps")
+    if expected == "TRG":
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _put10(main_db, "composite_drift_sweeps", **changes)
+        assert "constraint failed" not in str(error.value)
+    else:
+        _expect10(main_db, "composite_drift_sweeps", changes, expected)
+
+
+def test_sweep_outcome_matches_its_divergences(main_db):
+    _chain10(main_db)
+    _sql10(main_db, FINISH, (T0 + 30_400, "consistent", None, "sw-1"), "TRG")
+    _sql10(main_db, FINISH, (T0 + 30_400, "diverged", None, "sw-1"))
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        _put10(main_db, "composite_divergences", divergence_id="dv-2", detected_at=T0 + 30_500)
+    assert "constraint failed" not in str(error.value)
+    _sql10(main_db, "UPDATE composite_drift_sweeps SET outcome = 'consistent' WHERE sweep_id = 'sw-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_drift_sweeps SET ended_at = ? WHERE sweep_id = 'sw-1'", (T0 + 30_500,), "TRG")
+    _put10(main_db, "composite_drift_sweeps", sweep_id="sw-2", started_at=T0 + 60_000)
+    _sql10(main_db, FINISH, (T0 + 60_400, "diverged", None, "sw-2"), "TRG")
+    _sql10(main_db, FINISH, (T0 + 60_400, "consistent", None, "sw-2"))
+    _put10(main_db, "composite_drift_sweeps", sweep_id="sw-3", started_at=T0 + 90_000)
+    _put10(main_db, "composite_divergences", divergence_id="dv-3", sweep_id="sw-3", detected_at=T0 + 90_200, repeat_count=2)
+    _sql10(main_db, FINISH, (T0 + 105_001, "unknown", "read timed out", "sw-3"))
+
+
+@pytest.mark.parametrize("column,value", [("physical_panel_id", "pp-b"), ("inbound_id", 2), ("started_at", T0 + 60_001), ("timeout_ms", 10_000)], ids=["panel", "inbound", "start", "timeout"])
+def test_running_sweep_identity_never_changes(main_db, column, value):
+    _chain10(main_db)
+    _panel_b(main_db)
+    _put10(main_db, "composite_drift_sweeps", sweep_id="sw-2", started_at=T0 + 60_000)
+    _sql10(main_db, f"UPDATE composite_drift_sweeps SET {column} = ? WHERE sweep_id = 'sw-2'", (value,), "TRG")
+
+
+def test_finished_sweep_without_divergences_can_be_compacted(main_db):
+    _chain10(main_db)
+    _put10(main_db, "composite_drift_sweeps", sweep_id="sw-2", started_at=T0 + 60_000, ended_at=T0 + 60_400, outcome="consistent")
+    _sql10(main_db, "DELETE FROM composite_drift_sweeps WHERE sweep_id = 'sw-2'")
+    assert _one(main_db, "SELECT sweep_id FROM composite_drift_sweeps WHERE sweep_id='sw-2'") is None
+
+
+_DISCREPANCY_CASES = [
+    (CHILD_DISCREPANCY, "accepted"), ({**CHILD_DISCREPANCY, "kind": "identity"}, "accepted"), ({"observed_at": T0 + 90_000}, "accepted"),
+    ({"closed_at": T0 + 120_000, "closure_reason": "panel_restored"}, "accepted"), ({"closed_at": T0 + 120_000, "closure_reason": "no_longer_in_use"}, "accepted"),
+    ({**CHILD_DISCREPANCY, "closed_at": T0 + 120_000, "closure_reason": "owner_resolved"}, "accepted"), ({"closed_at": T0 + 60_000, "closure_reason": "panel_restored"}, "accepted"),
+    *[({**CHILD_DISCREPANCY, "kind": "drift"}, CHECK), ({"binding_id": None}, CHECK), ({"child_id": "ch-1"}, CHECK), ({"observed_values": None}, CHECK), ({"observed_at": None}, CHECK),
+      ({**CHILD_DISCREPANCY, "child_id": None}, CHECK), ({**CHILD_DISCREPANCY, "binding_id": "pb-a1"}, CHECK), ({**CHILD_DISCREPANCY, "observed_values": DESCRIPTOR_A1_NEW}, CHECK), ({**CHILD_DISCREPANCY, "observed_at": T0 + 60_000}, CHECK),
+      ({"observed_at": T0 + 59_999}, CHECK), ({"closed_at": T0 + 120_000}, CHECK), ({"closure_reason": "panel_restored"}, CHECK), ({"closed_at": T0 + 59_999, "closure_reason": "panel_restored"}, CHECK),
+      ({"closed_at": T0 + 120_000, "closure_reason": "owner_resolved"}, CHECK), ({"closed_at": T0 + 120_000, "closure_reason": "superseded"}, CHECK),
+      ({**CHILD_DISCREPANCY, "closed_at": T0 + 120_000, "closure_reason": "panel_restored"}, CHECK), ({**CHILD_DISCREPANCY, "closed_at": T0 + 120_000, "closure_reason": "no_longer_in_use"}, CHECK)],
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_discrepancies.{col}")) for col in ("kind", "detected_at")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _DISCREPANCY_CASES, ids=[_case_id(changes) for changes, _ in _DISCREPANCY_CASES])
+def test_discrepancy_values(main_db, changes, expected):
+    _chain10(main_db, until="composite_discrepancies")
+    _expect10(main_db, "composite_discrepancies", changes, expected)
+
+
+def test_one_open_discrepancy_per_binding_and_child(main_db):
+    _chain10(main_db, until="composite_discrepancy_descriptors")
+    _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_discrepancies", "binding_id"))):
+        _put10(main_db, "composite_discrepancies", discrepancy_id="dc-2")
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-3", binding_id="pb-a2")
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-c1", **CHILD_DISCREPANCY)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_discrepancies", "child_id"), ("composite_discrepancies", "kind"))):
+        _put10(main_db, "composite_discrepancies", discrepancy_id="dc-c2", **CHILD_DISCREPANCY)
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-i1", **{**CHILD_DISCREPANCY, "kind": "identity"})
+    _sql10(main_db, "UPDATE composite_discrepancies SET closed_at = ?, closure_reason = 'panel_restored' WHERE discrepancy_id = 'dc-1'", (T0 + 120_000,))
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-2", detected_at=T0 + 130_000, observed_at=T0 + 130_000)
+    _sql10(main_db, "UPDATE composite_discrepancies SET closed_at = ?, closure_reason = 'owner_resolved' WHERE discrepancy_id = 'dc-c1'", (T0 + 120_000,))
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-c2", **CHILD_DISCREPANCY)
+
+
+@pytest.mark.parametrize("column,value", [("kind", "identity"), ("binding_id", "pb-a2"), ("child_id", "ch-1"), ("detected_at", T0 + 60_001)], ids=["kind", "binding", "child", "detected"])
+def test_discrepancy_evidence_identity_never_changes(main_db, column, value):
+    _chain10(main_db, until="composite_discrepancy_descriptors")
+    _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
+    _sql10(main_db, f"UPDATE composite_discrepancies SET {column} = ? WHERE discrepancy_id = 'dc-1'", (value,), "TRG")
+
+
+def test_discrepancy_evidence_is_kept(main_db):
+    _chain10(main_db, until="composite_discrepancy_descriptors")
+    _sql10(main_db, "UPDATE composite_discrepancies SET observed_values = ?, observed_at = ? WHERE discrepancy_id = 'dc-1'", (DESCRIPTOR_A1, T0 + 90_000))
+    _sql10(main_db, "UPDATE composite_discrepancies SET closed_at = ?, closure_reason = 'panel_restored' WHERE discrepancy_id = 'dc-1'", (T0 + 120_000,))
+    _sql10(main_db, "UPDATE composite_discrepancies SET closed_at = NULL, closure_reason = NULL WHERE discrepancy_id = 'dc-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_discrepancies SET observed_values = ? WHERE discrepancy_id = 'dc-1'", (DESCRIPTOR_A1_NEW,), "TRG")
+    _sql10(main_db, "DELETE FROM composite_discrepancies WHERE discrepancy_id = 'dc-1'", (), "TRG")
+
+
+@pytest.mark.parametrize("column", ["descriptor", "recorded_at", "discrepancy_kind"], ids=["descriptor", "recorded", "kind"])
+def test_discrepancy_descriptor_required_columns(main_db, column):
+    _chain10(main_db, until="composite_discrepancy_descriptors")
+    _expect10(main_db, "composite_discrepancy_descriptors", {column: None}, re.escape(f"NOT NULL constraint failed: composite_discrepancy_descriptors.{column}"))
+
+
+def test_discrepancy_descriptor_kind_is_checked(main_db):
+    _chain10(main_db, until="composite_discrepancy_descriptors")
+    _expect10(main_db, "composite_discrepancy_descriptors", {"discrepancy_kind": "repeated_divergence"}, CHECK)
+
+
+def test_descriptors_belong_to_an_open_descriptor_discrepancy(main_db):
+    _chain10(main_db, until="composite_divergences")
+    uq = _uq10(("composite_discrepancy_descriptors", "discrepancy_id"), ("composite_discrepancy_descriptors", "descriptor"))
+    with pytest.raises(sqlite3.IntegrityError, match=uq):
+        _put10(main_db, "composite_discrepancy_descriptors", recorded_at=T0 + 70_000)
+    _put10(main_db, "composite_discrepancy_descriptors", descriptor=DESCRIPTOR_A1_OLD)
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-c1", **CHILD_DISCREPANCY)
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        _put10(main_db, "composite_discrepancy_descriptors", discrepancy_id="dc-c1")
+    _sql10(main_db, "UPDATE composite_discrepancy_descriptors SET descriptor = ? WHERE descriptor = ?", (DESCRIPTOR_A1_NEW, DESCRIPTOR_A1), "TRG")
+    _sql10(main_db, "UPDATE composite_discrepancy_descriptors SET recorded_at = ? WHERE descriptor = ?", (T0 + 60_001, DESCRIPTOR_A1), "TRG")
+    _sql10(main_db, "DELETE FROM composite_discrepancy_descriptors WHERE descriptor = ?", (DESCRIPTOR_A1,), "TRG")
+    _sql10(main_db, "UPDATE composite_discrepancies SET closed_at = ?, closure_reason = 'no_longer_in_use' WHERE discrepancy_id = 'dc-1'", (T0 + 120_000,))
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        _put10(main_db, "composite_discrepancy_descriptors", descriptor=DESCRIPTOR_A1_NEW, recorded_at=T0 + 130_000)
+    assert "constraint failed" not in str(error.value)
+
+
+_DIVERGENCE_CASES = [
+    (REPAIRED, "accepted"), ({**REPAIRED, "exposure_resolved_at": T0 + 31_000}, "accepted"), ({"repair_work_id": "rw-r"}, "accepted"),
+    ({"repair_state": "failed", "repair_work_id": "rw-r"}, "accepted"), ({"repair_state": "paused", "discrepancy_id": "dc-c1"}, "accepted"),
+    ({"kind": "reappeared", "exposure": "access_gained"}, "accepted"), (NOT_REPAIRABLE, "accepted"),
+    ({**NOT_REPAIRABLE, "kind": "identity", "observed_fields": '{"email": "cmp1-renamed"}'}, "accepted"),
+    ({"exposure": "none", "exposure_from": None}, "accepted"), ({"repeat_count": 3, "discrepancy_id": "dc-c1"}, "accepted"),
+    ({"exposure_from": T0 + 30_400}, "accepted"), ({"exposure_resolved_at": T0 + 30_400}, "accepted"),
+    *[({"kind": "late_write"}, CHECK), ({"observed_fields": '{"enable": true}'}, CHECK), ({"repeat_count": 0}, CHECK), ({"repeat_count": 1.5}, CHECK), ({"repair_state": "done"}, CHECK),
+      ({"repair_state": "repaired", "repaired_at": T0 + 31_000}, CHECK), ({"repair_work_id": "rw-r", "repair_state": "repaired"}, CHECK), ({"repaired_at": T0 + 31_000}, CHECK), ({**REPAIRED, "repaired_at": T0 + 30_399}, CHECK),
+      ({"repair_state": "not_repairable", "discrepancy_id": "dc-c1"}, CHECK), ({**NOT_REPAIRABLE, "repair_state": "pending"}, CHECK), ({**NOT_REPAIRABLE, "repair_work_id": "rw-r"}, CHECK), ({**NOT_REPAIRABLE, "discrepancy_id": None}, CHECK), ({"repair_state": "paused"}, CHECK),
+      ({"exposure": "leak"}, CHECK), ({"exposure": "none"}, CHECK), ({"exposure": "none", "exposure_from": None, "exposure_resolved_at": T0 + 31_000}, CHECK), ({"exposure_from": None}, CHECK), ({"exposure_from": T0 + 30_401}, CHECK), ({"exposure_resolved_at": T0 + 30_399}, CHECK)],
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_divergences.{col}")) for col in ("sweep_id", "physical_panel_id", "child_id", "kind", "observed_fields", "desired_fields", "detected_at", "repeat_count", "repair_state", "exposure")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _DIVERGENCE_CASES, ids=[_case_id(changes) for changes, _ in _DIVERGENCE_CASES])
+def test_divergence_values(main_db, changes, expected):
+    _chain10(main_db, until="composite_divergences")
+    _repair_parents(main_db)
+    _expect10(main_db, "composite_divergences", changes, expected)
+
+
+def test_divergence_child_is_on_the_swept_panel_and_owns_its_links(main_db):
+    _chain10(main_db, until="composite_divergences")
+    _panel_b(main_db)
+    _child2(main_db)
+    _put10(main_db, "composite_drift_sweeps", sweep_id="sw-b", physical_panel_id="pp-b")
+    _put10(main_db, "composite_remote_work", work_id="rw-2", child_id="ch-2")
+    _put10(main_db, "composite_discrepancies", discrepancy_id="dc-c2", **{**CHILD_DISCREPANCY, "child_id": "ch-2"})
+    cases = [
+        ({"sweep_id": "sw-b"}, FK),
+        ({"sweep_id": "sw-b", "physical_panel_id": "pp-b"}, FK),
+        ({"repair_work_id": "rw-2"}, FK),
+        ({"discrepancy_id": "dc-c2", "repair_state": "paused"}, FK),
+        ({"discrepancy_id": "dc-1", "repair_state": "paused"}, FK),
+    ]
+    for changes, expected in cases:
+        with pytest.raises(sqlite3.IntegrityError, match=expected):
+            _put10(main_db, "composite_divergences", divergence_id="dv-2", **changes)
+    _put10(main_db, "composite_divergences", divergence_id="dv-2", child_id="ch-2", repair_work_id="rw-2", discrepancy_id="dc-c2", repair_state="paused")
+
+
+@pytest.mark.parametrize("column,value", [("sweep_id", "sw-2"), ("child_id", "ch-2"), ("physical_panel_id", "pp-b"), ("kind", "reappeared"), ("observed_fields", '{"enable": "unknown"}'), ("desired_fields", '{"enable": false}'), ("detected_at", T0 + 30_401), ("repeat_count", 2), ("exposure", "access_gained"), ("exposure_from", T0 + 2_000)], ids=["sweep", "child", "panel", "kind", "observed", "desired", "detected", "repeat", "exposure", "exposure-from"])
+def test_divergence_evidence_never_changes(main_db, column, value):
+    _chain10(main_db)
+    _repair_parents(main_db)
+    _child2(main_db)
+    _panel_b(main_db)
+    _put10(main_db, "composite_drift_sweeps", sweep_id="sw-2", started_at=T0 + 60_000)
+    _sql10(main_db, f"UPDATE composite_divergences SET {column} = ? WHERE divergence_id = 'dv-1'", (value,), "TRG")
+
+
+def test_divergence_repair_and_exposure_are_monotonic(main_db):
+    _chain10(main_db)
+    _repair_parents(main_db)
+    _sql10(main_db, "UPDATE composite_divergences SET discrepancy_id = 'dc-c1', repair_state = 'paused' WHERE divergence_id = 'dv-1'")
+    _sql10(main_db, "UPDATE composite_divergences SET repair_state = 'pending' WHERE divergence_id = 'dv-1'")
+    _sql10(main_db, "UPDATE composite_divergences SET repair_work_id = 'rw-r' WHERE divergence_id = 'dv-1'")
+    _sql10(main_db, "UPDATE composite_divergences SET repair_state = 'repaired', repaired_at = ? WHERE divergence_id = 'dv-1'", (T0 + 31_000,))
+    _sql10(main_db, "UPDATE composite_divergences SET exposure_resolved_at = ? WHERE divergence_id = 'dv-1'", (T0 + 31_000,))
+    _sql10(main_db, "UPDATE composite_divergences SET repair_state = 'pending', repaired_at = NULL WHERE divergence_id = 'dv-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_divergences SET repair_state = 'failed' WHERE divergence_id = 'dv-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_divergences SET repaired_at = ? WHERE divergence_id = 'dv-1'", (T0 + 32_000,), "TRG")
+    _sql10(main_db, "UPDATE composite_divergences SET repair_work_id = NULL WHERE divergence_id = 'dv-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_divergences SET exposure_resolved_at = ? WHERE divergence_id = 'dv-1'", (T0 + 32_000,), "TRG")
+
+
+def test_divergences_are_kept_until_resolved(main_db):
+    _chain10(main_db)
+    _repair_parents(main_db)
+    _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_divergences SET repair_work_id = 'rw-r', repair_state = 'repaired', repaired_at = ? WHERE divergence_id = 'dv-1'", (T0 + 31_000,))
+    _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-1'", (), "TRG")
+    _sql10(main_db, "UPDATE composite_divergences SET exposure_resolved_at = ? WHERE divergence_id = 'dv-1'", (T0 + 31_000,))
+    _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-1'")
+
+
+def test_divergence_deletion_requires_resolved_repair_and_exposure(main_db):
+    _chain10(main_db, until="composite_divergences")
+    _repair_parents(main_db)
+    _put10(main_db, "composite_divergences", divergence_id="dv-n", exposure="none", exposure_from=None, **REPAIRED)
+    _put10(main_db, "composite_divergences", divergence_id="dv-m", exposure="none", exposure_from=None, **NOT_REPAIRABLE)
+    _put10(main_db, "composite_divergences", divergence_id="dv-f", exposure="none", exposure_from=None, repair_state="failed", repair_work_id="rw-r")
+    _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-n'")
+    _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-m'", (), "TRG")
+    _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-f'", (), "TRG")
