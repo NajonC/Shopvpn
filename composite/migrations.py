@@ -221,6 +221,249 @@ _CATALOG_DDL = (
     "ON composite_config_generations (subscription_id) WHERE state = 'published'",
 )
 
+# data-model.md §5-§7: child credentials, their inbound attachments and
+# cleanup obligations; meters, immutable observations, meter deltas and usage
+# gaps; entitlement periods, immutable boundary readings, reminder periods and
+# reminders. Same-owner rules use composite foreign keys; carried time is in
+# milliseconds and capped at 360 hours (1,296,000,000 ms).
+_ACCOUNTING_DDL = (
+    "CREATE UNIQUE INDEX composite_prepared_bindings_panel ON composite_prepared_bindings (binding_id, physical_panel_id)",
+    """CREATE TABLE composite_meters (
+    meter_id TEXT PRIMARY KEY,
+    subscription_id TEXT NOT NULL REFERENCES composite_subscriptions (subscription_id) ON DELETE RESTRICT,
+    physical_panel_id TEXT NOT NULL REFERENCES composite_physical_panels (physical_panel_id) ON DELETE RESTRICT,
+    traffic_key TEXT NOT NULL,
+    serving_class TEXT NOT NULL CHECK (serving_class IN ('serving', 'retired', 'emergency_exposure')),
+    required_current INTEGER NOT NULL DEFAULT 0 CHECK (required_current IN (0, 1)),
+    upload_epoch INTEGER NOT NULL DEFAULT 0 CHECK (typeof(upload_epoch) = 'integer' AND upload_epoch >= 0),
+    download_epoch INTEGER NOT NULL DEFAULT 0 CHECK (typeof(download_epoch) = 'integer' AND download_epoch >= 0),
+    last_observation_id TEXT REFERENCES composite_observations (observation_id) ON DELETE RESTRICT,
+    last_observed_at INTEGER,
+    failure_state TEXT,
+    restart_loss_annotations TEXT,
+    CHECK (required_current = 0 OR serving_class = 'serving'),
+    UNIQUE (physical_panel_id, traffic_key),
+    UNIQUE (meter_id, subscription_id)
+)""",
+    """CREATE TABLE composite_children (
+    child_id TEXT PRIMARY KEY,
+    subscription_id TEXT NOT NULL,
+    logical_node_key TEXT NOT NULL,
+    credential_generation INTEGER NOT NULL CHECK (typeof(credential_generation) = 'integer' AND credential_generation >= 1),
+    physical_panel_id TEXT NOT NULL REFERENCES composite_physical_panels (physical_panel_id) ON DELETE RESTRICT,
+    remote_email TEXT NOT NULL,
+    protocol TEXT NOT NULL CHECK (protocol IN ('vless', 'vmess', 'trojan')),
+    encrypted_secret BLOB NOT NULL CHECK (typeof(encrypted_secret) = 'blob'),
+    secret_key_id TEXT NOT NULL,
+    secret_fingerprint TEXT NOT NULL,
+    sub_id_ref TEXT,
+    meter_id TEXT,
+    desired_state TEXT NOT NULL CHECK (desired_state IN ('enabled', 'disabled', 'removed')),
+    desired_revision INTEGER NOT NULL DEFAULT 0 CHECK (typeof(desired_revision) = 'integer' AND desired_revision >= 0),
+    confirmed_access TEXT NOT NULL DEFAULT 'unknown' CHECK (confirmed_access IN ('unknown', 'partial', 'confirmed_eligible', 'confirmed_fresh_auth_denied')),
+    confirmed_at INTEGER,
+    retired_at INTEGER,
+    retire_reason TEXT,
+    CHECK ((retired_at IS NULL) = (retire_reason IS NULL)),
+    UNIQUE (physical_panel_id, remote_email),
+    UNIQUE (subscription_id, logical_node_key, credential_generation),
+    UNIQUE (child_id, physical_panel_id),
+    FOREIGN KEY (subscription_id, logical_node_key) REFERENCES composite_subscription_nodes (subscription_id, logical_node_key) ON DELETE RESTRICT,
+    FOREIGN KEY (meter_id, subscription_id) REFERENCES composite_meters (meter_id, subscription_id) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_children_identity_fixed
+    BEFORE UPDATE OF subscription_id, logical_node_key, credential_generation, physical_panel_id, remote_email, protocol, secret_fingerprint ON composite_children
+    WHEN NEW.subscription_id IS NOT OLD.subscription_id OR NEW.logical_node_key IS NOT OLD.logical_node_key
+        OR NEW.credential_generation IS NOT OLD.credential_generation OR NEW.physical_panel_id IS NOT OLD.physical_panel_id
+        OR NEW.remote_email IS NOT OLD.remote_email OR NEW.protocol IS NOT OLD.protocol OR NEW.secret_fingerprint IS NOT OLD.secret_fingerprint
+    BEGIN SELECT RAISE(ABORT, 'child identity is immutable'); END""",
+    """CREATE TRIGGER composite_children_no_delete BEFORE DELETE ON composite_children
+    BEGIN SELECT RAISE(ABORT, 'children are kept'); END""",
+    """CREATE TABLE composite_child_attachments (
+    attachment_id TEXT PRIMARY KEY,
+    child_id TEXT NOT NULL,
+    physical_panel_id TEXT NOT NULL,
+    binding_id TEXT NOT NULL,
+    settings_fingerprint TEXT NOT NULL,
+    egress_key TEXT NOT NULL,
+    expected_member INTEGER NOT NULL CHECK (expected_member IN (0, 1)),
+    confirmed_member TEXT NOT NULL DEFAULT 'unknown' CHECK (confirmed_member IN ('unknown', 'present', 'absent')),
+    UNIQUE (child_id, binding_id),
+    FOREIGN KEY (child_id, physical_panel_id) REFERENCES composite_children (child_id, physical_panel_id) ON DELETE RESTRICT,
+    FOREIGN KEY (binding_id, physical_panel_id) REFERENCES composite_prepared_bindings (binding_id, physical_panel_id) ON DELETE RESTRICT
+)""",
+    """CREATE TABLE composite_cleanup_obligations (
+    obligation_id TEXT PRIMARY KEY,
+    child_id TEXT NOT NULL REFERENCES composite_children (child_id) ON DELETE RESTRICT,
+    meter_id TEXT REFERENCES composite_meters (meter_id) ON DELETE RESTRICT,
+    responsible_actor TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    desired_outcome TEXT NOT NULL CHECK (desired_outcome IN ('fresh_auth_denied', 'removed')),
+    status TEXT NOT NULL CHECK (status IN ('open', 'escalated', 'resolved')),
+    disabled_at INTEGER,
+    final_upload_bytes INTEGER CHECK (final_upload_bytes IS NULL OR (typeof(final_upload_bytes) = 'integer' AND final_upload_bytes >= 0)),
+    final_download_bytes INTEGER CHECK (final_download_bytes IS NULL OR (typeof(final_download_bytes) = 'integer' AND final_download_bytes >= 0)),
+    deleted_at INTEGER,
+    still_growing_at_delete INTEGER CHECK (still_growing_at_delete IN (0, 1)),
+    next_check_at INTEGER,
+    escalation_ref TEXT,
+    CHECK (deleted_at IS NULL OR (disabled_at IS NOT NULL AND deleted_at >= disabled_at
+        AND final_upload_bytes IS NOT NULL AND final_download_bytes IS NOT NULL)),
+    CHECK ((deleted_at IS NULL) = (still_growing_at_delete IS NULL)),
+    CHECK (status <> 'resolved' OR CASE desired_outcome WHEN 'removed' THEN deleted_at IS NOT NULL ELSE disabled_at IS NOT NULL END)
+)""",
+    """CREATE TRIGGER composite_cleanup_obligations_no_delete BEFORE DELETE ON composite_cleanup_obligations
+    BEGIN SELECT RAISE(ABORT, 'cleanup obligations are kept'); END""",
+    """CREATE TABLE composite_observations (
+    observation_id TEXT PRIMARY KEY,
+    meter_id TEXT NOT NULL REFERENCES composite_meters (meter_id) ON DELETE RESTRICT,
+    upload_epoch INTEGER NOT NULL CHECK (typeof(upload_epoch) = 'integer' AND upload_epoch >= 0),
+    download_epoch INTEGER NOT NULL CHECK (typeof(download_epoch) = 'integer' AND download_epoch >= 0),
+    upload_bytes INTEGER NOT NULL CHECK (typeof(upload_bytes) = 'integer' AND upload_bytes >= 0),
+    download_bytes INTEGER NOT NULL CHECK (typeof(download_bytes) = 'integer' AND download_bytes >= 0),
+    dispatched_at INTEGER,
+    received_at INTEGER NOT NULL CHECK (typeof(received_at) = 'integer'),
+    outcome TEXT NOT NULL CHECK (outcome IN ('accepted', 'out_of_order')),
+    restart_evidence TEXT,
+    evidence_hash TEXT NOT NULL,
+    UNIQUE (observation_id, meter_id)
+)""",
+    """CREATE TRIGGER composite_observations_no_update BEFORE UPDATE ON composite_observations
+    BEGIN SELECT RAISE(ABORT, 'observations are immutable'); END""",
+    """CREATE TABLE composite_entitlement_periods (
+    period_id TEXT PRIMARY KEY,
+    subscription_id TEXT NOT NULL REFERENCES composite_subscriptions (subscription_id) ON DELETE RESTRICT,
+    operation_id TEXT NOT NULL UNIQUE,
+    grant_kind TEXT NOT NULL CHECK (grant_kind IN ('initial_paid', 'initial_test', 'renewal', 'conversion')),
+    offer_id TEXT NOT NULL REFERENCES composite_offers (offer_id) ON DELETE RESTRICT,
+    authorized_at INTEGER,
+    effective_at INTEGER NOT NULL CHECK (typeof(effective_at) = 'integer'),
+    previous_period_id TEXT REFERENCES composite_entitlement_periods (period_id) ON DELETE RESTRICT,
+    previous_expires_at INTEGER,
+    timely_payment INTEGER NOT NULL DEFAULT 0 CHECK (timely_payment IN (0, 1)),
+    purchased_bytes INTEGER NOT NULL CHECK (typeof(purchased_bytes) = 'integer' AND purchased_bytes > 0),
+    purchased_seconds INTEGER NOT NULL CHECK (typeof(purchased_seconds) = 'integer' AND purchased_seconds > 0),
+    carried_bytes INTEGER NOT NULL DEFAULT 0 CHECK (typeof(carried_bytes) = 'integer' AND carried_bytes >= 0),
+    carried_ms INTEGER NOT NULL DEFAULT 0 CHECK (typeof(carried_ms) = 'integer' AND carried_ms BETWEEN 0 AND 1296000000),
+    forfeited_ms INTEGER NOT NULL DEFAULT 0 CHECK (typeof(forfeited_ms) = 'integer' AND forfeited_ms >= 0),
+    available_bytes INTEGER NOT NULL CHECK (typeof(available_bytes) = 'integer'),
+    expires_at INTEGER NOT NULL,
+    uncertainty TEXT,
+    CHECK (available_bytes = purchased_bytes + carried_bytes),
+    CHECK (expires_at = effective_at + purchased_seconds * 1000 + carried_ms),
+    CHECK (CASE WHEN previous_expires_at IS NULL THEN carried_ms = 0 AND forfeited_ms = 0
+        ELSE carried_ms = min(max(previous_expires_at - effective_at, 0), 1296000000)
+        AND forfeited_ms = max(previous_expires_at - effective_at, 0) - carried_ms END),
+    CHECK (timely_payment = 0 OR (authorized_at IS NOT NULL AND previous_expires_at IS NOT NULL AND authorized_at < previous_expires_at)),
+    CHECK (carried_bytes = 0 OR timely_payment = 1 OR (previous_expires_at IS NOT NULL AND effective_at < previous_expires_at)),
+    UNIQUE (period_id, grant_kind)
+)""",
+    """CREATE TABLE composite_meter_deltas (
+    delta_id TEXT PRIMARY KEY,
+    meter_id TEXT NOT NULL,
+    direction TEXT NOT NULL CHECK (direction IN ('upload', 'download')),
+    epoch INTEGER NOT NULL CHECK (typeof(epoch) = 'integer' AND epoch >= 0),
+    predecessor_observation_id TEXT NOT NULL,
+    current_observation_id TEXT NOT NULL,
+    delta_bytes INTEGER NOT NULL CHECK (typeof(delta_bytes) = 'integer' AND delta_bytes >= 0),
+    interval_start_at INTEGER NOT NULL,
+    interval_end_at INTEGER NOT NULL,
+    child_id TEXT NOT NULL REFERENCES composite_children (child_id) ON DELETE RESTRICT,
+    period_id TEXT REFERENCES composite_entitlement_periods (period_id) ON DELETE RESTRICT,
+    allocation_state TEXT NOT NULL CHECK (allocation_state IN ('attributed', 'absorbed_exposure', 'gap_affected')),
+    CHECK (predecessor_observation_id <> current_observation_id),
+    UNIQUE (meter_id, direction, epoch, predecessor_observation_id),
+    FOREIGN KEY (predecessor_observation_id, meter_id) REFERENCES composite_observations (observation_id, meter_id) ON DELETE RESTRICT,
+    FOREIGN KEY (current_observation_id, meter_id) REFERENCES composite_observations (observation_id, meter_id) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_meter_deltas_no_delete BEFORE DELETE ON composite_meter_deltas
+    BEGIN SELECT RAISE(ABORT, 'deltas are kept'); END""",
+    """CREATE TRIGGER composite_meter_deltas_fixed
+    BEFORE UPDATE OF meter_id, direction, epoch, predecessor_observation_id, current_observation_id, delta_bytes ON composite_meter_deltas
+    WHEN NEW.meter_id IS NOT OLD.meter_id OR NEW.direction IS NOT OLD.direction OR NEW.epoch IS NOT OLD.epoch
+        OR NEW.predecessor_observation_id IS NOT OLD.predecessor_observation_id
+        OR NEW.current_observation_id IS NOT OLD.current_observation_id OR NEW.delta_bytes IS NOT OLD.delta_bytes
+    BEGIN SELECT RAISE(ABORT, 'confirmed deltas are immutable'); END""",
+    """CREATE TABLE composite_usage_gaps (
+    gap_id TEXT PRIMARY KEY,
+    meter_id TEXT NOT NULL,
+    subscription_id TEXT NOT NULL,
+    direction TEXT NOT NULL CHECK (direction IN ('upload', 'download')),
+    before_observation_id TEXT,
+    after_observation_id TEXT,
+    lower_bound_bytes INTEGER NOT NULL CHECK (typeof(lower_bound_bytes) = 'integer' AND lower_bound_bytes >= 0),
+    upper_bound_bytes INTEGER CHECK (upper_bound_bytes IS NULL OR (typeof(upper_bound_bytes) = 'integer' AND upper_bound_bytes >= lower_bound_bytes)),
+    reason TEXT NOT NULL CHECK (reason IN ('decrease', 'reset', 'missing_history')),
+    state TEXT NOT NULL CHECK (state IN ('unresolved', 'usage_settled')),
+    settled_by TEXT,
+    settled_at INTEGER,
+    settlement_reason TEXT,
+    accepted_risk TEXT,
+    remaining_uncertainty TEXT,
+    CHECK (state <> 'usage_settled' OR (settled_by IS NOT NULL AND settled_at IS NOT NULL
+        AND settlement_reason IS NOT NULL AND accepted_risk IS NOT NULL)),
+    FOREIGN KEY (meter_id, subscription_id) REFERENCES composite_meters (meter_id, subscription_id) ON DELETE RESTRICT,
+    FOREIGN KEY (before_observation_id, meter_id) REFERENCES composite_observations (observation_id, meter_id) ON DELETE RESTRICT,
+    FOREIGN KEY (after_observation_id, meter_id) REFERENCES composite_observations (observation_id, meter_id) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_usage_gaps_no_delete BEFORE DELETE ON composite_usage_gaps
+    BEGIN SELECT RAISE(ABORT, 'usage gaps are kept'); END""",
+    """CREATE TABLE composite_boundary_readings (
+    period_id TEXT NOT NULL REFERENCES composite_entitlement_periods (period_id) ON DELETE RESTRICT,
+    meter_id TEXT NOT NULL,
+    direction TEXT NOT NULL CHECK (direction IN ('upload', 'download')),
+    epoch INTEGER NOT NULL CHECK (typeof(epoch) = 'integer' AND epoch >= 0),
+    observation_id TEXT NOT NULL,
+    cumulative_bytes INTEGER NOT NULL CHECK (typeof(cumulative_bytes) = 'integer' AND cumulative_bytes >= 0),
+    received_at INTEGER NOT NULL,
+    age_ms INTEGER NOT NULL CHECK (typeof(age_ms) = 'integer' AND age_ms >= 0),
+    required_current INTEGER NOT NULL CHECK (required_current IN (0, 1)),
+    CHECK (required_current = 0 OR age_ms <= 60000),
+    PRIMARY KEY (period_id, meter_id, direction),
+    FOREIGN KEY (observation_id, meter_id) REFERENCES composite_observations (observation_id, meter_id) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_boundary_readings_no_update BEFORE UPDATE ON composite_boundary_readings
+    BEGIN SELECT RAISE(ABORT, 'boundary readings are immutable'); END""",
+    """CREATE TRIGGER composite_boundary_readings_no_delete BEFORE DELETE ON composite_boundary_readings
+    BEGIN SELECT RAISE(ABORT, 'boundary readings are immutable'); END""",
+    """CREATE TABLE composite_reminder_periods (
+    reminder_period_id TEXT PRIMARY KEY,
+    period_id TEXT NOT NULL UNIQUE,
+    grant_kind TEXT NOT NULL CHECK (grant_kind IN ('initial_paid', 'renewal', 'conversion')),
+    allowance_bytes INTEGER NOT NULL CHECK (typeof(allowance_bytes) = 'integer' AND allowance_bytes > 0),
+    expires_at INTEGER NOT NULL,
+    FOREIGN KEY (period_id, grant_kind) REFERENCES composite_entitlement_periods (period_id, grant_kind) ON DELETE RESTRICT
+)""",
+    """CREATE TABLE composite_reminders (
+    reminder_id TEXT PRIMARY KEY,
+    reminder_period_id TEXT NOT NULL REFERENCES composite_reminder_periods (reminder_period_id) ON DELETE RESTRICT,
+    reminder_type TEXT NOT NULL CHECK (reminder_type IN ('expiry', 'quota')),
+    expiry_threshold_seconds INTEGER CHECK (expiry_threshold_seconds IS NULL OR (typeof(expiry_threshold_seconds) = 'integer' AND expiry_threshold_seconds > 0)),
+    quota_mode TEXT CHECK (quota_mode IN ('percent', 'remaining_bytes')),
+    quota_percent INTEGER CHECK (quota_percent IS NULL OR (typeof(quota_percent) = 'integer' AND quota_percent BETWEEN 1 AND 100)),
+    quota_remaining_bytes INTEGER CHECK (quota_remaining_bytes IS NULL OR (typeof(quota_remaining_bytes) = 'integer' AND quota_remaining_bytes > 0)),
+    status TEXT NOT NULL DEFAULT 'armed' CHECK (status IN ('armed', 'due', 'accepted', 'cancelled')),
+    condition_met_at INTEGER,
+    due_at INTEGER,
+    CHECK (CASE reminder_type
+        WHEN 'expiry' THEN expiry_threshold_seconds IS NOT NULL AND quota_mode IS NULL AND quota_percent IS NULL AND quota_remaining_bytes IS NULL
+        ELSE expiry_threshold_seconds IS NULL AND (
+        (quota_mode IS 'percent' AND quota_percent IS NOT NULL AND quota_remaining_bytes IS NULL)
+        OR (quota_mode IS 'remaining_bytes' AND quota_remaining_bytes IS NOT NULL AND quota_percent IS NULL)) END),
+    CHECK (status NOT IN ('due', 'accepted') OR due_at IS NOT NULL),
+    CHECK (due_at IS NULL OR (condition_met_at IS NOT NULL AND due_at >= condition_met_at)),
+    UNIQUE (reminder_period_id, reminder_type)
+)""",
+    """CREATE TRIGGER composite_reminders_no_delete BEFORE DELETE ON composite_reminders
+    BEGIN SELECT RAISE(ABORT, 'reminders are kept'); END""",
+    """CREATE TRIGGER composite_reminders_accepted_final BEFORE UPDATE OF status ON composite_reminders
+    WHEN OLD.status = 'accepted' AND NEW.status IS NOT 'accepted'
+    BEGIN SELECT RAISE(ABORT, 'an accepted reminder never rearms'); END""",
+    """CREATE TRIGGER composite_reminders_due_fixed BEFORE UPDATE OF due_at ON composite_reminders
+    WHEN OLD.due_at IS NOT NULL AND NEW.due_at IS NOT OLD.due_at
+    BEGIN SELECT RAISE(ABORT, 'the original due time is immutable'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -326,7 +569,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL:
         conn.execute(statement)
 
 

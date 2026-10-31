@@ -229,7 +229,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
     - the current descriptor per logical node: set from the offer node at sale, replaced by the move's target descriptor when that subscription's move publishes, and unchanged by renewal (data-model.md §3; research.md RD05-OWN-002).
   - `composite_tokens`: unique SHA-256 digest; status `candidate`, `current`, `revoked`, `superseded`; tombstones retained.
   - `composite_config_generations`: state `preparing`, `complete_verified`, `published`, `retired`, `blocked_uncertain`; one current published generation
-- [ ] T038 Add the data-model §5–§7 DDL to `composite/migrations.py` (FR-033–FR-035; FR-043; FR-079). Tests: T034.
+- [X] T038 Add the data-model §5–§7 DDL to `composite/migrations.py` (FR-033–FR-035; FR-043; FR-079). Tests: T034.
   - Children: `composite_children` (unique canonical remote identity per physical authority; encrypted secret; desired and confirmed state), `composite_child_attachments` and `composite_cleanup_obligations`.
   - Metering: `composite_meters`; `composite_observations` with dispatch and receipt time; `composite_meter_deltas`, unique on `(meter, direction, epoch, predecessor observation)`, with `allocation_state` `attributed`, `absorbed_exposure` or `gap_affected`; `composite_usage_gaps`.
   - Periods: `composite_entitlement_periods`; immutable `composite_boundary_readings`, unique on `(period, meter, direction)`; `composite_reminder_periods` and `composite_reminders`, unique per `(period, expiry|quota)`.
