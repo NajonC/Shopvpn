@@ -234,7 +234,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Metering: `composite_meters`; `composite_observations` with dispatch and receipt time; `composite_meter_deltas`, unique on `(meter, direction, epoch, predecessor observation)`, with `allocation_state` `attributed`, `absorbed_exposure` or `gap_affected`; `composite_usage_gaps`.
   - Periods: `composite_entitlement_periods`; immutable `composite_boundary_readings`, unique on `(period, meter, direction)`; `composite_reminder_periods` and `composite_reminders`, unique per `(period, expiry|quota)`.
   - Bytes are checked nonnegative integers within signed 64-bit; times are UTC epoch milliseconds
-- [ ] T039 Add the data-model §8–§9 DDL to `composite/migrations.py` (FR-011; FR-015; FR-020; FR-029). Tests: T034.
+- [X] T039 Add the data-model §8–§9 DDL to `composite/migrations.py` (FR-011; FR-015; FR-020; FR-029). Tests: T034.
   - `composite_checkouts`: kind `initial`, `renewal`, `conversion`; status `quoted`, `awaiting_payment`, `manual_review`, `authorized`, `fulfilling`, `fulfilled`, `rejected`, `cancelled`, `failed`; a partial unique active-target index covering open renewal/conversion through authorized fulfilling.
   - `composite_payment_attempts`.
   - `composite_payment_receipts`: unique on `(provider, merchant_namespace, transaction_reference)`; outcome `original_funding`, `extra_credit`, `terminal_late_credit`, `mismatch_hold`.
