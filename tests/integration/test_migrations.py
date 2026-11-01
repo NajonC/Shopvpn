@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables and T034f3's (the last section) its notification delivery-window and attempt tables; all fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables and T034g1's (the last section) the §11 processing-control table and the issuance switch; all fail until T040 adds them.
 """
 
 from collections import Counter
@@ -4195,3 +4195,151 @@ def test_finished_attempt_is_final_and_kept(main_db):
     with pytest.raises(sqlite3.IntegrityError) as error:
         main_db.execute("DELETE FROM composite_notification_attempts WHERE attempt_id = 'na-1'")
     assert "constraint failed" not in str(error.value)
+
+
+# Data-model §11 processing control (T034g1: checks for T040 part e)
+
+# The installation's one processing-control row: admission open since T0, no restore yet, no worker, issuance off.
+CONTROL_ROW = {"control_id": 1, "installation_id": "inst-main", "restore_epoch": 0, "operation_generation": 0, "admission_mode": "open", "maintenance_reason": None, "mode_changed_at": T0, "worker_incarnation": None, "worker_epoch": None, "issuance_enabled": 0}
+ENTER_MAINTENANCE = {"admission_mode": "maintenance", "maintenance_reason": "restore", "mode_changed_at": T0 + 1_000, "operation_generation": 1}
+LEAVE_MAINTENANCE = {"admission_mode": "open", "maintenance_reason": None, "mode_changed_at": T0 + 2_000}
+
+
+def _put11(conn, changes=None, expected="accepted"):
+    row = {**CONTROL_ROW, **(changes or {})}
+    cols = tuple(row)
+    _sql10(conn, f"INSERT INTO composite_processing_control ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()), expected)
+
+
+def _set11(conn, changes, expected="accepted"):
+    cols = tuple(changes)
+    _sql10(conn, f"UPDATE composite_processing_control SET {', '.join(f'{col} = ?' for col in cols)} WHERE control_id = 1", tuple(changes.values()), expected)
+
+
+def test_main_gets_the_processing_control_table(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        assert "composite_processing_control" in _tables(conn)
+        assert set(CONTROL_ROW) <= set(_columns(conn, "composite_processing_control"))
+        assert _one(conn, "SELECT count(*) FROM composite_processing_control")[0] == 0
+        assert conn.execute("PRAGMA foreign_key_list(composite_processing_control)").fetchall() == []
+
+
+def test_control_row_survives_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        _put11(conn)
+        _set11(conn, {"worker_incarnation": "wk-1", "worker_epoch": 0})
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert _one(conn, "SELECT count(*) FROM composite_processing_control")[0] == 1
+        assert _one(conn, "SELECT control_id, installation_id, restore_epoch, operation_generation, admission_mode, worker_incarnation, worker_epoch, issuance_enabled FROM composite_processing_control") == (1, "inst-main", 0, 0, "open", "wk-1", 0, 0)
+
+
+def test_issuance_follows_the_control_switch(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    assert migrations.issuance_enabled(install.main) is False
+    with closing(sqlite3.connect(install.main)) as conn:
+        _put11(conn)
+        conn.commit()
+    assert migrations.issuance_enabled(install.main) is False
+    with closing(sqlite3.connect(install.main)) as conn:
+        _set11(conn, {"issuance_enabled": 1})
+        conn.commit()
+    before = install.dumps()
+    assert migrations.issuance_enabled(install.main) is True
+    assert install.dumps() == before
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("INSERT INTO composite_schema_versions VALUES (?, 'synthetic-future', ?)", (migrations.SCHEMA_VERSION + 1, _now_ms()))
+        conn.commit()
+    assert migrations.issuance_enabled(install.main) is False
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({}, "accepted"),
+    ({"admission_mode": "maintenance", "maintenance_reason": "restore", "restore_epoch": 4, "operation_generation": 7, "mode_changed_at": T0 + 5_000}, "accepted"),
+    ({"control_id": 2}, CHECK),
+    ({"admission_mode": "closed"}, CHECK),
+    ({"admission_mode": "maintenance"}, CHECK),
+    ({"maintenance_reason": "capture"}, CHECK),
+    ({"restore_epoch": -1}, CHECK),
+    ({"operation_generation": -1}, CHECK),
+    ({"issuance_enabled": 2}, CHECK),
+    ({"worker_incarnation": "wk-1", "worker_epoch": 0}, "TRG"),
+    ({"worker_epoch": 0}, "TRG"),
+    ({"worker_incarnation": "wk-1"}, "TRG"),
+    ({"issuance_enabled": 1}, "TRG"),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_processing_control.{col}")) for col in ("installation_id", "restore_epoch", "operation_generation", "admission_mode", "mode_changed_at", "issuance_enabled")],
+], ids=lambda value: _case_id(value) or "base")
+def test_processing_control_values(main_db, changes, expected):
+    _put11(main_db, changes, expected)
+
+
+def test_control_row_defaults(main_db):
+    main_db.execute("INSERT INTO composite_processing_control (installation_id, admission_mode, mode_changed_at) VALUES ('inst-main', 'open', ?)", (T0,))
+    assert _one(main_db, "SELECT control_id, restore_epoch, operation_generation, maintenance_reason, worker_incarnation, worker_epoch, issuance_enabled FROM composite_processing_control") == (1, 0, 0, None, None, None, 0)
+
+
+def test_control_row_is_kept_and_its_installation_never_changes(main_db):
+    _put11(main_db)
+    _put11(main_db, expected=_uq10(("composite_processing_control", "control_id")))
+    _sql10(main_db, "INSERT INTO composite_processing_control (installation_id, admission_mode, mode_changed_at) VALUES ('inst-other', 'open', ?)", (T0,), CHECK)
+    _set11(main_db, {"installation_id": "inst-other"}, "TRG")
+    _set11(main_db, {"control_id": 2}, CHECK)
+    _sql10(main_db, "DELETE FROM composite_processing_control", expected="TRG")
+    assert _one(main_db, "SELECT count(*) FROM composite_processing_control")[0] == 1
+    assert _one(main_db, "SELECT installation_id FROM composite_processing_control")[0] == "inst-main"
+
+
+def test_maintenance_fences_with_a_new_generation(main_db):
+    _put11(main_db)
+    _set11(main_db, {**ENTER_MAINTENANCE, "operation_generation": 0}, "TRG")
+    _set11(main_db, {**ENTER_MAINTENANCE, "operation_generation": 2}, "TRG")
+    _set11(main_db, {**ENTER_MAINTENANCE, "mode_changed_at": T0}, "TRG")
+    _set11(main_db, {**ENTER_MAINTENANCE, "maintenance_reason": None}, CHECK)
+    _set11(main_db, ENTER_MAINTENANCE)
+    _set11(main_db, {"maintenance_reason": "upgrade"})
+    _set11(main_db, {"mode_changed_at": T0 + 1_500}, "TRG")
+    _set11(main_db, {"operation_generation": 2}, "TRG")
+    _set11(main_db, {**LEAVE_MAINTENANCE, "maintenance_reason": "upgrade"}, CHECK)
+    _set11(main_db, {**LEAVE_MAINTENANCE, "operation_generation": 2}, "TRG")
+    _set11(main_db, LEAVE_MAINTENANCE)
+    _set11(main_db, {"operation_generation": 2}, "TRG")
+    _set11(main_db, {"operation_generation": 0}, "TRG")
+    _set11(main_db, {**ENTER_MAINTENANCE, "maintenance_reason": "capture", "mode_changed_at": T0 + 3_000, "operation_generation": 2})
+    assert _one(main_db, "SELECT operation_generation, admission_mode, maintenance_reason, mode_changed_at FROM composite_processing_control") == (2, "maintenance", "capture", T0 + 3_000)
+
+
+def test_restore_epoch_rises_only_in_maintenance(main_db):
+    _put11(main_db)
+    _set11(main_db, {"restore_epoch": 1}, "TRG")
+    _set11(main_db, {**ENTER_MAINTENANCE, "restore_epoch": 1}, "TRG")
+    _set11(main_db, ENTER_MAINTENANCE)
+    _set11(main_db, {"restore_epoch": 3})
+    _set11(main_db, {"restore_epoch": 2}, "TRG")
+    _set11(main_db, {**LEAVE_MAINTENANCE, "restore_epoch": 4}, "TRG")
+    _set11(main_db, LEAVE_MAINTENANCE)
+    assert _one(main_db, "SELECT restore_epoch, admission_mode FROM composite_processing_control") == (3, "open")
+
+
+def test_only_a_new_worker_incarnation_acknowledges_an_epoch(main_db):
+    _put11(main_db)
+    _set11(main_db, {"worker_incarnation": "wk-1", "worker_epoch": 1}, "TRG")
+    _set11(main_db, {"worker_incarnation": "wk-1"}, "TRG")
+    _set11(main_db, {"worker_incarnation": "wk-1", "worker_epoch": 0})
+    _set11(main_db, {"worker_incarnation": None}, CHECK)
+    _set11(main_db, ENTER_MAINTENANCE)
+    _set11(main_db, {"restore_epoch": 1})
+    _set11(main_db, {"worker_epoch": 1}, "TRG")
+    _set11(main_db, {"worker_incarnation": "wk-2", "worker_epoch": 1}, "TRG")
+    _set11(main_db, LEAVE_MAINTENANCE)
+    _set11(main_db, {"worker_incarnation": "wk-2", "worker_epoch": 0}, "TRG")
+    _set11(main_db, {"worker_incarnation": "wk-2", "worker_epoch": 1})
+    _set11(main_db, {"worker_incarnation": None, "worker_epoch": None})
+    assert _one(main_db, "SELECT worker_incarnation, worker_epoch, restore_epoch FROM composite_processing_control") == (None, None, 1)
