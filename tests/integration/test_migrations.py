@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables and T034g1's (the last section) the §11 processing-control table and the issuance switch; all fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables, T034g1's the §11 processing-control table and the issuance switch, and T034g2's (the last section) its recovery-point and backup delivery-attempt tables; all fail until T040 adds them.
 """
 
 from collections import Counter
@@ -4343,3 +4343,310 @@ def test_only_a_new_worker_incarnation_acknowledges_an_epoch(main_db):
     _set11(main_db, {"worker_incarnation": "wk-2", "worker_epoch": 1})
     _set11(main_db, {"worker_incarnation": None, "worker_epoch": None})
     assert _one(main_db, "SELECT worker_incarnation, worker_epoch, restore_epoch FROM composite_processing_control") == (None, None, 1)
+
+
+# Data-model §11 recovery points and B-01 delivery attempts (T034g2: checks for T040 part f)
+
+ARCHIVE_SHA = hashlib.sha256(b"rp archive").digest()
+MANIFEST_SHA = hashlib.sha256(b"rp manifest").digest()
+# rp-1: a validated capture at T0 with no verified copy before it, delivering under B-01; da-1: its first automatic attempt, just reserved.
+POINT_ROW = {"recovery_point_id": "rp-1", "installation_id": "inst-main", "restore_epoch": 0, "captured_at": T0, "schema_version": 1, "release": RELEASE, "runtime_inventory": '{"python": "3.12.3", "sqlite": "3.45.1"}', "manifest": '{"members": ["main.db"]}', "manifest_sha256": MANIFEST_SHA, "archive_ref": "archives/rp-1.enc", "archive_sha256": ARCHIVE_SHA, "archive_bytes": 4_096, "encryption_key_id": "bk-1", "validation_report": '{"integrity": "ok", "foreign_keys": "ok"}', "validated_at": T0 + 20_000, "destination_id": "sftp-1", "policy_version": "B-01/2026-10-06", "predecessor_point_id": None, "delivery_deadline": T0 + 600_000, "delivery_state": "delivering", "delivery_closed_at": None, "verified_at": None, "verified_attempt_id": None, "age_target_missed_at": None}
+ATTEMPT_ROW = {"attempt_id": "da-1", "recovery_point_id": "rp-1", "allowance": "automatic", "audit_event_id": None, "attempt_number": 1, "remote_path": "rp-1/da-1.enc", "reserved_at": T0 + 30_000, "dispatched_at": None, "finished_at": None, "outcome": None, "failure_kind": None, "next_attempt_at": None, "readback_bytes": None, "readback_sha256": None, "completion_manifest_ref": None, "closure_evidence_ref": None}
+# da-1 finished with a full read-back of rp-1's archive; rp-1 closed as verified by it.
+VERIFIED = {"dispatched_at": T0 + 31_000, "finished_at": T0 + 90_000, "outcome": "verified", "readback_bytes": 4_096, "readback_sha256": ARCHIVE_SHA, "completion_manifest_ref": "rp-1/da-1.done", "closure_evidence_ref": "closed, then read back in full"}
+POINT_VERIFIED = {"delivery_state": "verified", "delivery_closed_at": T0 + 90_000, "verified_at": T0 + 90_000, "verified_attempt_id": "da-1"}
+# Other ways da-1 finishes.
+NO_WRITE = {"finished_at": T0 + 40_000, "outcome": "no_write", "next_attempt_at": T0 + 55_000}
+PARTIAL = {"dispatched_at": T0 + 31_000, "finished_at": T0 + 151_000, "outcome": "partial", "next_attempt_at": T0 + 166_000}
+REJECTED = {"dispatched_at": T0 + 31_000, "finished_at": T0 + 32_000, "outcome": "rejected", "failure_kind": "host_key_mismatch"}
+# rp-2: a later capture taken while no copy is verified yet.
+SECOND_POINT = {"recovery_point_id": "rp-2", "captured_at": T0 + 300_000, "validated_at": T0 + 320_000, "delivery_deadline": T0 + 900_000}
+# The owner's audited recovery action for rp-1, and the first attempt it allows.
+BACKUP_EVENT = {"event_id": "ae-b1", "occurred_at": T0 + 2_000_000, "action": "backup_recovery", "resource_kind": "composite_recovery_points", "resource_id": "rp-1", "reason": "destination host key repaired"}
+RECOVERY_ATTEMPT = {"attempt_id": "da-r1", "allowance": "recovery", "audit_event_id": "ae-b1", "remote_path": "rp-1/da-r1.enc", "reserved_at": T0 + 2_001_000}
+
+
+def _point(conn, changes=None, expected="accepted"):
+    row = {**POINT_ROW, **(changes or {})}
+    cols = tuple(row)
+    _sql10(conn, f"INSERT INTO composite_recovery_points ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()), expected)
+
+
+def _attempt(conn, changes=None, expected="accepted"):
+    row = {**ATTEMPT_ROW, **(changes or {})}
+    cols = tuple(row)
+    _sql10(conn, f"INSERT INTO composite_recovery_delivery_attempts ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()), expected)
+
+
+def _set_point(conn, changes, expected="accepted", point_id="rp-1"):
+    cols = tuple(changes)
+    _sql10(conn, f"UPDATE composite_recovery_points SET {', '.join(f'{col} = ?' for col in cols)} WHERE recovery_point_id = ?", (*changes.values(), point_id), expected)
+
+
+def _set_attempt(conn, changes, expected="accepted", attempt_id="da-1"):
+    cols = tuple(changes)
+    _sql10(conn, f"UPDATE composite_recovery_delivery_attempts SET {', '.join(f'{col} = ?' for col in cols)} WHERE attempt_id = ?", (*changes.values(), attempt_id), expected)
+
+
+def _deliver(conn, point_id, attempt_id, reserved_at, finished_at):
+    """Reserve automatic attempt 1 of point_id, finish it verified at finished_at, and close the point as verified then."""
+    _attempt(conn, {"attempt_id": attempt_id, "recovery_point_id": point_id, "remote_path": f"{point_id}/{attempt_id}.enc", "reserved_at": reserved_at})
+    _set_attempt(conn, {**VERIFIED, "dispatched_at": reserved_at + 1_000, "finished_at": finished_at, "completion_manifest_ref": f"{point_id}/{attempt_id}.done"}, attempt_id=attempt_id)
+    _set_point(conn, {"delivery_state": "verified", "delivery_closed_at": finished_at, "verified_at": finished_at, "verified_attempt_id": attempt_id}, point_id=point_id)
+
+
+def test_main_gets_the_recovery_point_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        assert {"composite_recovery_points", "composite_recovery_delivery_attempts"} <= _tables(conn)
+        assert set(POINT_ROW) <= set(_columns(conn, "composite_recovery_points"))
+        assert set(ATTEMPT_ROW) <= set(_columns(conn, "composite_recovery_delivery_attempts"))
+        assert _one(conn, "SELECT count(*) FROM composite_recovery_points") == (0,)
+        assert _one(conn, "SELECT count(*) FROM composite_recovery_delivery_attempts") == (0,)
+        assert sorted((row[2], row[3], row[4], row[6]) for row in conn.execute("PRAGMA foreign_key_list(composite_recovery_points)")) == [("composite_recovery_delivery_attempts", "recovery_point_id", "recovery_point_id", "RESTRICT"), ("composite_recovery_delivery_attempts", "verified_attempt_id", "attempt_id", "RESTRICT"), ("composite_recovery_points", "predecessor_point_id", "recovery_point_id", "RESTRICT")]
+        assert sorted((row[2], row[3], row[4], row[6]) for row in conn.execute("PRAGMA foreign_key_list(composite_recovery_delivery_attempts)")) == [("composite_audit_events", "audit_event_id", "event_id", "RESTRICT"), ("composite_recovery_points", "recovery_point_id", "recovery_point_id", "RESTRICT")]
+
+
+def test_recovery_rows_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _point(conn)
+        _deliver(conn, "rp-1", "da-1", T0 + 30_000, T0 + 90_000)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert _one(conn, "SELECT delivery_state, verified_at, verified_attempt_id FROM composite_recovery_points") == ("verified", T0 + 90_000, "da-1")
+        assert _one(conn, "SELECT count(*) FROM composite_recovery_delivery_attempts") == (1,)
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({}, "accepted"), ({"validated_at": T0}, "accepted"),
+    ({"installation_id": ""}, CHECK), ({"release": ""}, CHECK), ({"manifest": ""}, CHECK), ({"destination_id": ""}, CHECK), ({"policy_version": ""}, CHECK),
+    ({"restore_epoch": -1}, CHECK), ({"schema_version": 0}, CHECK), ({"manifest_sha256": b"short"}, CHECK), ({"archive_sha256": "0" * 32}, CHECK),
+    ({"archive_bytes": 0}, CHECK), ({"archive_bytes": 1.5}, CHECK), ({"validated_at": T0 - 1}, CHECK), ({"delivery_closed_at": T0 + 100_000}, CHECK),
+    ({"delivery_state": "queued"}, "TRG"), ({"delivery_state": "exhausted", "delivery_closed_at": T0 + 700_000}, "TRG"),
+    ({"verified_at": T0 + 90_000, "verified_attempt_id": "da-1"}, "TRG"), ({"age_target_missed_at": T0 + 900_000}, "TRG"),
+    ({"delivery_deadline": T0 + 900_000}, "TRG"), ({"delivery_deadline": T0 + 599_999}, "TRG"),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_recovery_points.{col}")) for col in ("installation_id", "restore_epoch", "schema_version", "release", "runtime_inventory", "manifest", "manifest_sha256", "archive_ref", "archive_sha256", "archive_bytes", "encryption_key_id", "validation_report", "validated_at", "destination_id", "policy_version")],
+], ids=lambda value: _case_id(value) or "base")
+def test_recovery_point_values(main_db, changes, expected):
+    _point(main_db, changes, expected)
+
+
+def test_recovery_point_defaults(main_db):
+    cols = [key for key in POINT_ROW if key not in ("predecessor_point_id", "delivery_state", "delivery_closed_at", "verified_at", "verified_attempt_id", "age_target_missed_at")]
+    _sql10(main_db, f"INSERT INTO composite_recovery_points ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(POINT_ROW[key] for key in cols))
+    assert _one(main_db, "SELECT predecessor_point_id, delivery_state, delivery_closed_at, verified_at, verified_attempt_id, age_target_missed_at FROM composite_recovery_points") == (None, "delivering", None, None, None, None)
+
+
+@pytest.mark.parametrize("captured, predecessor, deadline, expected", [
+    (T0 + 200_000, "rp-1", T0 + 800_000, "accepted"),
+    (T0 + 450_000, "rp-1", T0 + 900_000, "accepted"),
+    (T0 + 450_000, "rp-1", T0 + 1_050_000, "TRG"),
+    (T0 + 600_000, "rp-1", T0 + 900_000, "TRG"),
+    (T0 + 600_000, "rp-2", T0 + 960_000, "accepted"),
+    (T0 + 1_000_000, "rp-2", T0 + 1_600_000, "accepted"),
+    (T0 + 1_000_000, "rp-2", T0 + 960_000, "TRG"),
+    (T0 + 600_000, None, T0 + 1_200_000, "TRG"),
+    (T0 + 600_000, "rp-3", T0 + 1_000_000, "TRG"),
+    (T0 + 80_000, None, T0 + 680_000, "accepted"),
+    (T0 + 80_000, "rp-1", T0 + 680_000, "TRG"),
+    (T0 + 600_000, "rp-9", T0 + 1_200_000, FK),
+], ids=["own-cap", "predecessor-cap", "predecessor-cap-ignored", "newer-copy-verified", "newest-predecessor", "protection-overdue", "overdue-cap-applied", "predecessor-omitted", "unverified-predecessor", "nothing-verified-yet", "verified-after-capture", "missing-predecessor"])
+def test_delivery_deadline_follows_the_predecessor(main_db, captured, predecessor, deadline, expected):
+    _point(main_db)
+    _deliver(main_db, "rp-1", "da-1", T0 + 30_000, T0 + 90_000)
+    _point(main_db, {"recovery_point_id": "rp-2", "captured_at": T0 + 60_000, "validated_at": T0 + 80_000, "delivery_deadline": T0 + 660_000})
+    _deliver(main_db, "rp-2", "da-2", T0 + 400_000, T0 + 500_000)
+    _point(main_db, {"recovery_point_id": "rp-3", "captured_at": T0 + 100_000, "validated_at": T0 + 120_000, "predecessor_point_id": "rp-1", "delivery_deadline": T0 + 700_000})
+    _point(main_db, {"recovery_point_id": "rp-4", "captured_at": captured, "validated_at": captured + 20_000, "predecessor_point_id": predecessor, "delivery_deadline": deadline}, expected)
+
+
+_POINT_FIXED_COLUMNS = [
+    ("recovery_point_id", "rp-9"), ("installation_id", "inst-other"), ("restore_epoch", 1), ("captured_at", T0 + 1),
+    ("schema_version", 2), ("release", OTHER_RELEASE), ("runtime_inventory", '{"python": "3.13.0"}'), ("manifest", '{"members": []}'),
+    ("manifest_sha256", ARCHIVE_SHA), ("archive_ref", "archives/other.enc"), ("archive_sha256", MANIFEST_SHA), ("archive_bytes", 4_097),
+    ("encryption_key_id", "bk-2"), ("validation_report", '{"integrity": "failed"}'), ("validated_at", T0 + 20_001),
+    ("destination_id", "sftp-2"), ("policy_version", "B-01/2026-11-01"), ("predecessor_point_id", "rp-1"), ("delivery_deadline", T0 + 600_001),
+]
+
+
+@pytest.mark.parametrize("column, value", _POINT_FIXED_COLUMNS, ids=[column for column, _ in _POINT_FIXED_COLUMNS])
+def test_capture_identity_never_changes(main_db, column, value):
+    _point(main_db)
+    _set_point(main_db, {column: value}, "TRG")
+    assert _one(main_db, f"SELECT count(*) FROM composite_recovery_points WHERE recovery_point_id = 'rp-1' AND {column} IS ?", POINT_ROW[column]) == (1,)
+
+
+def test_delivery_closes_only_as_its_attempts_allow(main_db):
+    _point(main_db)
+    _attempt(main_db)
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 700_000}, "TRG")
+    _set_attempt(main_db, NO_WRITE)
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 599_999}, "TRG")
+    _set_point(main_db, {"delivery_state": "stopped", "delivery_closed_at": T0 + 50_000}, "TRG")
+    _set_point(main_db, {"delivery_state": "verified", "delivery_closed_at": T0 + 50_000, "verified_at": T0 + 50_000, "verified_attempt_id": "da-1"}, "TRG")
+    _set_point(main_db, {"delivery_state": "verified", "delivery_closed_at": T0 + 50_000}, "TRG")
+    _attempt(main_db, {"attempt_id": "da-2", "attempt_number": 2, "remote_path": "rp-1/da-2.enc", "reserved_at": T0 + 55_000})
+    _set_attempt(main_db, {"dispatched_at": T0 + 56_000, "finished_at": T0 + 100_000, "outcome": "partial", "next_attempt_at": T0 + 145_000}, attempt_id="da-2")
+    _attempt(main_db, {"attempt_id": "da-3", "attempt_number": 3, "remote_path": "rp-1/da-3.enc", "reserved_at": T0 + 145_000})
+    _set_attempt(main_db, {"dispatched_at": T0 + 146_000, "finished_at": T0 + 266_000, "outcome": "uncertain"}, attempt_id="da-3")
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 266_000})
+    _set_point(main_db, {"delivery_state": "stopped"}, "TRG")
+    _set_point(main_db, {"delivery_closed_at": T0 + 700_000}, "TRG")
+    assert _one(main_db, "SELECT delivery_state, delivery_closed_at, verified_at FROM composite_recovery_points") == ("exhausted", T0 + 266_000, None)
+
+
+def test_delivery_exhausts_at_its_deadline_or_stops_on_a_definite_failure(main_db):
+    _point(main_db)
+    _attempt(main_db)
+    _set_attempt(main_db, {"dispatched_at": T0 + 31_000, "finished_at": T0 + 151_000, "outcome": "uncertain", "next_attempt_at": T0 + 166_000})
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 599_999}, "TRG")
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 600_000})
+    _point(main_db, SECOND_POINT)
+    _attempt(main_db, {"attempt_id": "da-4", "recovery_point_id": "rp-2", "remote_path": "rp-2/da-4.enc", "reserved_at": T0 + 330_000})
+    _set_attempt(main_db, {"dispatched_at": T0 + 331_000, "finished_at": T0 + 332_000, "outcome": "rejected", "failure_kind": "host_key_mismatch"}, attempt_id="da-4")
+    _attempt(main_db, {"attempt_id": "da-5", "recovery_point_id": "rp-2", "attempt_number": 2, "remote_path": "rp-2/da-5.enc", "reserved_at": T0 + 400_000}, "TRG")
+    _set_point(main_db, {"delivery_state": "stopped", "delivery_closed_at": T0 + 332_000}, point_id="rp-2")
+    assert main_db.execute("SELECT recovery_point_id, delivery_state, delivery_closed_at FROM composite_recovery_points ORDER BY recovery_point_id").fetchall() == [("rp-1", "exhausted", T0 + 600_000), ("rp-2", "stopped", T0 + 332_000)]
+
+
+def test_point_is_verified_only_by_its_own_verified_attempt(main_db):
+    _point(main_db)
+    _point(main_db, SECOND_POINT)
+    _attempt(main_db)
+    _attempt(main_db, {"attempt_id": "da-4", "recovery_point_id": "rp-2", "remote_path": "rp-2/da-4.enc", "reserved_at": T0 + 330_000})
+    _set_point(main_db, POINT_VERIFIED, "TRG")
+    _set_attempt(main_db, VERIFIED)
+    _set_attempt(main_db, {**VERIFIED, "dispatched_at": T0 + 331_000, "finished_at": T0 + 340_000, "completion_manifest_ref": "rp-2/da-4.done"}, attempt_id="da-4")
+    _set_point(main_db, {**POINT_VERIFIED, "delivery_closed_at": T0 + 340_000, "verified_at": T0 + 340_000, "verified_attempt_id": "da-4"}, "TRG")
+    _set_point(main_db, {**POINT_VERIFIED, "verified_at": T0 + 89_999, "delivery_closed_at": T0 + 89_999}, "TRG")
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 700_000}, "TRG")
+    _set_point(main_db, {"verified_at": T0 + 90_000, "verified_attempt_id": "da-1"}, "TRG")
+    _set_point(main_db, POINT_VERIFIED)
+    _set_point(main_db, {"verified_at": None, "verified_attempt_id": None}, "TRG")
+    _set_point(main_db, {"verified_attempt_id": "da-4"}, "TRG")
+    _sql10(main_db, "DELETE FROM composite_recovery_delivery_attempts WHERE attempt_id = 'da-1'", expected="TRG")
+    _sql10(main_db, "DELETE FROM composite_recovery_points WHERE recovery_point_id = 'rp-1'", expected="TRG")
+    assert _one(main_db, "SELECT delivery_state, verified_at, verified_attempt_id FROM composite_recovery_points WHERE recovery_point_id = 'rp-1'") == ("verified", T0 + 90_000, "da-1")
+    assert _one(main_db, "SELECT count(*) FROM composite_recovery_delivery_attempts") == (2,)
+
+
+def test_age_target_miss_is_recorded_once(main_db):
+    _point(main_db)
+    _set_point(main_db, {"age_target_missed_at": T0 + 900_000}, CHECK)
+    _deliver(main_db, "rp-1", "da-1", T0 + 30_000, T0 + 90_000)
+    _point(main_db, {**SECOND_POINT, "predecessor_point_id": "rp-1"})
+    _set_point(main_db, {"age_target_missed_at": T0 + 899_999}, CHECK)
+    _deliver(main_db, "rp-2", "da-2", T0 + 330_000, T0 + 850_000)
+    _set_point(main_db, {"age_target_missed_at": T0 + 900_000}, "TRG")
+    _set_point(main_db, {"age_target_missed_at": T0 + 1_199_999}, CHECK, point_id="rp-2")
+    _set_point(main_db, {"age_target_missed_at": T0 + 1_200_000}, point_id="rp-2")
+    _set_point(main_db, {"age_target_missed_at": T0 + 1_300_000}, "TRG", point_id="rp-2")
+    _set_point(main_db, {"age_target_missed_at": None}, "TRG", point_id="rp-2")
+    assert main_db.execute("SELECT recovery_point_id, age_target_missed_at FROM composite_recovery_points ORDER BY recovery_point_id").fetchall() == [("rp-1", None), ("rp-2", T0 + 1_200_000)]
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({}, "accepted"), ({"reserved_at": T0 + 20_000}, "accepted"), ({"reserved_at": T0 + 599_999}, "accepted"),
+    ({"allowance": "manual"}, CHECK), ({"attempt_number": 0}, CHECK), ({"remote_path": ""}, CHECK),
+    ({"reserved_at": T0 + 19_999}, "TRG"), ({"reserved_at": T0 + 600_000}, "TRG"), ({"attempt_number": 2}, "TRG"),
+    *[({column: value}, "TRG") for column, value in (("dispatched_at", T0 + 31_000), ("finished_at", T0 + 40_000), ("outcome", "no_write"), ("failure_kind", "credentials"), ("next_attempt_at", T0 + 55_000), ("readback_bytes", 4_096), ("readback_sha256", ARCHIVE_SHA), ("completion_manifest_ref", "rp-1/da-1.done"), ("closure_evidence_ref", "closed"))],
+    ({"recovery_point_id": "rp-9"}, FK),
+    *[({column: None}, re.escape(f"NOT NULL constraint failed: composite_recovery_delivery_attempts.{column}")) for column in ("recovery_point_id", "allowance", "attempt_number", "remote_path", "reserved_at")],
+], ids=lambda value: _case_id(value) or "base")
+def test_delivery_attempt_values(main_db, changes, expected):
+    _point(main_db)
+    _attempt(main_db, changes, expected)
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"dispatched_at": T0 + 31_000}, "accepted"), (NO_WRITE, "accepted"), ({**NO_WRITE, "dispatched_at": T0 + 31_000}, "accepted"),
+    (PARTIAL, "accepted"), ({**PARTIAL, "outcome": "uncertain"}, "accepted"), (REJECTED, "accepted"),
+    *[({**REJECTED, "failure_kind": kind}, "accepted") for kind in ("credentials", "checksum_mismatch", "destination_space")], (VERIFIED, "accepted"),
+    ({"outcome": "no_write"}, CHECK), ({"finished_at": T0 + 40_000}, CHECK), ({**NO_WRITE, "next_attempt_at": None}, CHECK),
+    ({**NO_WRITE, "next_attempt_at": T0 + 85_000}, CHECK), ({**NO_WRITE, "outcome": "partial"}, CHECK), ({**PARTIAL, "next_attempt_at": None}, CHECK),
+    ({"dispatched_at": T0 + 29_999}, CHECK), ({**NO_WRITE, "finished_at": T0 + 29_999, "next_attempt_at": T0 + 44_999}, CHECK),
+    ({**PARTIAL, "finished_at": T0 + 30_500, "next_attempt_at": T0 + 45_500}, CHECK), ({**REJECTED, "failure_kind": None}, CHECK),
+    ({**REJECTED, "failure_kind": "timeout"}, CHECK), ({**REJECTED, "next_attempt_at": T0 + 47_000}, CHECK), ({**NO_WRITE, "failure_kind": "credentials"}, CHECK),
+    ({"dispatched_at": T0 + 31_000, "finished_at": T0 + 32_000, "outcome": "lost"}, CHECK), ({**PARTIAL, "readback_bytes": 4_096}, CHECK),
+    ({**VERIFIED, "completion_manifest_ref": None}, CHECK), ({**VERIFIED, "closure_evidence_ref": None}, CHECK), ({**VERIFIED, "dispatched_at": None}, CHECK),
+    ({**VERIFIED, "next_attempt_at": T0 + 105_000}, CHECK), ({**VERIFIED, "readback_sha256": MANIFEST_SHA}, "TRG"),
+    ({**VERIFIED, "readback_bytes": 4_095}, "TRG"), ({**VERIFIED, "readback_sha256": None}, "TRG"),
+], ids=lambda value: _case_id(value) or "base")
+def test_finishing_a_delivery_attempt(main_db, changes, expected):
+    _point(main_db)
+    _attempt(main_db)
+    _set_attempt(main_db, changes, expected)
+
+
+def test_automatic_attempts_follow_the_b01_budget(main_db):
+    _point(main_db)
+    _attempt(main_db)
+    _attempt(main_db, {"attempt_id": "da-2", "attempt_number": 2, "remote_path": "rp-1/da-2.enc", "reserved_at": T0 + 30_000}, "TRG")
+    _set_attempt(main_db, PARTIAL)
+    _attempt(main_db, {"attempt_id": "da-2", "remote_path": "rp-1/da-2.enc", "reserved_at": T0 + 166_000}, _uq10(("composite_recovery_delivery_attempts", "recovery_point_id"), ("composite_recovery_delivery_attempts", "attempt_number")))
+    _attempt(main_db, {"attempt_id": "da-2", "attempt_number": 2, "remote_path": "rp-1/da-2.enc", "reserved_at": T0 + 165_999}, "TRG")
+    _attempt(main_db, {"attempt_id": "da-2", "attempt_number": 2, "remote_path": "rp-1/da-1.enc", "reserved_at": T0 + 166_000}, _uq10(("composite_recovery_delivery_attempts", "remote_path")))
+    _attempt(main_db, {"attempt_id": "da-2", "attempt_number": 2, "remote_path": "rp-1/da-2.enc", "reserved_at": T0 + 166_000})
+    _set_attempt(main_db, {"finished_at": T0 + 170_000, "outcome": "no_write", "next_attempt_at": T0 + 215_000}, attempt_id="da-2")
+    _attempt(main_db, {"attempt_id": "da-3", "attempt_number": 3, "remote_path": "rp-1/da-3.enc", "reserved_at": T0 + 214_999}, "TRG")
+    _attempt(main_db, {"attempt_id": "da-3", "attempt_number": 3, "remote_path": "rp-1/da-3.enc", "reserved_at": T0 + 215_000})
+    _set_attempt(main_db, {"dispatched_at": T0 + 216_000, "finished_at": T0 + 336_000, "outcome": "uncertain"}, attempt_id="da-3")
+    _attempt(main_db, {"attempt_id": "da-4", "attempt_number": 4, "remote_path": "rp-1/da-4.enc", "reserved_at": T0 + 400_000}, "TRG")
+    _set_point(main_db, {"delivery_state": "exhausted", "delivery_closed_at": T0 + 336_000})
+    assert main_db.execute("SELECT attempt_number, outcome, next_attempt_at FROM composite_recovery_delivery_attempts ORDER BY attempt_number").fetchall() == [(1, "partial", T0 + 166_000), (2, "no_write", T0 + 215_000), (3, "uncertain", None)]
+
+
+def test_recovery_attempts_need_an_audited_window(main_db):
+    _put10f(main_db, "composite_audit_events", **BACKUP_EVENT)
+    _put10f(main_db, "composite_audit_events", **{**BACKUP_EVENT, "event_id": "ae-b2", "resource_id": "rp-2"})
+    _put10f(main_db, "composite_audit_events", **{**BACKUP_EVENT, "event_id": "ae-b3", "resource_kind": "composite_notifications"})
+    _put10f(main_db, "composite_audit_events", **{**BACKUP_EVENT, "event_id": "ae-b4", "occurred_at": T0 + 2_000_500})
+    _point(main_db)
+    _attempt(main_db)
+    _set_attempt(main_db, REJECTED)
+    _attempt(main_db, RECOVERY_ATTEMPT, "TRG")
+    _set_point(main_db, {"delivery_state": "stopped", "delivery_closed_at": T0 + 32_000})
+    _attempt(main_db, {"attempt_id": "da-2", "remote_path": "rp-1/da-2.enc", "reserved_at": T0 + 100_000}, "TRG")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "audit_event_id": None}, CHECK)
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "audit_event_id": "ae-b2"}, "TRG")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "audit_event_id": "ae-b3"}, "TRG")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "audit_event_id": "ae-b9"}, FK)
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "reserved_at": T0 + 1_999_999}, "TRG")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "reserved_at": T0 + 2_420_000}, "TRG")
+    _attempt(main_db, RECOVERY_ATTEMPT)
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "attempt_id": "da-r4", "audit_event_id": "ae-b4", "remote_path": "rp-1/da-r4.enc", "reserved_at": T0 + 2_001_500}, _uq10(("composite_recovery_delivery_attempts", "recovery_point_id")))
+    _set_attempt(main_db, {"dispatched_at": T0 + 2_002_000, "finished_at": T0 + 2_122_000, "outcome": "partial", "next_attempt_at": T0 + 2_137_000}, attempt_id="da-r1")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "attempt_id": "da-r9", "remote_path": "rp-1/da-r9.enc", "reserved_at": T0 + 2_137_000}, _uq10(("composite_recovery_delivery_attempts", "audit_event_id"), ("composite_recovery_delivery_attempts", "attempt_number")))
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "attempt_id": "da-r4", "audit_event_id": "ae-b4", "attempt_number": 2, "remote_path": "rp-1/da-r4.enc", "reserved_at": T0 + 2_137_000}, "TRG")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "attempt_id": "da-r2", "attempt_number": 2, "remote_path": "rp-1/da-r2.enc", "reserved_at": T0 + 2_136_999}, "TRG")
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "attempt_id": "da-r2", "attempt_number": 2, "remote_path": "rp-1/da-r2.enc", "reserved_at": T0 + 2_137_000})
+    _set_attempt(main_db, {**VERIFIED, "dispatched_at": T0 + 2_138_000, "finished_at": T0 + 2_200_000, "completion_manifest_ref": "rp-1/da-r2.done"}, attempt_id="da-r2")
+    _set_point(main_db, {"delivery_state": "verified", "verified_at": T0 + 2_200_000, "verified_attempt_id": "da-r2"}, "TRG")
+    _set_point(main_db, {"verified_at": T0 + 2_200_000, "verified_attempt_id": "da-r2"})
+    _attempt(main_db, {**RECOVERY_ATTEMPT, "attempt_id": "da-r4", "audit_event_id": "ae-b4", "remote_path": "rp-1/da-r4.enc", "reserved_at": T0 + 2_300_000}, "TRG")
+    assert _one(main_db, "SELECT delivery_state, delivery_closed_at, verified_at, verified_attempt_id FROM composite_recovery_points") == ("stopped", T0 + 32_000, T0 + 2_200_000, "da-r2")
+
+
+@pytest.mark.parametrize("state, changes", [
+    ("dispatched", {"attempt_id": "da-9"}), ("dispatched", {"recovery_point_id": "rp-2"}), ("dispatched", {"allowance": "recovery"}),
+    ("dispatched", {"audit_event_id": "ae-b1"}), ("dispatched", {"attempt_number": 2}), ("dispatched", {"remote_path": "rp-1/other.enc"}),
+    ("dispatched", {"reserved_at": T0 + 30_001}), ("dispatched", {"dispatched_at": T0 + 32_000}), ("dispatched", {"dispatched_at": None}),
+    ("finished", {"closure_evidence_ref": "another check"}), ("finished", {"finished_at": T0 + 95_000}),
+    ("finished", {"outcome": "uncertain", "readback_bytes": None, "readback_sha256": None, "completion_manifest_ref": None, "closure_evidence_ref": None}),
+], ids=lambda value: _case_id(value) or "base")
+def test_attempt_identity_and_outcome_never_change(main_db, state, changes):
+    _put10f(main_db, "composite_audit_events", **BACKUP_EVENT)
+    _point(main_db)
+    _point(main_db, SECOND_POINT)
+    _attempt(main_db)
+    _set_attempt(main_db, VERIFIED if state == "finished" else {"dispatched_at": T0 + 31_000})
+    _set_attempt(main_db, changes, "TRG")
+    expected_row = ("da-1", "rp-1", "automatic", None, 1, "rp-1/da-1.enc", T0 + 30_000, T0 + 31_000, T0 + 90_000 if state == "finished" else None, "verified" if state == "finished" else None)
+    assert _one(main_db, "SELECT attempt_id, recovery_point_id, allowance, audit_event_id, attempt_number, remote_path, reserved_at, dispatched_at, finished_at, outcome FROM composite_recovery_delivery_attempts") == expected_row
