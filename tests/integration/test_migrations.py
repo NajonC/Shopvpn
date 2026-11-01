@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables and T034f1's (the last section) its batch tables; both fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables and T034f2's (the last section) its audit-event and notification tables; all fail until T040 adds them.
 """
 
 from collections import Counter
@@ -3425,3 +3425,340 @@ def test_move_mapping_values(main_db, changes, expected):
     _chain10b(main_db, until="composite_batch_member_nodes")
     _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
     _expect10b(main_db, "composite_batch_member_nodes", changes, expected)
+
+
+# Data-model §10 audit events and notifications (T034f2: checks for T040 part c)
+
+REMINDER_DUE = PREVIOUS_EXPIRY - 432_000_000  # rm-1's due time: 120 hours before ep-1's expiry
+# One valid row per table: an owner's audit event, and sub-1's due expiry reminder rm-1 in its first delivery opportunity.
+ROWS_10F = {
+    "composite_audit_events": {"event_id": "ae-1", "occurred_at": T0 + 160_000, "actor_domain": "web_admin", "actor_id": "owner-1", "action": "batch_authorize", "resource_kind": "composite_batches", "resource_id": "bt-1", "reason": "new address on inbound 1", "evidence_ref": None, "diagnostics": None},
+    "composite_notifications": {"notification_id": "nt-1", "notice_key": "reminder:rm-1", "recipient_telegram_id": 50001, "kind": "reminder", "subscription_id": "sub-1", "reminder_id": "rm-1", "operation_id": None, "escalation_ref": None, "policy_version": "N-01/2026-10-06", "original_due_at": REMINDER_DUE, "original_target_at": REMINDER_DUE + 300_000, "original_missed_at": None, "status": "sending", "block_reason": None, "next_opportunity_at": None, "next_attempt_at": None, "attempts_used": 0, "uncertain_since": None, "nonacceptance_ref": None, "accepted_at": None, "acceptance_ref": None, "stop_reason": None},
+}
+# (child table, child columns, parent table, parent columns)
+EXPECTED_FKS_10F = (
+    ("composite_notifications", ("subscription_id", "recipient_telegram_id"), "composite_subscriptions", ("subscription_id", "customer_telegram_id")),
+    ("composite_notifications", ("reminder_id", "original_due_at"), "composite_reminders", ("reminder_id", "due_at")),
+    ("composite_notifications", ("operation_id",), "composite_operations", ("operation_id",)),
+)
+FULFILLMENT_NOTICE = {"notice_key": "fulfillment:op-1", "kind": "fulfillment", "reminder_id": None, "operation_id": "op-1", "original_due_at": T0 + 300_000, "original_target_at": T0 + 600_000}
+OWNER_ALERT = {"notice_key": "alert:esc-1", "recipient_telegram_id": 90001, "kind": "owner_alert", "subscription_id": None, "reminder_id": None, "operation_id": "op-1", "escalation_ref": "esc-1", "original_due_at": T0 + 901_000, "original_target_at": T0 + 1_201_000}
+ACCEPT = {"status": "accepted", "accepted_at": REMINDER_DUE + 2_000, "acceptance_ref": "tg-msg-1"}
+UNCERTAIN_SEND = {"status": "uncertain_delivery", "uncertain_since": REMINDER_DUE + 17_000}
+WINDOW_EXPIRED = {"status": "waiting_opportunity", "next_opportunity_at": REMINDER_DUE + 330_000}
+
+
+def _put10f(conn, table, **changes):
+    row = {**ROWS_10F[table], **changes}
+    cols = tuple(row)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()))
+
+
+def _chain10f(conn, until=None):
+    assert until is None or until in ROWS_10F
+    _chain10(conn, until="composite_remote_work")
+    _put(conn, "composite_entitlement_periods")
+    _put(conn, "composite_reminder_periods")
+    _put(conn, "composite_reminders", status="due", condition_met_at=REMINDER_DUE, due_at=REMINDER_DUE)
+    for table in ROWS_10F:
+        if table == until:
+            break
+        _put10f(conn, table)
+
+
+def _set_notice(conn, changes, notification_id="nt-1"):
+    cols = tuple(changes)
+    conn.execute(f"UPDATE composite_notifications SET {', '.join(f'{col} = ?' for col in cols)} WHERE notification_id = ?", (*changes.values(), notification_id))
+
+
+def _expect_set(conn, changes, expected, notification_id="nt-1"):
+    if expected == "accepted":
+        _set_notice(conn, changes, notification_id)
+    elif expected == "TRG":
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _set_notice(conn, changes, notification_id)
+        assert "constraint failed" not in str(error.value)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=expected):
+            _set_notice(conn, changes, notification_id)
+
+
+def _expect10f(conn, table, changes, expected):
+    if expected == "accepted":
+        _put10f(conn, table, **changes)
+    elif expected == "TRG":
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _put10f(conn, table, **changes)
+        assert "constraint failed" not in str(error.value)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=expected):
+            _put10f(conn, table, **changes)
+
+
+def test_main_gets_the_audit_and_notification_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        tables = _tables(conn)
+        for table, row in ROWS_10F.items():
+            assert table in tables
+            assert set(row) <= set(_columns(conn, table))
+
+
+def test_audit_and_notification_foreign_keys(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in ROWS_10F:
+            groups = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                groups.setdefault(row[0], []).append(row)
+            for rows in groups.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                cols = tuple(row[4] for row in rows)
+                if any(col is None for col in cols):
+                    cols = tuple(row[1] for row in sorted((row for row in conn.execute(f"PRAGMA table_info({parent})") if row[5] > 0), key=lambda row: row[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS_10F) <= found
+        assert conn.execute("PRAGMA foreign_key_list(composite_audit_events)").fetchall() == []
+
+
+def test_rows_in_every_audit_and_notification_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain10f(conn)
+        _set_notice(conn, {"attempts_used": 1})
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in ROWS_10F)
+        assert _one(conn, "SELECT attempts_used FROM composite_notifications WHERE notification_id = 'nt-1'")[0] == 1
+
+
+def test_notification_subscription_cannot_be_deleted(main_db):
+    _chain10f(main_db)
+    _sub3(main_db)
+    _put10f(main_db, "composite_notifications", notification_id="nt-3", **{**FULFILLMENT_NOTICE, "kind": "support", "notice_key": "support:sub-3", "subscription_id": "sub-3", "recipient_telegram_id": 50002, "operation_id": None})
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        main_db.execute("DELETE FROM composite_subscriptions WHERE subscription_id = 'sub-3'")
+    assert _one(main_db, "SELECT subscription_id FROM composite_subscriptions WHERE subscription_id = 'sub-3'")[0] == "sub-3"
+
+
+_NOTIFICATION_PARENT_CASES = [
+    ({"subscription_id": "sub-missing"}, "missing-subscription"),
+    ({"recipient_telegram_id": 50002}, "wrong-customer"),
+    ({"reminder_id": "rm-missing"}, "missing-reminder"),
+    ({"original_due_at": REMINDER_DUE + 1_000, "original_target_at": REMINDER_DUE + 301_000}, "wrong-reminder-time"),
+    ({"reminder_id": "rm-2", "notice_key": "reminder:rm-2"}, "not-due-reminder"),
+    ({**FULFILLMENT_NOTICE, "operation_id": "op-missing"}, "missing-operation"),
+]
+
+
+@pytest.mark.parametrize("changes,case", _NOTIFICATION_PARENT_CASES, ids=[case for _, case in _NOTIFICATION_PARENT_CASES])
+def test_notification_needs_its_parents(main_db, changes, case):
+    _chain10f(main_db, until="composite_notifications")
+    if case == "not-due-reminder":
+        _put(main_db, "composite_reminders", reminder_id="rm-2", reminder_type="quota", expiry_threshold_seconds=None, quota_mode="percent", quota_percent=80)
+    _expect10f(main_db, "composite_notifications", changes, FK)
+
+
+_AUDIT_VALUES = [
+    ({}, "accepted"),
+    ({"actor_domain": "telegram", "actor_id": "50001", "action": "cancel_subscription", "resource_kind": "composite_subscriptions", "resource_id": "sub-1", "reason": None}, "accepted"),
+    ({"actor_domain": "payment_callback", "actor_id": "card-to-card", "action": "receipt_verified", "resource_kind": "composite_payment_receipts", "resource_id": "rc-1", "reason": None, "evidence_ref": "receipt:rc-1"}, "accepted"),
+    ({"actor_domain": "system", "actor_id": "worker", "reason": None, "diagnostics": "operation=op-1 tenant=inst-main record=ch-1"}, "accepted"),
+    ({"actor_domain": "cli", "actor_id": "operator"}, "accepted"),
+    ({"actor_domain": "web"}, CHECK), ({"actor_domain": "owner"}, CHECK), ({"actor_id": ""}, CHECK),
+    ({"action": ""}, CHECK), ({"resource_kind": ""}, CHECK), ({"resource_id": ""}, CHECK), ({"reason": ""}, CHECK),
+    *[({column: None}, re.escape(f"NOT NULL constraint failed: composite_audit_events.{column}")) for column in ("occurred_at", "actor_domain", "actor_id", "action", "resource_kind", "resource_id")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _AUDIT_VALUES, ids=[_case_id(changes) for changes, _ in _AUDIT_VALUES])
+def test_audit_event_values(main_db, changes, expected):
+    _expect10f(main_db, "composite_audit_events", changes, expected)
+
+
+_AUDIT_UPDATE_COLUMNS = [("event_id", "ae-9"), ("occurred_at", T0 + 160_001), ("actor_domain", "system"), ("actor_id", "owner-2"), ("action", "batch_discard"), ("resource_kind", "composite_operations"), ("resource_id", "bt-2"), ("reason", "other reason"), ("evidence_ref", "x"), ("diagnostics", "x")]
+_AUDIT_UPDATE_COLUMNS.append((None, None))
+
+
+@pytest.mark.parametrize("column,value", _AUDIT_UPDATE_COLUMNS, ids=[column or "delete-then-duplicate-id" for column, _ in _AUDIT_UPDATE_COLUMNS])
+def test_audit_events_are_immutable_and_kept(main_db, column, value):
+    _put10f(main_db, "composite_audit_events")
+    if column is None:
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            main_db.execute("DELETE FROM composite_audit_events WHERE event_id = 'ae-1'")
+        assert "constraint failed" not in str(error.value)
+        _put10f(main_db, "composite_audit_events", event_id="ae-2")
+        with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_audit_events", "event_id"))):
+            _put10f(main_db, "composite_audit_events")
+        return
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute(f"UPDATE composite_audit_events SET {column} = ? WHERE event_id = 'ae-1'", (value,))
+    assert "constraint failed" not in str(error.value)
+
+
+_NOTIFICATION_VALUES = [
+    ({}, "accepted"),
+    ({"status": "waiting_eligibility", "block_reason": "owner_suspended"}, "accepted"),
+    ({"status": "waiting_transport", "block_reason": "telegram unreachable"}, "accepted"),
+    ({"original_missed_at": REMINDER_DUE + 300_000}, "accepted"),
+    ({"next_attempt_at": REMINDER_DUE + 5_000}, "accepted"),
+    ({**FULFILLMENT_NOTICE}, "accepted"),
+    ({**FULFILLMENT_NOTICE, "kind": "failure", "notice_key": "failure:op-1"}, "accepted"),
+    ({**FULFILLMENT_NOTICE, "kind": "support", "notice_key": "support:op-1"}, "accepted"),
+    ({**FULFILLMENT_NOTICE, "kind": "replacement", "notice_key": "replacement:op-1"}, "accepted"),
+    ({**FULFILLMENT_NOTICE, "kind": "move", "notice_key": "move:op-1"}, "accepted"),
+    ({**FULFILLMENT_NOTICE, "kind": "support", "notice_key": "support:50001", "subscription_id": None, "operation_id": None}, "accepted"),
+    ({**OWNER_ALERT}, "accepted"), ({**OWNER_ALERT, "operation_id": None}, "accepted"),
+    ({**WINDOW_EXPIRED}, "TRG"), ({**UNCERTAIN_SEND}, "TRG"), ({**ACCEPT}, "TRG"),
+    ({"status": "permanent_failure", "stop_reason": "x"}, "TRG"), ({"status": "exhausted", "stop_reason": "x"}, "TRG"), ({"status": "obsolete", "stop_reason": "x"}, "TRG"),
+    ({"status": "delivered"}, "TRG"), ({"attempts_used": 1}, "TRG"),
+    ({"notice_key": ""}, CHECK), ({"policy_version": ""}, CHECK), ({"recipient_telegram_id": 0}, CHECK), ({"recipient_telegram_id": -5}, CHECK),
+    ({"recipient_telegram_id": 50001.5}, CHECK), ({"recipient_telegram_id": "x"}, CHECK), ({**FULFILLMENT_NOTICE, "kind": "alert"}, CHECK),
+    ({"kind": "fulfillment"}, CHECK), ({"reminder_id": None}, CHECK), ({"subscription_id": None}, CHECK),
+    ({**OWNER_ALERT, "escalation_ref": None}, CHECK), ({**FULFILLMENT_NOTICE, "escalation_ref": "esc-1"}, CHECK),
+    ({**OWNER_ALERT, "subscription_id": "sub-1", "recipient_telegram_id": 50001}, CHECK),
+    ({"original_target_at": REMINDER_DUE + 299_999}, CHECK), ({"original_target_at": REMINDER_DUE + 600_000}, CHECK),
+    ({"original_missed_at": REMINDER_DUE + 299_999}, CHECK),
+    *[({column: None}, re.escape(f"NOT NULL constraint failed: composite_notifications.{column}")) for column in ("notice_key", "recipient_telegram_id", "kind", "policy_version", "original_due_at", "original_target_at", "status")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _NOTIFICATION_VALUES, ids=[_case_id(changes) for changes, _ in _NOTIFICATION_VALUES])
+def test_notification_column_values(main_db, changes, expected):
+    _chain10f(main_db, until="composite_notifications")
+    _expect10f(main_db, "composite_notifications", changes, expected)
+
+
+def test_one_notice_per_key_recipient_and_reminder(main_db):
+    _chain10f(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_notifications", "reminder_id"))):
+        _put10f(main_db, "composite_notifications", notification_id="nt-2", notice_key="reminder:rm-1:again")
+    _put10f(main_db, "composite_notifications", notification_id="nt-3", **FULFILLMENT_NOTICE)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_notifications", "notice_key"), ("composite_notifications", "recipient_telegram_id"))):
+        _put10f(main_db, "composite_notifications", notification_id="nt-4", **{**FULFILLMENT_NOTICE, "kind": "support"})
+    _put10f(main_db, "composite_notifications", notification_id="nt-5", **{**OWNER_ALERT, "notice_key": "fulfillment:op-1"})
+
+
+_NOTICE_IDENTITY_COLUMNS = [("notification_id", "nt-9"), ("notice_key", "reminder:rm-9"), ("recipient_telegram_id", 50002), ("kind", "support"), ("subscription_id", "sub-2"), ("reminder_id", None), ("operation_id", "op-1"), ("escalation_ref", "esc-1"), ("policy_version", "N-01/2026-11-01"), ("original_due_at", REMINDER_DUE + 1_000), ("original_target_at", REMINDER_DUE + 301_000)]
+_NOTICE_IDENTITY_COLUMNS.append((None, None))
+
+
+@pytest.mark.parametrize("column,value", _NOTICE_IDENTITY_COLUMNS, ids=[column or "miss-set-once-and-kept" for column, _ in _NOTICE_IDENTITY_COLUMNS])
+def test_notice_identity_and_original_clocks_never_change(main_db, column, value):
+    _chain10f(main_db)
+    if column is None:
+        _expect_set(main_db, {"original_missed_at": REMINDER_DUE + 300_000}, "accepted")
+        _expect_set(main_db, {"original_missed_at": REMINDER_DUE + 400_000}, "TRG")
+        _expect_set(main_db, {"original_missed_at": None}, "TRG")
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            main_db.execute("DELETE FROM composite_notifications WHERE notification_id = 'nt-1'")
+        assert "constraint failed" not in str(error.value)
+        return
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute(f"UPDATE composite_notifications SET {column} = ? WHERE notification_id = 'nt-1'", (value,))
+    assert "constraint failed" not in str(error.value)
+
+
+def test_attempts_are_reserved_one_at_a_time_up_to_five(main_db):
+    _chain10f(main_db)
+    _expect_set(main_db, {"attempts_used": 2}, "TRG")
+    _expect_set(main_db, {"attempts_used": 1}, "accepted")
+    _expect_set(main_db, {"attempts_used": 0}, "TRG")
+    for attempts in (2, 3, 4):
+        _expect_set(main_db, {"attempts_used": attempts}, "accepted")
+    _expect_set(main_db, {"status": "exhausted", "stop_reason": "five attempts failed"}, CHECK)
+    _expect_set(main_db, {"attempts_used": 5}, "accepted")
+    _expect_set(main_db, {"attempts_used": 6}, CHECK)
+    _expect_set(main_db, WINDOW_EXPIRED, CHECK)
+    _expect_set(main_db, {"status": "exhausted", "stop_reason": "five attempts failed"}, "accepted")
+    _expect_set(main_db, {"attempts_used": 4}, "TRG")
+    assert _one(main_db, "SELECT attempts_used FROM composite_notifications WHERE notification_id = 'nt-1'")[0] == 5
+
+
+def test_backoff_is_never_shortened(main_db):
+    _chain10f(main_db)
+    _expect_set(main_db, {"next_attempt_at": REMINDER_DUE + 5_000}, "accepted")
+    _expect_set(main_db, {"next_attempt_at": REMINDER_DUE + 4_999}, "TRG")
+    _expect_set(main_db, {"next_attempt_at": None}, "TRG")
+    _expect_set(main_db, {"next_attempt_at": REMINDER_DUE + 20_000}, "accepted")
+    _expect_set(main_db, WINDOW_EXPIRED, "accepted")
+    _expect_set(main_db, {"status": "sending", "next_opportunity_at": None}, "accepted")
+    _expect_set(main_db, {"next_attempt_at": REMINDER_DUE + 19_000}, "TRG")
+    assert _one(main_db, "SELECT next_attempt_at FROM composite_notifications WHERE notification_id = 'nt-1'")[0] == REMINDER_DUE + 20_000
+
+
+_NOTICE_STATUS_VALUES = [
+    ({"status": "waiting_eligibility", "block_reason": "renewal in flight"}, "accepted"),
+    ({"status": "waiting_transport", "block_reason": "telegram unreachable"}, "accepted"),
+    (WINDOW_EXPIRED, "accepted"), (UNCERTAIN_SEND, "accepted"), (ACCEPT, "accepted"),
+    ({"status": "permanent_failure", "stop_reason": "recipient blocked the bot"}, "accepted"),
+    ({"status": "obsolete", "stop_reason": "subscription cancelled"}, "accepted"),
+    ({"status": "delivered"}, CHECK), ({"status": "waiting_eligibility"}, CHECK), ({"status": "waiting_transport"}, CHECK),
+    ({"status": "waiting_opportunity"}, CHECK), ({"status": "uncertain_delivery"}, CHECK),
+    ({"status": "accepted", "accepted_at": REMINDER_DUE + 2_000}, CHECK), ({"status": "accepted", "acceptance_ref": "tg-msg-1"}, CHECK),
+    ({"status": "permanent_failure"}, CHECK), ({"status": "exhausted"}, CHECK), ({"status": "obsolete"}, CHECK),
+    ({"status": "exhausted", "stop_reason": "five attempts failed"}, CHECK), ({"block_reason": "x"}, CHECK),
+    ({"next_opportunity_at": REMINDER_DUE + 330_000}, CHECK), ({"uncertain_since": REMINDER_DUE + 17_000}, CHECK),
+    ({"stop_reason": "x"}, CHECK), ({"acceptance_ref": "tg-msg-1"}, CHECK),
+    ({"accepted_at": REMINDER_DUE + 2_000, "acceptance_ref": "tg-msg-1"}, CHECK),
+    ({**ACCEPT, "accepted_at": REMINDER_DUE - 1}, CHECK),
+]
+
+
+@pytest.mark.parametrize("changes,expected", _NOTICE_STATUS_VALUES, ids=[_case_id(changes) for changes, _ in _NOTICE_STATUS_VALUES])
+def test_status_fields_match(main_db, changes, expected):
+    _chain10f(main_db)
+    _expect_set(main_db, changes, expected)
+
+
+@pytest.mark.parametrize("case", ["on-time", "late", "obsolete"], ids=["accepted-on-time-never-rearms", "late-acceptance-keeps-miss", "obsolete-never-rearms"])
+def test_accepted_or_obsolete_notice_never_rearms(main_db, case):
+    _chain10f(main_db)
+    if case == "on-time":
+        _set_notice(main_db, {"attempts_used": 1})
+        _expect_set(main_db, ACCEPT, "accepted")
+        _expect_set(main_db, {"status": "sending", "accepted_at": None, "acceptance_ref": None}, "TRG")
+        _expect_set(main_db, {"original_missed_at": REMINDER_DUE + 300_000}, "TRG")
+        _expect_set(main_db, {"attempts_used": 2}, "TRG")
+        _expect_set(main_db, {"acceptance_ref": "tg-msg-2"}, "TRG")
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            main_db.execute("DELETE FROM composite_notifications WHERE notification_id = 'nt-1'")
+        assert "constraint failed" not in str(error.value)
+    elif case == "late":
+        _expect_set(main_db, {**ACCEPT, "accepted_at": REMINDER_DUE + 400_000}, CHECK)
+        _expect_set(main_db, {**ACCEPT, "original_missed_at": REMINDER_DUE + 300_000}, CHECK)
+        _expect_set(main_db, {"original_missed_at": REMINDER_DUE + 300_000}, "accepted")
+        _expect_set(main_db, {**ACCEPT, "accepted_at": REMINDER_DUE + 400_000}, "accepted")
+        assert _one(main_db, "SELECT original_missed_at, accepted_at FROM composite_notifications WHERE notification_id = 'nt-1'") == (REMINDER_DUE + 300_000, REMINDER_DUE + 400_000)
+    else:
+        _expect_set(main_db, {"status": "obsolete", "stop_reason": "renewal changed the terms"}, "accepted")
+        _expect_set(main_db, {"status": "sending", "stop_reason": None}, "TRG")
+        _expect_set(main_db, {**ACCEPT, "stop_reason": None}, "TRG")
+
+
+@pytest.mark.parametrize("case", ["requires-new-evidence", "acceptance-resolves-uncertain"], ids=["new-nonacceptance-evidence-required", "later-acceptance-is-valid"])
+def test_uncertain_send_needs_new_nonacceptance_evidence(main_db, case):
+    _chain10f(main_db)
+    _set_notice(main_db, {"attempts_used": 1})
+    _expect_set(main_db, UNCERTAIN_SEND, "accepted")
+    if case == "requires-new-evidence":
+        _expect_set(main_db, {"status": "sending", "uncertain_since": None}, "TRG")
+        _expect_set(main_db, {**WINDOW_EXPIRED, "uncertain_since": None}, "TRG")
+        _expect_set(main_db, {"status": "obsolete", "stop_reason": "subscription cancelled", "uncertain_since": None}, "TRG")
+        _expect_set(main_db, {"status": "permanent_failure", "stop_reason": "x", "uncertain_since": None}, "TRG")
+        _expect_set(main_db, {"status": "sending", "uncertain_since": None, "nonacceptance_ref": "lookup:no-message-1"}, "accepted")
+        _set_notice(main_db, {"attempts_used": 2})
+        _expect_set(main_db, {"status": "uncertain_delivery", "uncertain_since": REMINDER_DUE + 40_000}, "accepted")
+        _expect_set(main_db, {"status": "sending", "uncertain_since": None, "nonacceptance_ref": "lookup:no-message-1"}, "TRG")
+        _expect_set(main_db, {"status": "sending", "uncertain_since": None}, "TRG")
+        _expect_set(main_db, {"status": "sending", "uncertain_since": None, "nonacceptance_ref": "lookup:no-message-2"}, "accepted")
+    else:
+        _expect_set(main_db, {**ACCEPT, "uncertain_since": None}, "accepted")
