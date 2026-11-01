@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables and T034f2's (the last section) its audit-event and notification tables; all fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables and T034f3's (the last section) its notification delivery-window and attempt tables; all fail until T040 adds them.
 """
 
 from collections import Counter
@@ -3762,3 +3762,436 @@ def test_uncertain_send_needs_new_nonacceptance_evidence(main_db, case):
         _expect_set(main_db, {"status": "sending", "uncertain_since": None, "nonacceptance_ref": "lookup:no-message-2"}, "accepted")
     else:
         _expect_set(main_db, {**ACCEPT, "uncertain_since": None}, "accepted")
+
+
+# Data-model §10 notification delivery windows and attempts (T034f3: checks for T040 part d)
+
+# One valid row per table: rm-1's first delivery opportunity no-1, still open, and automatic attempt 1 reserved in it.
+ROWS_10G = {
+    "composite_notification_opportunities": {"opportunity_id": "no-1", "notification_id": "nt-1", "reason": "original_due", "audit_event_id": None, "event_at": REMINDER_DUE, "detected_at": REMINDER_DUE + 1_000, "ends_at": REMINDER_DUE + 300_000, "closed_at": None, "close_reason": None},
+    "composite_notification_attempts": {"attempt_id": "na-1", "notification_id": "nt-1", "opportunity_id": "no-1", "allowance": "automatic", "attempt_number": 1, "call_kind": "send", "reserved_at": REMINDER_DUE + 2_000, "dispatched_at": None, "finished_at": None, "outcome": None, "evidence_ref": None},
+}
+ID_COLUMNS_10G = {"composite_notification_opportunities": "opportunity_id", "composite_notification_attempts": "attempt_id"}
+# (child table, child columns, parent table, parent columns)
+EXPECTED_FKS_10G = (
+    ("composite_notification_opportunities", ("notification_id",), "composite_notifications", ("notification_id",)),
+    ("composite_notification_opportunities", ("audit_event_id",), "composite_audit_events", ("event_id",)),
+    ("composite_notification_attempts", ("opportunity_id", "notification_id"), "composite_notification_opportunities", ("opportunity_id", "notification_id")),
+)
+RECOVERY_EVENT = {"event_id": "ae-2", "occurred_at": REMINDER_DUE + 900_000, "action": "notice_recovery", "resource_kind": "composite_notifications", "resource_id": "nt-1", "reason": "recipient unblocked the bot"}
+# Other windows for nt-1: no-1 is the initial one (ROWS_10G); no-3 is used for nt-3.
+AUTO_WINDOW = {"opportunity_id": "no-2", "reason": "processing_resumed", "event_at": REMINDER_DUE + 3_600_000, "detected_at": REMINDER_DUE + 3_610_000, "ends_at": REMINDER_DUE + 3_900_000}
+RETRY_WINDOW = {"opportunity_id": "no-4", "reason": "retry_due", "event_at": REMINDER_DUE + 6_500, "detected_at": REMINDER_DUE + 6_500, "ends_at": REMINDER_DUE + 306_500}
+REPLACED_WINDOW = {"opportunity_id": "no-5", "reason": "window_replaced", "event_at": REMINDER_DUE + 330_000, "detected_at": REMINDER_DUE + 330_000, "ends_at": REMINDER_DUE + 630_000}
+RECONCILE_WINDOW = {"opportunity_id": "no-6", "reason": "reconciliation", "event_at": REMINDER_DUE + 60_000, "detected_at": REMINDER_DUE + 60_000, "ends_at": REMINDER_DUE + 360_000}
+OWNER_WINDOW = {"opportunity_id": "no-9", "reason": "owner_recovery", "audit_event_id": "ae-2", "event_at": REMINDER_DUE + 900_000, "detected_at": REMINDER_DUE + 900_000, "ends_at": REMINDER_DUE + 1_200_000}
+DUPLICATE_RISK_WINDOW = {**OWNER_WINDOW, "reason": "owner_duplicate_risk"}
+# Calls: a finished automatic call's clocks, a lookup in RECONCILE_WINDOW, and the first manual call in OWNER_WINDOW.
+CALL_DONE = {"dispatched_at": REMINDER_DUE + 2_100, "finished_at": REMINDER_DUE + 2_600}
+LOOKUP = {"attempt_id": "na-6", "opportunity_id": "no-6", "attempt_number": 2, "call_kind": "lookup", "reserved_at": REMINDER_DUE + 61_000}
+MANUAL_SEND = {"attempt_id": "na-9", "opportunity_id": "no-9", "allowance": "manual", "attempt_number": 1, "reserved_at": REMINDER_DUE + 901_000}
+FIVE_USED = [{"attempts_used": n} for n in range(1, 6)]
+# nt-1's state before a test: the updates _notice_state applies to it, in order.
+NOTICE_STATES = {
+    "sending": [],
+    "blocked": [{"status": "waiting_eligibility", "block_reason": "owner_suspended"}],
+    "backoff": [{"attempts_used": 1}, {"next_attempt_at": REMINDER_DUE + 6_500}],
+    "window-expired": [WINDOW_EXPIRED],
+    "uncertain": [{"attempts_used": 1}, UNCERTAIN_SEND],
+    "five-used": FIVE_USED,
+    "five-used-uncertain": [*FIVE_USED, UNCERTAIN_SEND],
+    "exhausted": [*FIVE_USED, {"status": "exhausted", "stop_reason": "five attempts failed"}],
+    "permanent": [{"attempts_used": 1}, {"status": "permanent_failure", "stop_reason": "recipient blocked the bot"}],
+    "accepted": [{"attempts_used": 1}, ACCEPT],
+    "obsolete": [{"status": "obsolete", "stop_reason": "subscription cancelled"}],
+}
+
+
+def _put10g(conn, table, **changes):
+    row = {**ROWS_10G[table], **changes}
+    cols = tuple(row)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()))
+
+
+def _chain10g(conn, until=None):
+    assert until is None or until in ROWS_10G
+    _chain10f(conn)
+    if until == "composite_notification_opportunities":
+        return
+    _put10g(conn, "composite_notification_opportunities")
+    _set_notice(conn, {"attempts_used": 1})  # reserves attempt 1 for na-1
+    if until == "composite_notification_attempts":
+        return
+    _put10g(conn, "composite_notification_attempts")
+
+
+def _notice_state(conn, state):
+    _chain10f(conn)
+    _put10f(conn, "composite_audit_events", **RECOVERY_EVENT)
+    _put10f(conn, "composite_audit_events", **{**RECOVERY_EVENT, "event_id": "ae-4", "resource_id": "nt-3"})  # the owner's action on another notice
+    _put10f(conn, "composite_audit_events", **{**RECOVERY_EVENT, "event_id": "ae-5", "resource_kind": "composite_subscriptions"})  # an action on another kind of record
+    for changes in NOTICE_STATES[state]:
+        _set_notice(conn, changes)
+
+
+def _expect10g(conn, table, changes, expected):
+    if expected == "accepted":
+        _put10g(conn, table, **changes)
+    elif expected == "TRG":
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _put10g(conn, table, **changes)
+        assert "constraint failed" not in str(error.value)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=expected):
+            _put10g(conn, table, **changes)
+
+
+def _update10g(conn, table, row_id, changes, expected="accepted"):
+    cols = tuple(changes)
+    sql = f"UPDATE {table} SET {', '.join(f'{col} = ?' for col in cols)} WHERE {ID_COLUMNS_10G[table]} = ?"
+    _sql10(conn, sql, (*changes.values(), row_id), expected)
+
+
+def test_main_gets_the_delivery_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        tables = _tables(conn)
+        for table, row in ROWS_10G.items():
+            assert table in tables
+            assert set(row) <= set(_columns(conn, table))
+
+
+def test_delivery_foreign_keys(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in ROWS_10G:
+            groups = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                groups.setdefault(row[0], []).append(row)
+            for rows in groups.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                cols = tuple(row[4] for row in rows)
+                if any(col is None for col in cols):
+                    cols = tuple(row[1] for row in sorted((row for row in conn.execute(f"PRAGMA table_info({parent})") if row[5] > 0), key=lambda row: row[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS_10G) <= found
+
+
+def test_rows_in_every_delivery_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain10g(conn)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in ROWS_10G)
+        assert _one(conn, "SELECT attempts_used FROM composite_notifications WHERE notification_id = 'nt-1'")[0] == 1
+
+
+@pytest.mark.parametrize("case", ["window-notice", "owner-audit", "attempt-window", "attempt-notice", "attempt-window-notice-pair"], ids=["window-notice", "owner-audit", "attempt-window", "attempt-notice", "attempt-window-notice-pair"])
+def test_delivery_rows_need_their_parents(main_db, case):
+    if case == "window-notice":
+        _chain10g(main_db, until="composite_notification_opportunities")
+        _expect10g(main_db, "composite_notification_opportunities", {"notification_id": "nt-missing"}, FK)
+    elif case == "owner-audit":
+        _notice_state(main_db, "exhausted")
+        _expect10g(main_db, "composite_notification_opportunities", {**OWNER_WINDOW, "audit_event_id": "ae-missing"}, FK)
+    elif case == "attempt-window":
+        _chain10g(main_db, until="composite_notification_attempts")
+        _expect10g(main_db, "composite_notification_attempts", {"opportunity_id": "no-missing"}, FK)
+    elif case == "attempt-notice":
+        _chain10g(main_db, until="composite_notification_attempts")
+        _expect10g(main_db, "composite_notification_attempts", {"notification_id": "nt-missing"}, FK)
+    else:
+        _chain10g(main_db, until="composite_notification_attempts")
+        _put10f(main_db, "composite_notifications", notification_id="nt-3", **FULFILLMENT_NOTICE)
+        _put10g(main_db, "composite_notification_opportunities", opportunity_id="no-3", notification_id="nt-3", event_at=T0 + 300_000, detected_at=T0 + 300_000, ends_at=T0 + 600_000)
+        _expect10g(main_db, "composite_notification_attempts", {"opportunity_id": "no-3", "reserved_at": T0 + 301_000}, FK)
+
+
+_OPPORTUNITY_VALUES = [
+    ({}, "accepted"),
+    ({"detected_at": REMINDER_DUE + 400_000}, "accepted"),
+    ({"closed_at": REMINDER_DUE + 300_000, "close_reason": "expired"}, "accepted"),
+    ({"closed_at": REMINDER_DUE + 60_000, "close_reason": "blocked"}, "accepted"),
+    *[({"closed_at": REMINDER_DUE + 2_000, "close_reason": reason}, "accepted") for reason in ("accepted", "uncertain", "resolved", "stopped")],
+    ({**AUTO_WINDOW}, "accepted"),
+    ({**AUTO_WINDOW, "reason": "unblocked"}, "accepted"),
+    ({"reason": "retry"}, CHECK),
+    ({"ends_at": REMINDER_DUE + 299_999}, CHECK),
+    ({"ends_at": REMINDER_DUE + 300_001}, CHECK),
+    ({"detected_at": REMINDER_DUE - 1}, CHECK),
+    ({"closed_at": REMINDER_DUE + 2_000}, CHECK),
+    ({"close_reason": "expired"}, CHECK),
+    ({"closed_at": REMINDER_DUE + 2_000, "close_reason": "done"}, CHECK),
+    ({"closed_at": REMINDER_DUE + 299_999, "close_reason": "expired"}, CHECK),
+    ({"closed_at": REMINDER_DUE + 300_000, "close_reason": "blocked"}, CHECK),
+    ({"closed_at": REMINDER_DUE + 999, "close_reason": "blocked"}, CHECK),
+    ({"audit_event_id": "ae-2"}, CHECK),
+    ({**OWNER_WINDOW, "audit_event_id": None}, CHECK),
+    *[({column: None}, re.escape(f"NOT NULL constraint failed: composite_notification_opportunities.{column}")) for column in ("notification_id", "reason", "event_at", "detected_at", "ends_at")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _OPPORTUNITY_VALUES, ids=[_case_id(changes) for changes, _ in _OPPORTUNITY_VALUES])
+def test_opportunity_values(main_db, changes, expected):
+    state = "exhausted" if changes == {**OWNER_WINDOW, "audit_event_id": None} else "sending"
+    _notice_state(main_db, state)
+    _expect10g(main_db, "composite_notification_opportunities", changes, expected)
+
+
+_WINDOW_STATE_CASES = [
+    ("sending", {}, "accepted"),
+    ("sending", {"event_at": REMINDER_DUE + 1_000, "detected_at": REMINDER_DUE + 1_000, "ends_at": REMINDER_DUE + 301_000}, "TRG"),
+    ("sending", {**AUTO_WINDOW, "reason": "unblocked", "event_at": REMINDER_DUE - 1_000, "detected_at": REMINDER_DUE - 1_000, "ends_at": REMINDER_DUE + 299_000}, "TRG"),
+    ("sending", AUTO_WINDOW, "accepted"),
+    ("blocked", {**AUTO_WINDOW, "reason": "unblocked"}, "accepted"),
+    ("sending", RETRY_WINDOW, "TRG"),
+    ("backoff", RETRY_WINDOW, "accepted"),
+    ("backoff", {**RETRY_WINDOW, "event_at": REMINDER_DUE + 7_000, "detected_at": REMINDER_DUE + 7_000, "ends_at": REMINDER_DUE + 307_000}, "TRG"),
+    ("sending", REPLACED_WINDOW, "TRG"),
+    ("window-expired", REPLACED_WINDOW, "accepted"),
+    ("window-expired", {**REPLACED_WINDOW, "event_at": REMINDER_DUE + 331_000, "detected_at": REMINDER_DUE + 331_000, "ends_at": REMINDER_DUE + 631_000}, "TRG"),
+    ("window-expired", AUTO_WINDOW, "accepted"),
+    ("sending", RECONCILE_WINDOW, "TRG"),
+    ("uncertain", RECONCILE_WINDOW, "accepted"),
+    ("uncertain", AUTO_WINDOW, "TRG"),
+    ("uncertain", {}, "TRG"),
+    ("five-used", AUTO_WINDOW, "TRG"),
+    ("five-used-uncertain", RECONCILE_WINDOW, "TRG"),
+    ("exhausted", AUTO_WINDOW, "TRG"),
+    ("permanent", AUTO_WINDOW, "TRG"),
+    ("accepted", AUTO_WINDOW, "TRG"),
+    ("obsolete", AUTO_WINDOW, "TRG"),
+    ("exhausted", OWNER_WINDOW, "accepted"),
+    ("permanent", OWNER_WINDOW, "accepted"),
+    ("sending", OWNER_WINDOW, "TRG"),
+    ("uncertain", OWNER_WINDOW, "TRG"),
+    ("accepted", OWNER_WINDOW, "TRG"),
+    ("obsolete", OWNER_WINDOW, "TRG"),
+    ("exhausted", {**OWNER_WINDOW, "audit_event_id": "ae-1"}, "TRG"),
+    ("exhausted", {**OWNER_WINDOW, "audit_event_id": "ae-4"}, "TRG"),
+    ("exhausted", {**OWNER_WINDOW, "audit_event_id": "ae-5"}, "TRG"),
+    ("uncertain", DUPLICATE_RISK_WINDOW, "accepted"),
+    ("five-used-uncertain", DUPLICATE_RISK_WINDOW, "accepted"),
+    ("exhausted", DUPLICATE_RISK_WINDOW, "TRG"),
+    ("sending", DUPLICATE_RISK_WINDOW, "TRG"),
+]
+
+
+@pytest.mark.parametrize("state,changes,expected", _WINDOW_STATE_CASES, ids=[f"{state}-{changes.get('reason', 'original_due')}-{index}" for index, (state, changes, _) in enumerate(_WINDOW_STATE_CASES)])
+def test_window_opens_only_for_its_notice_state(main_db, state, changes, expected):
+    _notice_state(main_db, state)
+    _expect10g(main_db, "composite_notification_opportunities", changes, expected)
+
+
+def test_one_open_window_and_one_initial_window_per_notice(main_db):
+    _notice_state(main_db, "sending")
+    _expect10g(main_db, "composite_notification_opportunities", {}, "accepted")
+    _expect10g(main_db, "composite_notification_opportunities", AUTO_WINDOW, _uq10(("composite_notification_opportunities", "notification_id")))
+    _update10g(main_db, "composite_notification_opportunities", "no-1", {"closed_at": REMINDER_DUE + 300_000, "close_reason": "expired"})
+    _expect10g(main_db, "composite_notification_opportunities", AUTO_WINDOW, "accepted")
+    _expect10g(main_db, "composite_notification_opportunities", {"opportunity_id": "no-3", "closed_at": REMINDER_DUE + 300_000, "close_reason": "expired"}, _uq10(("composite_notification_opportunities", "notification_id")))
+    _put10f(main_db, "composite_notifications", notification_id="nt-3", **FULFILLMENT_NOTICE)
+    _expect10g(main_db, "composite_notification_opportunities", {"opportunity_id": "no-3", "notification_id": "nt-3", "event_at": T0 + 300_000, "detected_at": T0 + 300_000, "ends_at": T0 + 600_000}, "accepted")
+    assert _one(main_db, "SELECT count(*) FROM composite_notification_opportunities WHERE notification_id = 'nt-1'")[0] == 2
+    assert main_db.execute("SELECT opportunity_id FROM composite_notification_opportunities WHERE notification_id = 'nt-1' AND closed_at IS NULL").fetchall() == [("no-2",)]
+
+
+_WINDOW_UPDATE_COLUMNS = [("opportunity_id", "no-9"), ("notification_id", "nt-2"), ("reason", "unblocked"), ("audit_event_id", "ae-1"), ("event_at", REMINDER_DUE + 1_000), ("detected_at", REMINDER_DUE + 2_000), ("ends_at", REMINDER_DUE + 301_000)]
+
+
+@pytest.mark.parametrize("column,value", _WINDOW_UPDATE_COLUMNS, ids=[column for column, _ in _WINDOW_UPDATE_COLUMNS])
+def test_closed_window_is_final_and_kept_columns(main_db, column, value):
+    _chain10g(main_db, until="composite_notification_attempts")
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute(f"UPDATE composite_notification_opportunities SET {column} = ? WHERE opportunity_id = 'no-1'", (value,))
+    assert "constraint failed" not in str(error.value)
+
+
+def test_closed_window_is_final_and_kept(main_db):
+    _chain10g(main_db, until="composite_notification_attempts")
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute("DELETE FROM composite_notification_opportunities WHERE opportunity_id = 'no-1'")
+    assert "constraint failed" not in str(error.value)
+    _update10g(main_db, "composite_notification_opportunities", "no-1", {"closed_at": REMINDER_DUE + 300_000, "close_reason": "expired"})
+    for changes in ({"closed_at": REMINDER_DUE + 310_000}, {"close_reason": "blocked"}, {"closed_at": None, "close_reason": None}):
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _update10g(main_db, "composite_notification_opportunities", "no-1", changes)
+        assert "constraint failed" not in str(error.value)
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute("DELETE FROM composite_notification_opportunities WHERE opportunity_id = 'no-1'")
+    assert "constraint failed" not in str(error.value)
+
+
+_ATTEMPT_VALUES = [
+    ({}, "accepted"),
+    ({"dispatched_at": REMINDER_DUE + 2_100}, "accepted"),
+    ({"finished_at": REMINDER_DUE + 2_050, "outcome": "no_send"}, "accepted"),
+    ({**CALL_DONE, "outcome": "no_send"}, "accepted"),
+    ({**CALL_DONE, "outcome": "accepted", "evidence_ref": "tg-msg-1"}, "accepted"),
+    ({**CALL_DONE, "outcome": "rejected"}, "accepted"),
+    ({**CALL_DONE, "outcome": "uncertain"}, "accepted"),
+    ({"finished_at": REMINDER_DUE + 2_050, "outcome": "uncertain"}, "accepted"),
+    ({"allowance": "auto"}, CHECK),
+    ({"call_kind": "resend"}, CHECK),
+    ({**CALL_DONE, "outcome": "lost"}, CHECK),
+    ({"finished_at": REMINDER_DUE + 2_600}, CHECK),
+    ({"outcome": "no_send"}, CHECK),
+    ({"dispatched_at": REMINDER_DUE + 1_999}, CHECK),
+    ({"dispatched_at": REMINDER_DUE + 2_100, "finished_at": REMINDER_DUE + 2_099, "outcome": "uncertain"}, CHECK),
+    ({"finished_at": REMINDER_DUE + 1_999, "outcome": "no_send"}, CHECK),
+    ({"finished_at": REMINDER_DUE + 2_600, "outcome": "accepted", "evidence_ref": "tg-msg-1"}, CHECK),
+    ({"finished_at": REMINDER_DUE + 2_600, "outcome": "rejected"}, CHECK),
+    ({**CALL_DONE, "outcome": "accepted"}, CHECK),
+    ({**CALL_DONE, "outcome": "uncertain", "evidence_ref": "tg-msg-1"}, CHECK),
+    ({"evidence_ref": "tg-msg-1"}, CHECK),
+    ({**CALL_DONE, "outcome": "not_accepted", "evidence_ref": "lookup:no-message-1"}, CHECK),
+    *[({column: None}, re.escape(f"NOT NULL constraint failed: composite_notification_attempts.{column}")) for column in ("notification_id", "opportunity_id", "allowance", "attempt_number", "call_kind", "reserved_at")],
+    ({"attempt_number": 2}, "TRG"),
+    ({"attempt_number": 0}, "TRG"),
+    ({"reserved_at": REMINDER_DUE + 999}, "TRG"),
+    ({"reserved_at": REMINDER_DUE + 300_000}, "TRG"),
+    ({"allowance": "manual"}, "TRG"),
+    ({"call_kind": "lookup"}, "TRG"),
+]
+
+
+@pytest.mark.parametrize("changes,expected", _ATTEMPT_VALUES, ids=[_case_id(changes) for changes, _ in _ATTEMPT_VALUES])
+def test_notification_attempt_values(main_db, changes, expected):
+    _chain10g(main_db, until="composite_notification_attempts")
+    _expect10g(main_db, "composite_notification_attempts", changes, expected)
+
+
+def test_automatic_attempts_follow_the_notice(main_db):
+    _chain10g(main_db, until="composite_notification_attempts")
+    _set_notice(main_db, {"status": "waiting_transport", "block_reason": "telegram unreachable"})
+    _expect10g(main_db, "composite_notification_attempts", {}, "TRG")
+    _set_notice(main_db, {"status": "sending", "block_reason": None})
+    _expect10g(main_db, "composite_notification_attempts", {}, "accepted")
+    _set_notice(main_db, {"attempts_used": 2})
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-2", "attempt_number": 2, "reserved_at": REMINDER_DUE + 3_000}, _uq10(("composite_notification_attempts", "notification_id")))
+    _update10g(main_db, "composite_notification_attempts", "na-1", {"dispatched_at": REMINDER_DUE + 2_100, "finished_at": REMINDER_DUE + 2_600, "outcome": "no_send"})
+    _set_notice(main_db, {"next_attempt_at": REMINDER_DUE + 7_600})
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-2", "attempt_number": 2, "reserved_at": REMINDER_DUE + 7_599}, "TRG")
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-2", "attempt_number": 2, "reserved_at": REMINDER_DUE + 7_600}, "accepted")
+    _update10g(main_db, "composite_notification_attempts", "na-2", {"dispatched_at": REMINDER_DUE + 7_700, "finished_at": REMINDER_DUE + 8_000, "outcome": "no_send"})
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-3", "attempt_number": 2, "reserved_at": REMINDER_DUE + 25_000}, _uq10(("composite_notification_attempts", "notification_id"), ("composite_notification_attempts", "attempt_number")))
+    _set_notice(main_db, {"attempts_used": 3})
+    _update10g(main_db, "composite_notification_opportunities", "no-1", {"closed_at": REMINDER_DUE + 9_000, "close_reason": "blocked"})
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-3", "attempt_number": 3, "reserved_at": REMINDER_DUE + 25_000}, "TRG")
+    _put10g(main_db, "composite_notification_opportunities", opportunity_id="no-2", reason="unblocked", event_at=REMINDER_DUE + 20_000, detected_at=REMINDER_DUE + 20_000, ends_at=REMINDER_DUE + 320_000)
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-3", "opportunity_id": "no-2", "attempt_number": 3, "reserved_at": REMINDER_DUE + 25_000}, "accepted")
+    assert main_db.execute("SELECT attempt_number FROM composite_notification_attempts WHERE notification_id = 'nt-1' ORDER BY attempt_number").fetchall() == [(1,), (2,), (3,)]
+    _put10f(main_db, "composite_notifications", notification_id="nt-3", **FULFILLMENT_NOTICE)
+    _put10g(main_db, "composite_notification_opportunities", opportunity_id="no-3", notification_id="nt-3", event_at=T0 + 300_000, detected_at=T0 + 300_000, ends_at=T0 + 600_000)
+    _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-30", "notification_id": "nt-3", "opportunity_id": "no-3", "attempt_number": 0, "reserved_at": T0 + 301_000}, CHECK)
+
+
+def _manual_owner_recovery_case(main_db):
+    _notice_state(main_db, "exhausted")
+    _expect10g(main_db, "composite_notification_opportunities", OWNER_WINDOW, "accepted")
+    _expect10g(main_db, "composite_notification_attempts", MANUAL_SEND, "TRG")
+    _expect_set(main_db, {"status": "sending", "stop_reason": None}, "accepted")
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_number": 2}, "TRG")
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "allowance": "automatic", "attempt_number": 5}, "TRG")
+    _expect10g(main_db, "composite_notification_attempts", MANUAL_SEND, "accepted")
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_id": "na-10", "attempt_number": 2, "reserved_at": REMINDER_DUE + 940_000}, "TRG")
+    _update10g(main_db, "composite_notification_attempts", "na-9", {"dispatched_at": REMINDER_DUE + 901_100, "finished_at": REMINDER_DUE + 902_000, "outcome": "no_send"})
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_id": "na-10", "reserved_at": REMINDER_DUE + 932_000}, "TRG")
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_id": "na-10", "attempt_number": 2, "reserved_at": REMINDER_DUE + 931_999}, "TRG")
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_id": "na-10", "attempt_number": 2, "reserved_at": REMINDER_DUE + 932_000}, "accepted")
+    _update10g(main_db, "composite_notification_attempts", "na-10", {"dispatched_at": REMINDER_DUE + 932_100, "finished_at": REMINDER_DUE + 933_000, "outcome": "no_send"})
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_id": "na-11", "attempt_number": 3, "reserved_at": REMINDER_DUE + 970_000}, CHECK)
+    _expect_set(main_db, {"status": "exhausted", "stop_reason": "manual calls failed"}, "accepted")
+    _update10g(main_db, "composite_notification_opportunities", "no-9", {"closed_at": REMINDER_DUE + 975_000, "close_reason": "stopped"})
+    next_window = {**OWNER_WINDOW, "opportunity_id": "no-10", "event_at": REMINDER_DUE + 1_000_000, "detected_at": REMINDER_DUE + 1_000_000, "ends_at": REMINDER_DUE + 1_300_000}
+    _expect10g(main_db, "composite_notification_opportunities", next_window, _uq10(("composite_notification_opportunities", "audit_event_id")))
+    _put10f(main_db, "composite_audit_events", **{**RECOVERY_EVENT, "event_id": "ae-3", "occurred_at": REMINDER_DUE + 1_000_000})
+    _expect10g(main_db, "composite_notification_opportunities", {**next_window, "audit_event_id": "ae-3"}, "accepted")
+    assert _one(main_db, "SELECT count(*) FROM composite_notification_attempts WHERE allowance = 'manual'")[0] == 2
+    assert _one(main_db, "SELECT attempts_used FROM composite_notifications WHERE notification_id = 'nt-1'")[0] == 5
+
+
+def _manual_known_failure_case(main_db):
+    _chain10g(main_db)
+    _put10f(main_db, "composite_audit_events", **RECOVERY_EVENT)
+    _update10g(main_db, "composite_notification_attempts", "na-1", {**CALL_DONE, "outcome": "rejected"})
+    _expect_set(main_db, {"status": "permanent_failure", "stop_reason": "recipient blocked the bot"}, "accepted")
+    _update10g(main_db, "composite_notification_opportunities", "no-1", {"closed_at": REMINDER_DUE + 2_600, "close_reason": "stopped"})
+    _expect10g(main_db, "composite_notification_opportunities", OWNER_WINDOW, "accepted")
+    _expect_set(main_db, {"status": "sending", "stop_reason": None}, "accepted")
+    _expect10g(main_db, "composite_notification_attempts", MANUAL_SEND, "accepted")
+    _update10g(main_db, "composite_notification_attempts", "na-9", {"dispatched_at": REMINDER_DUE + 901_100, "finished_at": REMINDER_DUE + 902_000, "outcome": "uncertain"})
+    _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "attempt_id": "na-10", "attempt_number": 2, "reserved_at": REMINDER_DUE + 932_000}, "TRG")
+
+
+@pytest.mark.parametrize("case", ["owner-recovery", "known-permanent-failure"], ids=["owner-recovery-two-calls", "known-permanent-failure-uncertain-retry"])
+def test_manual_window_allows_two_calls_30_seconds_apart(main_db, case):
+    if case == "owner-recovery":
+        _manual_owner_recovery_case(main_db)
+    else:
+        _manual_known_failure_case(main_db)
+
+
+@pytest.mark.parametrize("case", ["lookup", "acknowledged-send"], ids=["lookup-proves-nonacceptance", "owner-acknowledges-duplicate-risk"])
+def test_uncertain_send_is_resolved_by_lookup_or_acknowledged_send(main_db, case):
+    _notice_state(main_db, "uncertain")
+    if case == "lookup":
+        _expect10g(main_db, "composite_notification_opportunities", RECONCILE_WINDOW, "accepted")
+        _set_notice(main_db, {"attempts_used": 2})
+        _expect10g(main_db, "composite_notification_attempts", {**LOOKUP, "call_kind": "send"}, "TRG")
+        _expect10g(main_db, "composite_notification_attempts", LOOKUP, "accepted")
+        _update10g(main_db, "composite_notification_attempts", "na-6", {"dispatched_at": REMINDER_DUE + 61_100, "finished_at": REMINDER_DUE + 62_000, "outcome": "rejected"}, CHECK)
+        _update10g(main_db, "composite_notification_attempts", "na-6", {"dispatched_at": REMINDER_DUE + 61_100, "finished_at": REMINDER_DUE + 62_000, "outcome": "not_accepted", "evidence_ref": "lookup:no-message-1"})
+        _expect_set(main_db, {"status": "sending", "uncertain_since": None, "nonacceptance_ref": "lookup:no-message-1"}, "accepted")
+        _update10g(main_db, "composite_notification_opportunities", "no-6", {"closed_at": REMINDER_DUE + 62_000, "close_reason": "resolved"})
+        _expect10g(main_db, "composite_notification_opportunities", {**AUTO_WINDOW, "opportunity_id": "no-7", "reason": "unblocked", "event_at": REMINDER_DUE + 62_000, "detected_at": REMINDER_DUE + 62_000, "ends_at": REMINDER_DUE + 362_000}, "accepted")
+        _set_notice(main_db, {"attempts_used": 3})
+        _expect10g(main_db, "composite_notification_attempts", {"attempt_id": "na-7", "opportunity_id": "no-7", "attempt_number": 3, "reserved_at": REMINDER_DUE + 63_000}, "accepted")
+    else:
+        _expect10g(main_db, "composite_notification_opportunities", DUPLICATE_RISK_WINDOW, "accepted")
+        _expect10g(main_db, "composite_notification_attempts", {**MANUAL_SEND, "call_kind": "lookup"}, "TRG")
+        _expect10g(main_db, "composite_notification_attempts", MANUAL_SEND, "accepted")
+        _update10g(main_db, "composite_notification_attempts", "na-9", {"dispatched_at": REMINDER_DUE + 901_100, "finished_at": REMINDER_DUE + 902_000, "outcome": "accepted", "evidence_ref": "tg-msg-1"})
+        _expect_set(main_db, {"original_missed_at": REMINDER_DUE + 300_000}, "accepted")
+        _expect_set(main_db, {**ACCEPT, "accepted_at": REMINDER_DUE + 902_000, "uncertain_since": None}, "accepted")
+        _update10g(main_db, "composite_notification_opportunities", "no-9", {"closed_at": REMINDER_DUE + 902_000, "close_reason": "accepted"})
+
+
+_ATTEMPT_IDENTITY_COLUMNS = [("attempt_id", "na-9"), ("notification_id", "nt-2"), ("opportunity_id", "no-2"), ("allowance", "manual"), ("attempt_number", 2), ("call_kind", "lookup"), ("reserved_at", REMINDER_DUE + 2_001)]
+
+
+@pytest.mark.parametrize("column,value", _ATTEMPT_IDENTITY_COLUMNS, ids=[column for column, _ in _ATTEMPT_IDENTITY_COLUMNS])
+def test_finished_attempt_is_final_and_kept_columns(main_db, column, value):
+    _chain10g(main_db)
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute(f"UPDATE composite_notification_attempts SET {column} = ? WHERE attempt_id = 'na-1'", (value,))
+    assert "constraint failed" not in str(error.value)
+
+
+def test_finished_attempt_is_final_and_kept(main_db):
+    _chain10g(main_db)
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute("DELETE FROM composite_notification_attempts WHERE attempt_id = 'na-1'")
+    assert "constraint failed" not in str(error.value)
+    _update10g(main_db, "composite_notification_attempts", "na-1", {"dispatched_at": REMINDER_DUE + 2_100})
+    for changes in ({"dispatched_at": REMINDER_DUE + 2_200}, {"dispatched_at": None}):
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _update10g(main_db, "composite_notification_attempts", "na-1", changes)
+        assert "constraint failed" not in str(error.value)
+    _update10g(main_db, "composite_notification_attempts", "na-1", {"finished_at": REMINDER_DUE + 2_600, "outcome": "uncertain"})
+    for changes in ({"outcome": "no_send"}, {"finished_at": REMINDER_DUE + 2_700}, {"evidence_ref": "tg-msg-1"}):
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _update10g(main_db, "composite_notification_attempts", "na-1", changes)
+        assert "constraint failed" not in str(error.value)
+    with pytest.raises(sqlite3.IntegrityError) as error:
+        main_db.execute("DELETE FROM composite_notification_attempts WHERE attempt_id = 'na-1'")
+    assert "constraint failed" not in str(error.value)
