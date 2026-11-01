@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests (the last section) check the data-model §10 lifecycle-work, drift and discrepancy tables and fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables and T034f1's (the last section) its batch tables; both fail until T040 adds them.
 """
 
 from collections import Counter
@@ -3036,3 +3036,392 @@ def test_divergence_deletion_requires_resolved_repair_and_exposure(main_db):
     _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-n'")
     _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-m'", (), "TRG")
     _sql10(main_db, "DELETE FROM composite_divergences WHERE divergence_id = 'dv-f'", (), "TRG")
+
+
+# Data-model §10 batches (T034f1: checks for T040 part b)
+
+# One valid row per table, in parent-before-child order: a same-inbound move of sub-1, previewed and not yet authorized.
+ROWS_10B = {
+    "composite_batches": {"batch_id": "bt-1", "action": "move", "preview_digest": _digest(101), "actor": "web:owner-1", "reason": "new address on inbound 1", "emergency": 0, "emergency_acceptance_ref": None, "amount": None, "member_count": 1, "total_amount": None, "previewed_at": T0 + 100_000, "authorized_at": None},
+    "composite_batch_members": {"member_id": "bm-1", "batch_id": "bt-1", "action": "move", "subscription_id": "sub-1", "customer_telegram_id": 50001, "subscription_context": None, "amount": None, "obligation_kind": None, "operation_id": None, "obligation_id": None, "result": "pending", "finished_at": None, "failure_reason": None},
+    "composite_batch_member_nodes": {"member_id": "bm-1", "member_action": "move", "subscription_id": "sub-1", "logical_node_key": "node-a1", "target_binding_id": "pb-a1", "target_descriptor": DESCRIPTOR_A1_NEW, "owner_pick": None, "read_at": T0 + 99_000},
+}
+# (child table, child columns, parent table, parent columns)
+EXPECTED_FKS_10B = (
+    ("composite_batch_members", ("batch_id", "action"), "composite_batches", ("batch_id", "action")),
+    ("composite_batch_members", ("batch_id", "amount"), "composite_batches", ("batch_id", "amount")),
+    ("composite_batch_members", ("subscription_id", "customer_telegram_id"), "composite_subscriptions", ("subscription_id", "customer_telegram_id")),
+    ("composite_batch_members", ("operation_id", "subscription_id", "action"), "composite_operations", ("operation_id", "subscription_id", "kind")),
+    ("composite_batch_members", ("obligation_id", "customer_telegram_id", "obligation_kind", "amount"), "financial_obligations", ("obligation_id", "beneficiary_telegram_id", "kind", "amount")),
+    ("composite_batch_member_nodes", ("member_id", "member_action", "subscription_id"), "composite_batch_members", ("member_id", "action", "subscription_id")),
+    ("composite_batch_member_nodes", ("subscription_id", "logical_node_key"), "composite_subscription_nodes", ("subscription_id", "logical_node_key")),
+    ("composite_batch_member_nodes", ("target_binding_id",), "composite_prepared_bindings", ("binding_id",)),
+)
+COMPENSATION = {"action": "compensation", "amount": 50, "member_count": 10, "total_amount": 500}  # 10 customers x 50 = 500
+CREDIT_MEMBER = {"action": "compensation", "subscription_id": None, "amount": 50, "obligation_kind": "support_compensation"}
+AUTHORIZE = "UPDATE composite_batches SET authorized_at = ? WHERE batch_id = ?"
+LINK = "UPDATE composite_batch_members SET operation_id = ? WHERE member_id = ?"
+LINK_CREDIT = "UPDATE composite_batch_members SET obligation_id = ? WHERE member_id = ?"
+RESULT = "UPDATE composite_batch_members SET result = ?, finished_at = ?, failure_reason = ? WHERE member_id = ?"
+
+
+def _put10b(conn, table, **changes):
+    row = {**ROWS_10B[table], **changes}
+    cols = tuple(row)
+    conn.execute(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()))
+
+
+def _chain10b(conn, until=None):
+    assert until is None or until in ROWS_10B
+    _chain10(conn, until="composite_remote_work")
+    for table in ROWS_10B:
+        if table == until:
+            break
+        _put10b(conn, table)
+
+
+def _sub3(conn):
+    _insert(conn, "composite_subscriptions", subscription_id="sub-3", customer_telegram_id=50002)
+
+
+def _op(conn, operation_id, kind, subscription_id="sub-1"):
+    _put10(conn, "composite_operations", operation_id=operation_id, business_key=f"{kind}:{operation_id}", kind=kind, subscription_id=subscription_id, **ON_SUB)
+
+
+def _credit(conn, obligation_id, customer, amount=50, kind="support_compensation"):
+    _put89(conn, "financial_obligations", obligation_id=obligation_id, effect_key=f"support:{obligation_id}", beneficiary_telegram_id=customer, kind=kind, amount=amount, checkout_id=None)
+
+
+def _expect10b(conn, table, changes, expected):
+    if expected == "accepted":
+        _put10b(conn, table, **changes)
+    elif expected == "TRG":
+        with pytest.raises(sqlite3.IntegrityError) as error:
+            _put10b(conn, table, **changes)
+        assert "constraint failed" not in str(error.value)
+    else:
+        with pytest.raises(sqlite3.IntegrityError, match=expected):
+            _put10b(conn, table, **changes)
+
+
+def test_main_gets_the_batch_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        tables = _tables(conn)
+        for table, row in ROWS_10B.items():
+            assert table in tables
+            assert set(row) <= set(_columns(conn, table))
+
+
+def test_batch_foreign_keys_are_restrict(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        found = set()
+        for table in ROWS_10B:
+            groups = {}
+            for row in conn.execute(f"PRAGMA foreign_key_list({table})"):
+                groups.setdefault(row[0], []).append(row)
+            for rows in groups.values():
+                rows.sort(key=lambda row: row[1])
+                parent = rows[0][2]
+                cols = tuple(row[4] for row in rows)
+                if any(col is None for col in cols):
+                    cols = tuple(row[1] for row in sorted((row for row in conn.execute(f"PRAGMA table_info({parent})") if row[5] > 0), key=lambda row: row[5]))
+                found.add((table, tuple(row[3] for row in rows), parent, cols))
+                assert all(row[6] == "RESTRICT" for row in rows)
+        assert set(EXPECTED_FKS_10B) <= found
+
+
+def test_rows_in_every_batch_table_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _chain10b(conn)
+        conn.execute(AUTHORIZE, (T0 + 160_000, "bt-1"))
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert all(_one(conn, f"SELECT count(*) FROM {table}")[0] == 1 for table in ROWS_10B)
+        assert _one(conn, "SELECT authorized_at FROM composite_batches WHERE batch_id = 'bt-1'")[0] == T0 + 160_000
+
+
+@pytest.mark.parametrize("case", ["batch", "member", "binding"], ids=["batch-used-by-member", "member-used-by-node", "binding-used-by-node"])
+def test_batch_parents_cannot_be_deleted(main_db, case):
+    if case == "batch":
+        _chain10b(main_db, until="composite_batch_member_nodes")
+        sql, parent, where = "DELETE FROM composite_batches WHERE batch_id = 'bt-1'", "composite_batches", "batch_id = 'bt-1'"
+    elif case == "member":
+        _chain10b(main_db)
+        sql, parent, where = "DELETE FROM composite_batch_members WHERE member_id = 'bm-1'", "composite_batch_members", "member_id = 'bm-1'"
+    else:
+        _chain10b(main_db, until="composite_batch_member_nodes")
+        _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
+        _put10b(main_db, "composite_batch_member_nodes", target_binding_id="pb-a2", target_descriptor=DESCRIPTOR_A1)
+        sql, parent, where = "DELETE FROM composite_prepared_bindings WHERE binding_id = 'pb-a2'", "composite_prepared_bindings", "binding_id = 'pb-a2'"
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        main_db.execute(sql)
+    key = where.split(" = ")[0]
+    assert _one(main_db, f"SELECT {key} FROM {parent} WHERE {where}")[0] is not None
+
+
+@pytest.mark.parametrize("table,setup,changes", [
+    ("composite_batch_members", "member", {"batch_id": "bt-missing"}),
+    ("composite_batch_members", "credit", {"member_id": "bm-c1", "batch_id": "bt-c", **CREDIT_MEMBER, "amount": 40}),
+    ("composite_batch_members", "member", {"subscription_id": "sub-missing"}),
+    ("composite_batch_members", "member", {"customer_telegram_id": 50002}),
+    ("composite_batch_member_nodes", "node", {"member_id": "bm-missing"}),
+    ("composite_batch_member_nodes", "subnode", {"subscription_id": "sub-2"}),
+    ("composite_batch_member_nodes", "node", {"logical_node_key": "node-x"}),
+    ("composite_batch_member_nodes", "node", {"target_binding_id": "pb-missing"}),
+], ids=["member-batch", "member-batch-amount", "member-subscription", "member-customer", "node-member", "node-subscription", "node-logical-key", "node-binding"])
+def test_batch_child_row_needs_its_parent(main_db, table, setup, changes):
+    if setup in ("member", "credit"):
+        _chain10b(main_db, until="composite_batch_members")
+    else:
+        _chain10b(main_db, until="composite_batch_member_nodes")
+    if setup == "credit":
+        _put10b(main_db, "composite_batches", batch_id="bt-c", preview_digest=_digest(102), **COMPENSATION)
+    elif setup == "subnode":
+        _sub2(main_db)
+        _insert(main_db, "composite_subscription_nodes", subscription_id="sub-2")
+    with pytest.raises(sqlite3.IntegrityError, match=FK):
+        _put10b(main_db, table, **changes)
+
+
+_BATCH_VALUES = [
+    ({"action": "owner_suspend"}, "accepted"), ({"action": "owner_resume"}, "accepted"), ({"action": "cancellation"}, "accepted"),
+    (COMPENSATION, "accepted"), ({"emergency": 1, "emergency_acceptance_ref": "unmeasured old usage accepted"}, "accepted"), ({"member_count": 151}, "accepted"),
+    ({"action": "delete"}, CHECK), ({"action": "customer_disable"}, CHECK), ({"preview_digest": _digest(101)[:31]}, CHECK),
+    ({"preview_digest": _digest(101).hex()}, CHECK), ({"preview_digest": "x" * 32}, CHECK), ({"reason": ""}, CHECK),
+    ({"emergency": 2}, CHECK), ({"emergency": 1}, CHECK), ({"emergency_acceptance_ref": "x"}, CHECK),
+    ({"action": "owner_suspend", "emergency": 1, "emergency_acceptance_ref": "x"}, CHECK), ({"amount": 50}, CHECK),
+    ({**COMPENSATION, "amount": None}, CHECK), ({**COMPENSATION, "amount": 0, "total_amount": 0}, CHECK),
+    ({**COMPENSATION, "amount": -50, "total_amount": -500}, CHECK), ({**COMPENSATION, "amount": 50.5, "total_amount": 505}, CHECK),
+    ({**COMPENSATION, "total_amount": 499}, CHECK), ({**COMPENSATION, "total_amount": None}, CHECK), ({"total_amount": 500}, CHECK),
+    ({"member_count": 0}, CHECK), ({"member_count": 1.5}, CHECK), ({"authorized_at": T0 + 100_000}, "TRG"),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_batches.{col}")) for col in ("action", "preview_digest", "actor", "reason", "emergency", "member_count", "previewed_at")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _BATCH_VALUES, ids=[_case_id(changes) for changes, _ in _BATCH_VALUES])
+def test_batch_column_values(main_db, changes, expected):
+    _chain10b(main_db, until="composite_batches")
+    _expect10b(main_db, "composite_batches", changes, expected)
+
+
+@pytest.mark.parametrize("case", ["duplicate", "distinct", "fixed", "authorization"], ids=["duplicate-digest", "distinct-digest", "preview-fields-fixed", "authorization-once"])
+def test_batch_preview_is_unique_and_never_changes(main_db, case):
+    if case == "duplicate":
+        _chain10b(main_db, until="composite_batch_members")
+        with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_batches", "preview_digest"))):
+            _put10b(main_db, "composite_batches", batch_id="bt-2")
+    elif case == "distinct":
+        _chain10b(main_db, until="composite_batch_members")
+        _put10b(main_db, "composite_batches", batch_id="bt-3", preview_digest=_digest(102))
+    elif case == "fixed":
+        _chain10b(main_db, until="composite_batch_members")
+        for col, value in [("action", "owner_suspend"), ("preview_digest", _digest(102)), ("actor", "web:owner-2"), ("reason", "other reason"), ("emergency", 1), ("emergency_acceptance_ref", "x"), ("amount", 50), ("member_count", 2), ("total_amount", 500), ("previewed_at", T0 + 100_001), ("batch_id", "bt-9")]:
+            _sql10(main_db, f"UPDATE composite_batches SET {col} = ? WHERE batch_id = 'bt-1'", (value,), "TRG")
+    else:
+        _chain10b(main_db)
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"))
+        _sql10(main_db, AUTHORIZE, (T0 + 170_000, "bt-1"), "TRG")
+        _sql10(main_db, "UPDATE composite_batches SET authorized_at = NULL WHERE batch_id = 'bt-1'", (), "TRG")
+        _sql10(main_db, "DELETE FROM composite_batches WHERE batch_id = 'bt-1'", (), "TRG")
+
+
+@pytest.mark.parametrize("case", ["move", "suspend", "compensation"], ids=["move-needs-exact-members-and-map", "suspend-exact-members", "compensation-does-not-need-map"])
+def test_authorization_needs_the_exact_previewed_members(main_db, case):
+    if case == "move":
+        _chain10b(main_db, until="composite_batch_members")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"), "TRG")
+        _put10b(main_db, "composite_batch_members")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"), "TRG")
+        _put10b(main_db, "composite_batch_member_nodes")
+        _sql10(main_db, AUTHORIZE, (T0 + 99_999, "bt-1"), CHECK)
+        _sql10(main_db, AUTHORIZE, (T0 + 100_000, "bt-1"))
+    elif case == "suspend":
+        _chain10b(main_db, until="composite_batches")
+        _sub2(main_db)
+        _sub3(main_db)
+        _put10b(main_db, "composite_batches", batch_id="bt-s", action="owner_suspend", member_count=2, preview_digest=_digest(103))
+        _put10b(main_db, "composite_batch_members", member_id="bm-s1", batch_id="bt-s", action="owner_suspend")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-s"), "TRG")
+        _put10b(main_db, "composite_batch_members", member_id="bm-s2", batch_id="bt-s", action="owner_suspend", subscription_id="sub-2")
+        _put10b(main_db, "composite_batch_members", member_id="bm-s3", batch_id="bt-s", action="owner_suspend", subscription_id="sub-3", customer_telegram_id=50002)
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-s"), "TRG")
+        _sql10(main_db, "DELETE FROM composite_batch_members WHERE member_id = 'bm-s3'")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-s"))
+    else:
+        _chain10b(main_db, until="composite_batches")
+        _put10b(main_db, "composite_batches", batch_id="bt-c", **{**COMPENSATION, "member_count": 2, "total_amount": 100})
+        _put10b(main_db, "composite_batch_members", member_id="bm-c1", batch_id="bt-c", **CREDIT_MEMBER)
+        _put10b(main_db, "composite_batch_members", member_id="bm-c2", batch_id="bt-c", **CREDIT_MEMBER, customer_telegram_id=50002)
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-c"))
+
+
+@pytest.mark.parametrize("case", ["authorized", "preview"], ids=["locked-after-authorization", "discardable-preview"])
+def test_members_and_mapping_are_fixed_once_authorized(main_db, case):
+    _chain10b(main_db)
+    if case == "authorized":
+        _sub2(main_db)
+        _insert(main_db, "composite_subscription_nodes", logical_node_key="node-a2")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"))
+        _expect10b(main_db, "composite_batch_members", {"member_id": "bm-2", "subscription_id": "sub-2"}, "TRG")
+        _expect10b(main_db, "composite_batch_member_nodes", {"logical_node_key": "node-a2"}, "TRG")
+        _sql10(main_db, "UPDATE composite_batch_member_nodes SET target_descriptor = ? WHERE member_id = 'bm-1'", (DESCRIPTOR_A1,), "TRG")
+        _sql10(main_db, "DELETE FROM composite_batch_member_nodes WHERE member_id = 'bm-1'", (), "TRG")
+        _sql10(main_db, "DELETE FROM composite_batch_members WHERE member_id = 'bm-1'", (), "TRG")
+    else:
+        _insert(main_db, "composite_subscription_nodes", logical_node_key="node-a2")
+        _put10b(main_db, "composite_batch_member_nodes", logical_node_key="node-a2")
+        _sql10(main_db, "UPDATE composite_batch_member_nodes SET owner_pick = 'x' WHERE member_id = 'bm-1'", (), "TRG")
+        _sql10(main_db, "DELETE FROM composite_batch_member_nodes WHERE member_id = 'bm-1'")
+        _sql10(main_db, "DELETE FROM composite_batch_members WHERE member_id = 'bm-1'")
+        _sql10(main_db, "DELETE FROM composite_batches WHERE batch_id = 'bt-1'")
+        assert all(_one(main_db, f"SELECT count(*) FROM {table}")[0] == 0 for table in ROWS_10B)
+
+
+_MEMBER_VALUES = [
+    ({}, {}, "accepted"), ({"action": "owner_suspend"}, {"action": "owner_suspend"}, "accepted"),
+    ({"action": "owner_suspend"}, {"action": "owner_suspend", "subscription_id": "sub-3", "customer_telegram_id": 50002}, "accepted"),
+    (COMPENSATION, CREDIT_MEMBER, "accepted"), (COMPENSATION, {**CREDIT_MEMBER, "customer_telegram_id": 50002}, "accepted"),
+    (COMPENSATION, {**CREDIT_MEMBER, "subscription_context": '["sub-1"]'}, "accepted"),
+    ({}, {"subscription_id": None}, CHECK), (COMPENSATION, {**CREDIT_MEMBER, "subscription_id": "sub-1"}, CHECK),
+    (COMPENSATION, {**CREDIT_MEMBER, "amount": None}, CHECK), (COMPENSATION, {**CREDIT_MEMBER, "obligation_kind": None}, CHECK),
+    (COMPENSATION, {**CREDIT_MEMBER, "obligation_kind": "topup_credit"}, CHECK), ({}, {"amount": 50}, CHECK),
+    ({}, {"obligation_kind": "support_compensation"}, CHECK), ({}, {"subscription_context": '["sub-1"]'}, CHECK),
+    ({}, {"result": "done"}, CHECK), ({}, {"result": "succeeded", "finished_at": T0 + 200_000}, CHECK),
+    ({}, {"finished_at": T0 + 200_000}, CHECK), ({}, {"failure_reason": "x"}, CHECK),
+    ({}, {"action": "owner_suspend"}, FK), ({}, {"customer_telegram_id": 50002}, FK),
+    ({}, {"operation_id": "op-1"}, "TRG"), (COMPENSATION, {**CREDIT_MEMBER, "obligation_id": "fo-c1"}, "TRG"),
+    *[({}, {col: None}, re.escape(f"NOT NULL constraint failed: composite_batch_members.{col}")) for col in ("batch_id", "action", "customer_telegram_id", "result")],
+]
+
+
+@pytest.mark.parametrize("batch,changes,expected", _MEMBER_VALUES, ids=[_case_id({**batch, **changes}) for batch, changes, _ in _MEMBER_VALUES])
+def test_member_column_values(main_db, batch, changes, expected):
+    _chain10b(main_db, until="composite_batches")
+    _sub3(main_db)
+    _put10b(main_db, "composite_batches", **batch)
+    _expect10b(main_db, "composite_batch_members", changes, expected)
+
+
+def test_one_member_per_subscription_or_customer(main_db):
+    _chain10b(main_db)
+    _sub2(main_db)
+    _sub3(main_db)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_batch_member_nodes", "member_id"), ("composite_batch_member_nodes", "logical_node_key"))):
+        _put10b(main_db, "composite_batch_member_nodes", read_at=T0 + 99_500)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_batch_members", "batch_id"), ("composite_batch_members", "subscription_id"))):
+        _put10b(main_db, "composite_batch_members", member_id="bm-2")
+    _put10b(main_db, "composite_batch_members", member_id="bm-3", subscription_id="sub-2")
+    _put10b(main_db, "composite_batches", batch_id="bt-2", preview_digest=_digest(102))
+    _put10b(main_db, "composite_batch_members", member_id="bm-4", batch_id="bt-2")
+    _put10b(main_db, "composite_batches", batch_id="bt-c", preview_digest=_digest(103), **COMPENSATION)
+    _put10b(main_db, "composite_batch_members", member_id="bm-c1", batch_id="bt-c", **CREDIT_MEMBER)
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_batch_members", "batch_id"), ("composite_batch_members", "customer_telegram_id"))):
+        _put10b(main_db, "composite_batch_members", member_id="bm-c2", batch_id="bt-c", **CREDIT_MEMBER)
+    _put10b(main_db, "composite_batch_members", member_id="bm-c3", batch_id="bt-c", **CREDIT_MEMBER, customer_telegram_id=50002)
+
+
+@pytest.mark.parametrize("case", ["matching", "shared"], ids=["authorized-effect-matches", "pending-operation-can-be-shared"])
+def test_member_operation_matches_its_subscription_and_action(main_db, case):
+    if case == "matching":
+        _chain10b(main_db)
+        _sub2(main_db)
+        _op(main_db, "op-m", "move")
+        _op(main_db, "op-m2", "move", "sub-2")
+        _op(main_db, "op-s", "owner_suspend")
+        _op(main_db, "op-m3", "move")
+        _sql10(main_db, LINK, ("op-m", "bm-1"), "TRG")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"))
+        for operation in ("op-missing", "op-s", "op-m2", "op-1"):
+            _sql10(main_db, LINK, (operation, "bm-1"), FK)
+        _sql10(main_db, LINK, ("op-m", "bm-1"))
+        _sql10(main_db, LINK, ("op-m3", "bm-1"), "TRG")
+        _sql10(main_db, "UPDATE composite_batch_members SET operation_id = NULL WHERE member_id = 'bm-1'", (), "TRG")
+    else:
+        _chain10b(main_db, until="composite_batches")
+        _put10b(main_db, "composite_batches", batch_id="bt-x1", action="cancellation")
+        _put10b(main_db, "composite_batches", batch_id="bt-x2", action="cancellation", preview_digest=_digest(102))
+        _put10b(main_db, "composite_batch_members", member_id="bm-x1", batch_id="bt-x1", action="cancellation")
+        _put10b(main_db, "composite_batch_members", member_id="bm-x2", batch_id="bt-x2", action="cancellation")
+        _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-x1"))
+        _sql10(main_db, AUTHORIZE, (T0 + 170_000, "bt-x2"))
+        _op(main_db, "op-c", "cancellation")
+        _sql10(main_db, LINK, ("op-c", "bm-x1"))
+        _sql10(main_db, LINK, ("op-c", "bm-x2"))
+
+
+def test_compensation_member_links_one_equal_credit(main_db):
+    _chain10b(main_db, until="composite_batches")
+    _put10b(main_db, "composite_batches", batch_id="bt-c", **{**COMPENSATION, "member_count": 2, "total_amount": 100})
+    _put10b(main_db, "composite_batch_members", member_id="bm-c1", batch_id="bt-c", **CREDIT_MEMBER)
+    _put10b(main_db, "composite_batch_members", member_id="bm-c2", batch_id="bt-c", **CREDIT_MEMBER, customer_telegram_id=50002)
+    _credit(main_db, "fo-c1", 50001)
+    _credit(main_db, "fo-c2", 50002)
+    _credit(main_db, "fo-x", 50001, amount=60)
+    _credit(main_db, "fo-t", 50001, kind="topup_credit")
+    _sql10(main_db, LINK_CREDIT, ("fo-c1", "bm-c1"), "TRG")
+    _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-c"))
+    for obligation in ("fo-missing", "fo-x", "fo-t", "fo-c2"):
+        _sql10(main_db, LINK_CREDIT, (obligation, "bm-c1"), FK)
+    _sql10(main_db, LINK_CREDIT, ("fo-c1", "bm-c1"))
+    with pytest.raises(sqlite3.IntegrityError, match=_uq10(("composite_batch_members", "obligation_id"))):
+        main_db.execute(LINK_CREDIT, ("fo-c1", "bm-c2"))
+    _sql10(main_db, LINK_CREDIT, ("fo-c2", "bm-c2"))
+    _sql10(main_db, LINK_CREDIT, ("fo-c2", "bm-c1"), "TRG")
+    _sql10(main_db, LINK, ("op-1", "bm-c1"), CHECK)
+
+
+def test_finished_members_stay_finished(main_db):
+    _chain10b(main_db)
+    _op(main_db, "op-m", "move")
+    _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"))
+    _sql10(main_db, RESULT, ("succeeded", T0 + 400_000, None, "bm-1"), CHECK)
+    _sql10(main_db, LINK, ("op-m", "bm-1"))
+    _sql10(main_db, RESULT, ("succeeded", None, None, "bm-1"), CHECK)
+    _sql10(main_db, RESULT, ("failed", T0 + 400_000, None, "bm-1"), CHECK)
+    _sql10(main_db, RESULT, ("succeeded", T0 + 400_000, "x", "bm-1"), CHECK)
+    _sql10(main_db, RESULT, ("done", T0 + 400_000, None, "bm-1"), CHECK)
+    _sql10(main_db, RESULT, ("succeeded", T0 + 400_000, None, "bm-1"))
+    _sql10(main_db, RESULT, ("pending", None, None, "bm-1"), "TRG")
+    _sql10(main_db, RESULT, ("failed", T0 + 400_000, "late", "bm-1"), "TRG")
+    _sql10(main_db, "UPDATE composite_batch_members SET finished_at = ? WHERE member_id = 'bm-1'", (T0 + 400_001,), "TRG")
+
+
+def test_failed_member_stays_failed(main_db):
+    _chain10b(main_db)
+    _op(main_db, "op-m", "move")
+    _sql10(main_db, AUTHORIZE, (T0 + 160_000, "bt-1"))
+    _sql10(main_db, LINK, ("op-m", "bm-1"))
+    _sql10(main_db, RESULT, ("failed", T0 + 400_000, "subscription was cancelled", "bm-1"))
+    _sql10(main_db, RESULT, ("succeeded", T0 + 400_000, None, "bm-1"), "TRG")
+
+
+@pytest.mark.parametrize("column,value", [("member_id", "bm-9"), ("batch_id", "bt-2"), ("action", "owner_suspend"), ("subscription_id", "sub-2"), ("customer_telegram_id", 50002), ("subscription_context", "x"), ("amount", 50), ("obligation_kind", "support_compensation")], ids=["member-id", "batch", "action", "subscription", "customer", "context", "amount", "obligation-kind"])
+def test_member_identity_never_changes(main_db, column, value):
+    _chain10b(main_db, until="composite_batch_member_nodes")
+    _sub2(main_db)
+    _put10b(main_db, "composite_batches", batch_id="bt-2", preview_digest=_digest(102))
+    _sql10(main_db, f"UPDATE composite_batch_members SET {column} = ? WHERE member_id = 'bm-1'", (value,), "TRG")
+
+
+_NODE_VALUES = [
+    ({}, "accepted"), ({"target_binding_id": "pb-a2", "target_descriptor": DESCRIPTOR_A1}, "accepted"),
+    ({"owner_pick": '{"host": "a2.example.invalid"}'}, "accepted"), ({"read_at": T0 + 100_000}, "accepted"),
+    ({"read_at": T0 + 100_001}, "TRG"), ({"member_action": "owner_suspend"}, CHECK),
+    ({"logical_node_key": "node-x"}, FK), ({"member_id": "bm-missing"}, FK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_batch_member_nodes.{col}")) for col in ("member_id", "member_action", "subscription_id", "logical_node_key", "target_binding_id", "target_descriptor", "read_at")],
+]
+
+
+@pytest.mark.parametrize("changes,expected", _NODE_VALUES, ids=[_case_id(changes) for changes, _ in _NODE_VALUES])
+def test_move_mapping_values(main_db, changes, expected):
+    _chain10b(main_db, until="composite_batch_member_nodes")
+    _insert(main_db, "composite_prepared_bindings", binding_id="pb-a2", inbound_id=2)
+    _expect10b(main_db, "composite_batch_member_nodes", changes, expected)
