@@ -792,6 +792,281 @@ _COMMERCE_DDL = (
     BEGIN SELECT RAISE(ABORT, 'campaign recipients are permanent'); END""",
 )
 
+# data-model.md §10: lifecycle operations; remote work, one row per desired
+# state of one child, and its network attempts (at most five, each 15 s at
+# most, an uncertain one quarantined from when its connection closed); drift
+# sweeps and the divergences they find; FR-041 discrepancies with the in-use
+# descriptors that differ from the panel. Times are UTC epoch milliseconds.
+_LIFECYCLE_DDL = (
+    """CREATE TABLE composite_operations (
+    operation_id TEXT PRIMARY KEY,
+    business_key TEXT NOT NULL UNIQUE,
+    kind TEXT NOT NULL CHECK (kind IN ('fulfillment', 'test_fulfillment', 'checkout_rejection', 'customer_disable', 'customer_resume', 'owner_suspend', 'owner_resume', 'reporting_suspend', 'reporting_resume', 'leak_replacement', 'cancellation', 'move', 'cleanup', 'drift_repair')),
+    subscription_id TEXT REFERENCES composite_subscriptions (subscription_id) ON DELETE RESTRICT,
+    checkout_id TEXT REFERENCES composite_checkouts (checkout_id) ON DELETE RESTRICT,
+    claim_id TEXT REFERENCES composite_test_claims (claim_id) ON DELETE RESTRICT,
+    discrepancy_id TEXT REFERENCES composite_discrepancies (discrepancy_id) ON DELETE RESTRICT,
+    actor TEXT NOT NULL,
+    reason TEXT,
+    desired_revision INTEGER CHECK (desired_revision IS NULL OR (typeof(desired_revision) = 'integer' AND desired_revision >= 0)),
+    status TEXT NOT NULL CHECK (status IN ('accepted', 'in_progress', 'manual_hold', 'succeeded', 'failed', 'superseded')),
+    phase TEXT,
+    accepted_at INTEGER NOT NULL,
+    authorized_at INTEGER CHECK (authorized_at IS NULL OR authorized_at >= accepted_at),
+    ready_at INTEGER CHECK (ready_at IS NULL OR ready_at >= accepted_at),
+    final_stage_at INTEGER CHECK (final_stage_at IS NULL OR final_stage_at >= accepted_at),
+    target_at INTEGER CHECK (target_at IS NULL OR target_at >= accepted_at),
+    deadline_at INTEGER CHECK (deadline_at IS NULL OR deadline_at >= accepted_at),
+    escalation_at INTEGER CHECK (escalation_at IS NULL OR escalation_at >= accepted_at),
+    missed_target_at INTEGER CHECK (missed_target_at IS NULL OR (target_at IS NOT NULL AND missed_target_at >= target_at)),
+    prerequisite_ref TEXT,
+    recovery_evidence_ref TEXT,
+    worker_epoch INTEGER CHECK (worker_epoch IS NULL OR (typeof(worker_epoch) = 'integer' AND worker_epoch >= 0)),
+    restore_epoch INTEGER NOT NULL CHECK (typeof(restore_epoch) = 'integer' AND restore_epoch >= 0),
+    last_error TEXT,
+    escalation_ref TEXT,
+    finished_at INTEGER CHECK (finished_at IS NULL OR finished_at >= accepted_at),
+    CHECK ((status IN ('succeeded', 'failed', 'superseded')) = (finished_at IS NOT NULL)),
+    CHECK (CASE kind
+        WHEN 'fulfillment' THEN checkout_id IS NOT NULL AND claim_id IS NULL AND discrepancy_id IS NULL
+        WHEN 'checkout_rejection' THEN checkout_id IS NOT NULL AND claim_id IS NULL
+        WHEN 'test_fulfillment' THEN claim_id IS NOT NULL AND checkout_id IS NULL AND discrepancy_id IS NULL
+        ELSE subscription_id IS NOT NULL AND checkout_id IS NULL AND claim_id IS NULL AND discrepancy_id IS NULL
+    END),
+    UNIQUE (checkout_id, kind),
+    UNIQUE (claim_id, kind)
+)""",
+    "CREATE UNIQUE INDEX composite_operations_one_open ON composite_operations (subscription_id, kind) WHERE kind IN ('leak_replacement', 'cancellation') AND status IN ('accepted', 'in_progress', 'manual_hold')",
+    "CREATE UNIQUE INDEX composite_operations_subscription_kind ON composite_operations (operation_id, subscription_id, kind)",
+    """CREATE TRIGGER composite_operations_identity_fixed BEFORE UPDATE ON composite_operations
+    WHEN NEW.business_key IS NOT OLD.business_key OR NEW.kind IS NOT OLD.kind
+        OR NEW.checkout_id IS NOT OLD.checkout_id OR NEW.claim_id IS NOT OLD.claim_id
+        OR NEW.actor IS NOT OLD.actor OR NEW.accepted_at IS NOT OLD.accepted_at
+        OR (OLD.subscription_id IS NOT NULL AND NEW.subscription_id IS NOT OLD.subscription_id)
+        OR (OLD.discrepancy_id IS NOT NULL AND NEW.discrepancy_id IS NOT OLD.discrepancy_id)
+        OR (OLD.desired_revision IS NOT NULL AND NEW.desired_revision IS NOT OLD.desired_revision)
+    BEGIN SELECT RAISE(ABORT, 'an operation keeps its identity'); END""",
+    """CREATE TRIGGER composite_operations_clocks_fixed BEFORE UPDATE ON composite_operations
+    WHEN (OLD.authorized_at IS NOT NULL AND NEW.authorized_at IS NOT OLD.authorized_at)
+        OR (OLD.ready_at IS NOT NULL AND NEW.ready_at IS NOT OLD.ready_at)
+        OR (OLD.final_stage_at IS NOT NULL AND NEW.final_stage_at IS NOT OLD.final_stage_at)
+        OR (OLD.target_at IS NOT NULL AND NEW.target_at IS NOT OLD.target_at)
+        OR (OLD.deadline_at IS NOT NULL AND NEW.deadline_at IS NOT OLD.deadline_at)
+        OR (OLD.escalation_at IS NOT NULL AND NEW.escalation_at IS NOT OLD.escalation_at)
+        OR (OLD.missed_target_at IS NOT NULL AND NEW.missed_target_at IS NOT OLD.missed_target_at)
+    BEGIN SELECT RAISE(ABORT, 'accepted clocks never restart'); END""",
+    """CREATE TRIGGER composite_operations_finished_final BEFORE UPDATE ON composite_operations
+    WHEN OLD.status IN ('succeeded', 'failed', 'superseded')
+    BEGIN SELECT RAISE(ABORT, 'a finished operation never changes'); END""",
+    """CREATE TRIGGER composite_operations_no_delete BEFORE DELETE ON composite_operations
+    BEGIN SELECT RAISE(ABORT, 'operations are kept'); END""",
+    """CREATE TABLE composite_remote_work (
+    work_id TEXT PRIMARY KEY,
+    operation_id TEXT NOT NULL REFERENCES composite_operations (operation_id) ON DELETE RESTRICT,
+    child_id TEXT NOT NULL REFERENCES composite_children (child_id) ON DELETE RESTRICT,
+    action TEXT NOT NULL CHECK (action IN ('create', 'enable', 'disable', 'delete')),
+    desired_revision INTEGER NOT NULL CHECK (typeof(desired_revision) = 'integer' AND desired_revision >= 0),
+    payload_fingerprint TEXT NOT NULL,
+    encrypted_ref BLOB CHECK (encrypted_ref IS NULL OR typeof(encrypted_ref) = 'blob'),
+    status TEXT NOT NULL CHECK (status IN ('queued', 'dispatched', 'uncertain', 'confirmed', 'manual_hold')),
+    next_attempt_at INTEGER,
+    observed_state TEXT,
+    observed_at INTEGER,
+    observed_matches INTEGER CHECK (observed_matches IS NULL OR observed_matches IN (0, 1)),
+    runtime_required INTEGER NOT NULL CHECK (runtime_required IN (0, 1)),
+    runtime_evidence_ref TEXT,
+    confirmed_at INTEGER,
+    hold_reason TEXT,
+    created_at INTEGER NOT NULL,
+    CHECK ((observed_state IS NULL) = (observed_at IS NULL) AND (observed_state IS NULL) = (observed_matches IS NULL)),
+    CHECK ((status = 'confirmed') = (confirmed_at IS NOT NULL)),
+    CHECK (status != 'confirmed' OR (observed_matches IS 1 AND confirmed_at >= observed_at AND (runtime_required = 0 OR runtime_evidence_ref IS NOT NULL))),
+    CHECK ((status = 'manual_hold') = (hold_reason IS NOT NULL)),
+    UNIQUE (operation_id, child_id, action, desired_revision),
+    UNIQUE (work_id, child_id)
+)""",
+    """CREATE TRIGGER composite_remote_work_identity_fixed BEFORE UPDATE ON composite_remote_work
+    WHEN NEW.operation_id IS NOT OLD.operation_id OR NEW.child_id IS NOT OLD.child_id
+        OR NEW.action IS NOT OLD.action OR NEW.desired_revision IS NOT OLD.desired_revision
+        OR NEW.payload_fingerprint IS NOT OLD.payload_fingerprint OR NEW.created_at IS NOT OLD.created_at
+    BEGIN SELECT RAISE(ABORT, 'remote work keeps its identity'); END""",
+    """CREATE TRIGGER composite_remote_work_read_back_after_writes BEFORE UPDATE ON composite_remote_work
+    WHEN NEW.status = 'confirmed' AND OLD.status IS NOT 'confirmed' AND EXISTS (
+        SELECT 1 FROM composite_remote_attempts
+        WHERE work_id = NEW.work_id AND (NEW.observed_at IS NULL OR dispatched_at >= NEW.observed_at))
+    BEGIN SELECT RAISE(ABORT, 'confirmation needs a read-back after the latest write'); END""",
+    """CREATE TRIGGER composite_remote_work_confirmed_final BEFORE UPDATE ON composite_remote_work
+    WHEN OLD.status = 'confirmed'
+    BEGIN SELECT RAISE(ABORT, 'confirmed work never changes'); END""",
+    """CREATE TRIGGER composite_remote_work_no_delete BEFORE DELETE ON composite_remote_work
+    BEGIN SELECT RAISE(ABORT, 'remote work is kept'); END""",
+    """CREATE TABLE composite_remote_attempts (
+    attempt_id TEXT PRIMARY KEY,
+    work_id TEXT NOT NULL REFERENCES composite_remote_work (work_id) ON DELETE RESTRICT,
+    attempt_no INTEGER NOT NULL CHECK (typeof(attempt_no) = 'integer' AND attempt_no BETWEEN 1 AND 5),
+    dispatched_at INTEGER NOT NULL,
+    timeout_ms INTEGER NOT NULL CHECK (typeof(timeout_ms) = 'integer' AND timeout_ms BETWEEN 1 AND 15000),
+    worker_epoch INTEGER NOT NULL CHECK (typeof(worker_epoch) = 'integer' AND worker_epoch >= 0),
+    outcome TEXT NOT NULL CHECK (outcome IN ('in_flight', 'applied', 'rejected_no_effect', 'uncertain')),
+    completed_at INTEGER,
+    connection_closed_at INTEGER,
+    quarantine_until INTEGER,
+    error_ref TEXT,
+    CHECK (CASE outcome
+        WHEN 'in_flight' THEN completed_at IS NULL AND connection_closed_at IS NULL AND quarantine_until IS NULL
+        WHEN 'uncertain' THEN completed_at IS NULL AND connection_closed_at IS NOT NULL AND connection_closed_at >= dispatched_at
+            AND quarantine_until IS NOT NULL AND quarantine_until > connection_closed_at
+        ELSE completed_at IS NOT NULL AND completed_at BETWEEN dispatched_at AND dispatched_at + timeout_ms AND connection_closed_at IS NULL AND quarantine_until IS NULL
+    END),
+    CHECK (outcome != 'rejected_no_effect' OR error_ref IS NOT NULL),
+    UNIQUE (work_id, attempt_no)
+)""",
+    """CREATE TRIGGER composite_remote_attempts_not_after_confirmation BEFORE INSERT ON composite_remote_attempts
+    WHEN EXISTS (SELECT 1 FROM composite_remote_work WHERE work_id = NEW.work_id AND status = 'confirmed')
+    BEGIN SELECT RAISE(ABORT, 'confirmed work takes no further attempts'); END""",
+    """CREATE TRIGGER composite_remote_attempts_identity_fixed BEFORE UPDATE ON composite_remote_attempts
+    WHEN NEW.work_id IS NOT OLD.work_id OR NEW.attempt_no IS NOT OLD.attempt_no
+        OR NEW.dispatched_at IS NOT OLD.dispatched_at OR NEW.timeout_ms IS NOT OLD.timeout_ms
+        OR NEW.worker_epoch IS NOT OLD.worker_epoch
+    BEGIN SELECT RAISE(ABORT, 'an attempt keeps its identity'); END""",
+    """CREATE TRIGGER composite_remote_attempts_decided_final BEFORE UPDATE ON composite_remote_attempts
+    WHEN OLD.outcome != 'in_flight'
+    BEGIN SELECT RAISE(ABORT, 'a decided attempt never changes'); END""",
+    """CREATE TRIGGER composite_remote_attempts_no_delete BEFORE DELETE ON composite_remote_attempts
+    BEGIN SELECT RAISE(ABORT, 'attempts are kept'); END""",
+    """CREATE TABLE composite_drift_sweeps (
+    sweep_id TEXT PRIMARY KEY,
+    physical_panel_id TEXT NOT NULL REFERENCES composite_physical_panels (physical_panel_id) ON DELETE RESTRICT,
+    inbound_id INTEGER NOT NULL,
+    started_at INTEGER NOT NULL,
+    timeout_ms INTEGER NOT NULL CHECK (typeof(timeout_ms) = 'integer' AND timeout_ms BETWEEN 1 AND 15000),
+    ended_at INTEGER CHECK (ended_at IS NULL OR ended_at >= started_at),
+    outcome TEXT CHECK (outcome IS NULL OR outcome IN ('consistent', 'diverged', 'unknown')),
+    error_ref TEXT,
+    CHECK ((outcome IS NULL) = (ended_at IS NULL)),
+    CHECK (CASE WHEN outcome IS NULL THEN error_ref IS NULL ELSE (outcome = 'unknown') = (error_ref IS NOT NULL) END),
+    CHECK (outcome IS NOT 'consistent' OR ended_at <= started_at + timeout_ms),
+    UNIQUE (sweep_id, physical_panel_id)
+)""",
+    """CREATE TRIGGER composite_drift_sweeps_starts_running BEFORE INSERT ON composite_drift_sweeps
+    WHEN NEW.outcome = 'diverged'
+    BEGIN SELECT RAISE(ABORT, 'a sweep cannot start out diverged'); END""",
+    """CREATE TRIGGER composite_drift_sweeps_identity_fixed BEFORE UPDATE ON composite_drift_sweeps
+    WHEN NEW.physical_panel_id IS NOT OLD.physical_panel_id OR NEW.inbound_id IS NOT OLD.inbound_id
+        OR NEW.started_at IS NOT OLD.started_at OR NEW.timeout_ms IS NOT OLD.timeout_ms
+    BEGIN SELECT RAISE(ABORT, 'a sweep keeps its identity'); END""",
+    """CREATE TRIGGER composite_drift_sweeps_finished_final BEFORE UPDATE ON composite_drift_sweeps
+    WHEN OLD.outcome IS NOT NULL
+    BEGIN SELECT RAISE(ABORT, 'a finished sweep never changes'); END""",
+    """CREATE TRIGGER composite_drift_sweeps_outcome_matches BEFORE UPDATE ON composite_drift_sweeps
+    WHEN (NEW.outcome = 'consistent' AND EXISTS (SELECT 1 FROM composite_divergences WHERE sweep_id = NEW.sweep_id))
+        OR (NEW.outcome = 'diverged' AND NOT EXISTS (SELECT 1 FROM composite_divergences WHERE sweep_id = NEW.sweep_id))
+    BEGIN SELECT RAISE(ABORT, 'a sweep outcome must match its divergences'); END""",
+    """CREATE TABLE composite_discrepancies (
+    discrepancy_id TEXT PRIMARY KEY,
+    kind TEXT NOT NULL CHECK (kind IN ('descriptor', 'repeated_divergence', 'identity')),
+    child_id TEXT REFERENCES composite_children (child_id) ON DELETE RESTRICT,
+    binding_id TEXT REFERENCES composite_prepared_bindings (binding_id) ON DELETE RESTRICT,
+    observed_values TEXT,
+    observed_at INTEGER,
+    detected_at INTEGER NOT NULL,
+    closed_at INTEGER CHECK (closed_at IS NULL OR closed_at >= detected_at),
+    closure_reason TEXT,
+    CHECK (CASE kind
+        WHEN 'descriptor' THEN binding_id IS NOT NULL AND child_id IS NULL AND observed_values IS NOT NULL AND observed_at IS NOT NULL AND observed_at >= detected_at
+        ELSE child_id IS NOT NULL AND binding_id IS NULL AND observed_values IS NULL AND observed_at IS NULL
+    END),
+    CHECK ((closed_at IS NULL) = (closure_reason IS NULL)),
+    CHECK (closure_reason IS NULL OR CASE kind
+        WHEN 'descriptor' THEN closure_reason IN ('panel_restored', 'no_longer_in_use')
+        ELSE closure_reason = 'owner_resolved'
+    END),
+    UNIQUE (discrepancy_id, child_id),
+    UNIQUE (discrepancy_id, kind)
+)""",
+    "CREATE UNIQUE INDEX composite_discrepancies_one_open_per_binding ON composite_discrepancies (binding_id) WHERE closed_at IS NULL AND binding_id IS NOT NULL",
+    "CREATE UNIQUE INDEX composite_discrepancies_one_open_per_child ON composite_discrepancies (child_id, kind) WHERE closed_at IS NULL AND child_id IS NOT NULL",
+    """CREATE TRIGGER composite_discrepancies_identity_fixed BEFORE UPDATE ON composite_discrepancies
+    WHEN NEW.kind IS NOT OLD.kind OR NEW.binding_id IS NOT OLD.binding_id
+        OR NEW.child_id IS NOT OLD.child_id OR NEW.detected_at IS NOT OLD.detected_at
+    BEGIN SELECT RAISE(ABORT, 'a discrepancy keeps its identity'); END""",
+    """CREATE TRIGGER composite_discrepancies_closed_final BEFORE UPDATE ON composite_discrepancies
+    WHEN OLD.closed_at IS NOT NULL
+    BEGIN SELECT RAISE(ABORT, 'a closed discrepancy never changes'); END""",
+    """CREATE TRIGGER composite_discrepancies_no_delete BEFORE DELETE ON composite_discrepancies
+    BEGIN SELECT RAISE(ABORT, 'discrepancies are kept'); END""",
+    """CREATE TABLE composite_discrepancy_descriptors (
+    discrepancy_id TEXT NOT NULL,
+    discrepancy_kind TEXT NOT NULL CHECK (discrepancy_kind = 'descriptor'),
+    descriptor TEXT NOT NULL,
+    recorded_at INTEGER NOT NULL,
+    PRIMARY KEY (discrepancy_id, descriptor),
+    FOREIGN KEY (discrepancy_id, discrepancy_kind) REFERENCES composite_discrepancies (discrepancy_id, kind) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_discrepancy_descriptors_open_only BEFORE INSERT ON composite_discrepancy_descriptors
+    WHEN EXISTS (SELECT 1 FROM composite_discrepancies WHERE discrepancy_id = NEW.discrepancy_id AND closed_at IS NOT NULL)
+    BEGIN SELECT RAISE(ABORT, 'a closed discrepancy takes no descriptor'); END""",
+    """CREATE TRIGGER composite_discrepancy_descriptors_no_update BEFORE UPDATE ON composite_discrepancy_descriptors
+    BEGIN SELECT RAISE(ABORT, 'discrepancy descriptors are kept as recorded'); END""",
+    """CREATE TRIGGER composite_discrepancy_descriptors_no_delete BEFORE DELETE ON composite_discrepancy_descriptors
+    BEGIN SELECT RAISE(ABORT, 'discrepancy descriptors are kept as recorded'); END""",
+    """CREATE TABLE composite_divergences (
+    divergence_id TEXT PRIMARY KEY,
+    sweep_id TEXT NOT NULL,
+    physical_panel_id TEXT NOT NULL,
+    child_id TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('state', 'reappeared', 'missing', 'identity')),
+    observed_fields TEXT NOT NULL,
+    desired_fields TEXT NOT NULL,
+    detected_at INTEGER NOT NULL,
+    repeat_count INTEGER NOT NULL CHECK (typeof(repeat_count) = 'integer' AND repeat_count >= 1),
+    repair_work_id TEXT,
+    repair_state TEXT NOT NULL CHECK (repair_state IN ('pending', 'repaired', 'failed', 'paused', 'not_repairable')),
+    repaired_at INTEGER,
+    discrepancy_id TEXT,
+    exposure TEXT NOT NULL CHECK (exposure IN ('access_lost', 'access_gained', 'none')),
+    exposure_from INTEGER,
+    exposure_resolved_at INTEGER,
+    CHECK (observed_fields != desired_fields),
+    CHECK ((kind IN ('missing', 'identity')) = (repair_state = 'not_repairable')),
+    CHECK (CASE repair_state
+        WHEN 'repaired' THEN repair_work_id IS NOT NULL AND repaired_at IS NOT NULL AND repaired_at >= detected_at
+        WHEN 'failed' THEN repair_work_id IS NOT NULL AND repaired_at IS NULL
+        WHEN 'paused' THEN discrepancy_id IS NOT NULL AND repaired_at IS NULL
+        WHEN 'not_repairable' THEN discrepancy_id IS NOT NULL AND repair_work_id IS NULL AND repaired_at IS NULL
+        ELSE repaired_at IS NULL
+    END),
+    CHECK (CASE exposure
+        WHEN 'none' THEN exposure_from IS NULL AND exposure_resolved_at IS NULL
+        ELSE exposure_from IS NOT NULL AND exposure_from <= detected_at AND (exposure_resolved_at IS NULL OR exposure_resolved_at >= detected_at)
+    END),
+    FOREIGN KEY (sweep_id, physical_panel_id) REFERENCES composite_drift_sweeps (sweep_id, physical_panel_id) ON DELETE RESTRICT,
+    FOREIGN KEY (child_id, physical_panel_id) REFERENCES composite_children (child_id, physical_panel_id) ON DELETE RESTRICT,
+    FOREIGN KEY (repair_work_id, child_id) REFERENCES composite_remote_work (work_id, child_id) ON DELETE RESTRICT,
+    FOREIGN KEY (discrepancy_id, child_id) REFERENCES composite_discrepancies (discrepancy_id, child_id) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_divergences_during_the_sweep BEFORE INSERT ON composite_divergences
+    WHEN EXISTS (SELECT 1 FROM composite_drift_sweeps WHERE sweep_id = NEW.sweep_id AND outcome IS NOT NULL)
+    BEGIN SELECT RAISE(ABORT, 'a finished sweep takes no divergence'); END""",
+    """CREATE TRIGGER composite_divergences_evidence_fixed BEFORE UPDATE ON composite_divergences
+    WHEN NEW.sweep_id IS NOT OLD.sweep_id OR NEW.physical_panel_id IS NOT OLD.physical_panel_id
+        OR NEW.child_id IS NOT OLD.child_id OR NEW.kind IS NOT OLD.kind
+        OR NEW.observed_fields IS NOT OLD.observed_fields OR NEW.desired_fields IS NOT OLD.desired_fields
+        OR NEW.detected_at IS NOT OLD.detected_at OR NEW.repeat_count IS NOT OLD.repeat_count
+        OR NEW.exposure IS NOT OLD.exposure OR NEW.exposure_from IS NOT OLD.exposure_from
+    BEGIN SELECT RAISE(ABORT, 'divergence evidence never changes'); END""",
+    """CREATE TRIGGER composite_divergences_outcome_final BEFORE UPDATE ON composite_divergences
+    WHEN (OLD.repair_state IN ('repaired', 'failed', 'not_repairable') AND NEW.repair_state IS NOT OLD.repair_state)
+        OR (OLD.repair_work_id IS NOT NULL AND NEW.repair_work_id IS NOT OLD.repair_work_id)
+        OR (OLD.repaired_at IS NOT NULL AND NEW.repaired_at IS NOT OLD.repaired_at)
+        OR (OLD.discrepancy_id IS NOT NULL AND NEW.discrepancy_id IS NOT OLD.discrepancy_id)
+        OR (OLD.exposure_resolved_at IS NOT NULL AND NEW.exposure_resolved_at IS NOT OLD.exposure_resolved_at)
+    BEGIN SELECT RAISE(ABORT, 'a divergence repair outcome never changes'); END""",
+    """CREATE TRIGGER composite_divergences_kept_until_resolved BEFORE DELETE ON composite_divergences
+    WHEN OLD.repair_state != 'repaired' OR (OLD.exposure != 'none' AND OLD.exposure_resolved_at IS NULL)
+    BEGIN SELECT RAISE(ABORT, 'an unresolved divergence is kept'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -897,7 +1172,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL:
         conn.execute(statement)
 
 
