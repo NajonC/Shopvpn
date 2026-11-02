@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables, T034g1's the §11 processing-control table and the issuance switch, and T034g2's (the last section) its recovery-point and backup delivery-attempt tables; all fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables, T034g1's the §11 processing-control table and the issuance switch, T034g2's its recovery-point and backup delivery-attempt tables, and T034g3's (the last section) its recovery-case and evidence tables with the subscription recovery hold; all fail until T040 adds them.
 """
 
 from collections import Counter
@@ -4650,3 +4650,314 @@ def test_attempt_identity_and_outcome_never_change(main_db, state, changes):
     _set_attempt(main_db, changes, "TRG")
     expected_row = ("da-1", "rp-1", "automatic", None, 1, "rp-1/da-1.enc", T0 + 30_000, T0 + 31_000, T0 + 90_000 if state == "finished" else None, "verified" if state == "finished" else None)
     assert _one(main_db, "SELECT attempt_id, recovery_point_id, allowance, audit_event_id, attempt_number, remote_path, reserved_at, dispatched_at, finished_at, outcome FROM composite_recovery_delivery_attempts") == expected_row
+
+
+# Data-model §11 recovery cases and evidence (T034g3: checks for T040 part g)
+
+CASE_MANIFEST_SHA = hashlib.sha256(b"rc manifest").digest()
+# rc-1: a hold on subscription sub-1, opened by the restore that brought capture rp-1 (taken in restore epoch 0 at T0) back as restore epoch 1.
+CASE_ROW = {"case_id": "rc-1", "installation_id": "inst-main", "scope_kind": "record", "scope_ref": "sub-1", "old_restore_epoch": 0, "new_restore_epoch": 1, "restored_point_id": "rp-1", "restored_captured_at": T0, "restored_manifest_sha256": CASE_MANIFEST_SHA, "pre_restore_set_ref": "pre-restore/epoch-1", "restrictions": '["recreate", "enable", "export", "refill", "extend", "transfer"]', "opened_at": T0 + 5_000_000, "released_at": None, "release_kind": None, "release_audit_event_id": None, "follow_up_due_at": None}
+# ev-1: rc-1's open question about sub-1's renewal refund, found in the preserved pre-restore copy.
+FACT_ROW = {"evidence_id": "ev-1", "case_id": "rc-1", "fact_kind": "financial", "subject_ref": "financial_obligations:fo-1", "fact": '{"question": "was the renewal refund settled after the capture"}', "source_ref": "pre-restore/epoch-1/main.db", "recorded_at": T0 + 5_000_000, "status": "unknown", "resolution_ref": None, "resolved_at": None}
+# The two ways a fact is resolved.
+FACT_VERIFIED = {"status": "verified", "resolution_ref": "ledger entry 41 in the pre-restore copy", "resolved_at": T0 + 5_060_000}
+FACT_IRRECOVERABLE = {"status": "irrecoverable", "resolution_ref": "no newer copy or provider record exists", "resolved_at": T0 + 5_060_000}
+# The worker's release of rc-1 once every fact is verified.
+RELEASE_EVENT = {"event_id": "ae-r1", "occurred_at": T0 + 5_100_000, "actor_domain": "system", "actor_id": "worker", "action": "recovery_release", "resource_kind": "composite_recovery_cases", "resource_id": "rc-1", "reason": "every fact verified"}
+RELEASED = {"released_at": T0 + 5_100_000, "release_kind": "verified", "release_audit_event_id": "ae-r1"}
+# The owner's governed remediation of an irrecoverable gap in rc-1, with a follow-up review a week later.
+REMEDIATION_EVENT = {"event_id": "ae-g1", "occurred_at": T0 + 5_200_000, "actor_domain": "web_admin", "actor_id": "owner-1", "action": "recovery_remediation", "resource_kind": "composite_recovery_cases", "resource_id": "rc-1", "reason": "refund re-credited after a support review", "evidence_ref": "support-ticket-41"}
+REMEDIATED = {"released_at": T0 + 5_200_000, "release_kind": "governed_remediation", "release_audit_event_id": "ae-g1", "follow_up_due_at": T0 + 610_000_000}
+
+
+def _open_case(conn, changes=None, expected="accepted"):
+    row = {**CASE_ROW, **(changes or {})}
+    cols = tuple(row)
+    _sql10(conn, f"INSERT INTO composite_recovery_cases ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()), expected)
+
+
+def _add_fact(conn, changes=None, expected="accepted"):
+    row = {**FACT_ROW, **(changes or {})}
+    cols = tuple(row)
+    _sql10(conn, f"INSERT INTO composite_recovery_evidence ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()), expected)
+
+
+def _set_case(conn, changes, expected="accepted", case_id="rc-1"):
+    cols = tuple(changes)
+    _sql10(conn, f"UPDATE composite_recovery_cases SET {', '.join(f'{col} = ?' for col in cols)} WHERE case_id = ?", (*changes.values(), case_id), expected)
+
+
+def _set_fact(conn, changes, expected="accepted", evidence_id="ev-1"):
+    cols = tuple(changes)
+    _sql10(conn, f"UPDATE composite_recovery_evidence SET {', '.join(f'{col} = ?' for col in cols)} WHERE evidence_id = ?", (*changes.values(), evidence_id), expected)
+
+
+def _hold(conn, case_id, expected="accepted", subscription_id="sub-1"):
+    _sql10(conn, "UPDATE composite_subscriptions SET recovery_hold_case = ? WHERE subscription_id = ?", (case_id, subscription_id), expected)
+
+
+def _held_subscription(conn, subscription_id, case_id, expected="accepted"):
+    row = {**BASE_ROWS["composite_subscriptions"], "subscription_id": subscription_id, "recovery_hold_case": case_id}
+    cols = tuple(row)
+    _sql10(conn, f"INSERT INTO composite_subscriptions ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})", tuple(row.values()), expected)
+
+
+def test_main_gets_the_recovery_case_tables(two_runs):
+    with closing(sqlite3.connect(two_runs.install.main)) as conn:
+        assert {"composite_recovery_cases", "composite_recovery_evidence"} <= _tables(conn)
+        assert set(CASE_ROW) <= set(_columns(conn, "composite_recovery_cases"))
+        assert set(FACT_ROW) <= set(_columns(conn, "composite_recovery_evidence"))
+        assert _one(conn, "SELECT count(*) FROM composite_recovery_cases") == (0,)
+        assert _one(conn, "SELECT count(*) FROM composite_recovery_evidence") == (0,)
+        assert sorted((row[2], row[3], row[4], row[6]) for row in conn.execute("PRAGMA foreign_key_list(composite_recovery_cases)")) == [("composite_audit_events", "release_audit_event_id", "event_id", "RESTRICT")]
+        assert sorted((row[2], row[3], row[4], row[6]) for row in conn.execute("PRAGMA foreign_key_list(composite_recovery_evidence)")) == [("composite_recovery_cases", "case_id", "case_id", "RESTRICT")]
+
+
+def test_recovery_cases_survive_a_rerun(tmp_path):
+    install = _build(tmp_path, "current")
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        _open_case(conn)
+        _add_fact(conn, FACT_VERIFIED)
+        _put10f(conn, "composite_audit_events", **RELEASE_EVENT)
+        _set_case(conn, RELEASED)
+        conn.commit()
+    before = _dump(install.main)
+    report = migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-2")), RELEASE)
+    assert _outcomes(report) == install.expected(migrations.SCHEMA_VERSION, migrations.SCHEMA_VERSION, "unchanged")
+    assert _dump(install.main) == before
+    _check_clean(install.main)
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert _one(conn, "SELECT released_at, release_kind, release_audit_event_id FROM composite_recovery_cases") == (T0 + 5_100_000, "verified", "ae-r1")
+        assert _one(conn, "SELECT status FROM composite_recovery_evidence") == ("verified",)
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({}, "accepted"),
+    ({"scope_kind": "customer", "scope_ref": "50001"}, "accepted"), ({"scope_kind": "campaign", "scope_ref": "cmp-1"}, "accepted"),
+    ({"scope_kind": "money", "scope_ref": "50001"}, "accepted"), ({"scope_kind": "panel", "scope_ref": "pp-a"}, "accepted"),
+    ({"old_restore_epoch": 2, "new_restore_epoch": 5}, "accepted"), ({"opened_at": T0}, "accepted"),
+    ({"installation_id": ""}, CHECK), ({"scope_kind": "tenant"}, CHECK), ({"scope_ref": ""}, CHECK), ({"old_restore_epoch": -1}, CHECK), ({"old_restore_epoch": 0.5}, CHECK),
+    ({"new_restore_epoch": 0}, CHECK), ({"new_restore_epoch": 1.5}, CHECK), ({"restored_point_id": ""}, CHECK),
+    ({"restored_manifest_sha256": b"short"}, CHECK), ({"restored_manifest_sha256": "0" * 32}, CHECK), ({"pre_restore_set_ref": ""}, CHECK),
+    ({"restrictions": ""}, CHECK), ({"opened_at": T0 - 1}, CHECK),
+    ({"released_at": T0 + 5_100_000}, "TRG"), ({"release_kind": "verified"}, "TRG"), ({"release_audit_event_id": "ae-r1"}, "TRG"),
+    ({"follow_up_due_at": T0 + 6_000_000}, "TRG"), (RELEASED, "TRG"),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_recovery_cases.{col}")) for col in ("installation_id", "scope_kind", "scope_ref", "old_restore_epoch", "new_restore_epoch", "restored_point_id", "restored_captured_at", "restored_manifest_sha256", "pre_restore_set_ref", "restrictions", "opened_at")],
+], ids=lambda value: _case_id(value) or "base")
+def test_recovery_case_values(main_db, changes, expected):
+    _open_case(main_db, changes, expected)
+
+
+def test_cases_open_held_and_facts_start_unknown(main_db):
+    case = {key: value for key, value in CASE_ROW.items() if key not in ("released_at", "release_kind", "release_audit_event_id", "follow_up_due_at")}
+    main_db.execute(f"INSERT INTO composite_recovery_cases ({', '.join(case)}) VALUES ({', '.join('?' for _ in case)})", tuple(case.values()))
+    fact = {key: value for key, value in FACT_ROW.items() if key not in ("source_ref", "status", "resolution_ref", "resolved_at")}
+    main_db.execute(f"INSERT INTO composite_recovery_evidence ({', '.join(fact)}) VALUES ({', '.join('?' for _ in fact)})", tuple(fact.values()))
+    assert _one(main_db, "SELECT released_at, release_kind, release_audit_event_id, follow_up_due_at FROM composite_recovery_cases") == (None, None, None, None)
+    assert _one(main_db, "SELECT source_ref, status, resolution_ref, resolved_at FROM composite_recovery_evidence") == (None, "unknown", None, None)
+
+
+def test_one_case_per_scope_per_restore(main_db):
+    _open_case(main_db)
+    _open_case(main_db, {"case_id": "rc-2"}, _uq10(("composite_recovery_cases", "new_restore_epoch"), ("composite_recovery_cases", "scope_kind"), ("composite_recovery_cases", "scope_ref")))
+    _open_case(main_db, {"case_id": "rc-2", "scope_kind": "customer", "scope_ref": "50001"})
+    _open_case(main_db, {"case_id": "rc-3", "old_restore_epoch": 1, "new_restore_epoch": 2})
+    _sql10(main_db, "DELETE FROM composite_recovery_cases WHERE case_id = 'rc-3'", expected="TRG")
+    assert main_db.execute("SELECT case_id FROM composite_recovery_cases ORDER BY case_id").fetchall() == [("rc-1",), ("rc-2",), ("rc-3",)]
+
+
+_CASE_FIXED_COLUMNS = [
+    ("case_id", "rc-9"), ("installation_id", "inst-other"), ("scope_kind", "customer"), ("scope_ref", "sub-2"),
+    ("old_restore_epoch", 1), ("new_restore_epoch", 2), ("restored_point_id", "rp-2"), ("restored_captured_at", T0 + 1),
+    ("restored_manifest_sha256", ARCHIVE_SHA), ("pre_restore_set_ref", "pre-restore/other"), ("restrictions", '["enable"]'),
+    ("opened_at", T0 + 5_000_001),
+]
+
+
+@pytest.mark.parametrize("column, value", _CASE_FIXED_COLUMNS, ids=[column for column, _ in _CASE_FIXED_COLUMNS])
+def test_case_identity_never_changes(main_db, column, value):
+    _open_case(main_db)
+    _set_case(main_db, {column: value}, "TRG")
+    assert _one(main_db, f"SELECT count(*) FROM composite_recovery_cases WHERE case_id = 'rc-1' AND {column} IS ?", CASE_ROW[column]) == (1,)
+
+
+def test_case_is_released_only_when_its_facts_allow(main_db):
+    _open_case(main_db)
+    _put10f(main_db, "composite_audit_events", **RELEASE_EVENT)
+    _put10f(main_db, "composite_audit_events", **REMEDIATION_EVENT)
+    _set_case(main_db, RELEASED, "TRG")
+    _add_fact(main_db)
+    _set_case(main_db, RELEASED, "TRG")
+    _set_fact(main_db, FACT_VERIFIED)
+    _add_fact(main_db, {"evidence_id": "ev-2", "fact_kind": "token", "subject_ref": "composite_tokens:tok-1", "fact": '{"question": "was the token rotated after the capture"}', "recorded_at": T0 + 5_010_000})
+    _set_case(main_db, RELEASED, "TRG")
+    _set_fact(main_db, {"status": "verified", "resolution_ref": "panel read-back shows generation 2", "resolved_at": T0 + 5_090_000}, evidence_id="ev-2")
+    _set_case(main_db, {**RELEASED, "release_kind": "usage_settlement"}, "TRG")
+    _set_case(main_db, REMEDIATED, "TRG")
+    _set_case(main_db, RELEASED)
+    assert _one(main_db, "SELECT released_at, release_kind, release_audit_event_id FROM composite_recovery_cases") == (T0 + 5_100_000, "verified", "ae-r1")
+
+
+def test_usage_only_gaps_settle_without_remediation(main_db):
+    _open_case(main_db)
+    _put10f(main_db, "composite_audit_events", **{**RELEASE_EVENT, "event_id": "ae-u1", "reason": "only usage history is missing"})
+    _put10f(main_db, "composite_audit_events", **REMEDIATION_EVENT)
+    _add_fact(main_db, {"fact_kind": "usage", "subject_ref": "composite_meters:mt-1", "fact": '{"question": "usage between the capture and the restore"}'})
+    _set_fact(main_db, FACT_IRRECOVERABLE)
+    _add_fact(main_db, {"evidence_id": "ev-2"})
+    usage_settled = {"released_at": T0 + 5_100_000, "release_kind": "usage_settlement", "release_audit_event_id": "ae-u1"}
+    _set_case(main_db, usage_settled, "TRG")
+    _set_fact(main_db, FACT_VERIFIED, evidence_id="ev-2")
+    _set_case(main_db, {**usage_settled, "release_kind": "verified"}, "TRG")
+    _set_case(main_db, REMEDIATED, "TRG")
+    _set_case(main_db, usage_settled)
+    _open_case(main_db, {"case_id": "rc-2", "scope_kind": "customer", "scope_ref": "50001"})
+    _add_fact(main_db, {"evidence_id": "ev-3", "case_id": "rc-2", "fact_kind": "usage", "subject_ref": "composite_meters:mt-2", "fact": '{"question": "usage between the capture and the restore"}'})
+    _set_fact(main_db, FACT_IRRECOVERABLE, evidence_id="ev-3")
+    _add_fact(main_db, {"evidence_id": "ev-4", "case_id": "rc-2", "fact_kind": "campaign", "subject_ref": "composite_campaign_recipients:cr-1", "fact": '{"question": "was a campaign place granted after the capture"}'})
+    _set_fact(main_db, FACT_IRRECOVERABLE, evidence_id="ev-4")
+    _put10f(main_db, "composite_audit_events", **{**RELEASE_EVENT, "event_id": "ae-u2", "resource_id": "rc-2", "reason": "only usage history is missing"})
+    _set_case(main_db, {**usage_settled, "release_audit_event_id": "ae-u2"}, "TRG", case_id="rc-2")
+    assert main_db.execute("SELECT case_id, release_kind FROM composite_recovery_cases ORDER BY case_id").fetchall() == [("rc-1", "usage_settlement"), ("rc-2", None)]
+
+
+_BAD_REMEDIATION_EVENTS = {
+    "ae-g2": {"actor_domain": "system", "actor_id": "worker"},
+    "ae-g3": {"actor_domain": "payment_callback", "actor_id": "card-to-card"},
+    "ae-g4": {"evidence_ref": None},
+    "ae-g5": {"reason": None},
+    "ae-g6": {"occurred_at": T0 + 4_000_000},
+    "ae-g7": {"occurred_at": T0 + 5_050_000},
+    "ae-g8": {"resource_id": "rc-2"},
+    "ae-g9": {"resource_kind": "composite_operations"},
+}
+
+
+def test_irrecoverable_history_needs_a_specific_governed_remediation(main_db):
+    _open_case(main_db)
+    _add_fact(main_db)
+    _set_fact(main_db, FACT_IRRECOVERABLE)
+    _put10f(main_db, "composite_audit_events", **REMEDIATION_EVENT)
+    for event_id, changes in _BAD_REMEDIATION_EVENTS.items():
+        _put10f(main_db, "composite_audit_events", **{**REMEDIATION_EVENT, "event_id": event_id, **changes})
+    _set_case(main_db, {**REMEDIATED, "release_kind": "verified", "follow_up_due_at": None}, "TRG")
+    _set_case(main_db, {**REMEDIATED, "release_kind": "usage_settlement", "follow_up_due_at": None}, "TRG")
+    for event_id in _BAD_REMEDIATION_EVENTS:
+        _set_case(main_db, {**REMEDIATED, "release_audit_event_id": event_id}, "TRG")
+    _set_case(main_db, {**REMEDIATED, "release_audit_event_id": "ae-missing"}, FK)
+    _set_case(main_db, {**REMEDIATED, "released_at": T0 + 5_199_999}, "TRG")
+    _set_case(main_db, {**REMEDIATED, "follow_up_due_at": None}, CHECK)
+    _set_case(main_db, {**REMEDIATED, "follow_up_due_at": T0 + 5_200_000}, CHECK)
+    _set_case(main_db, REMEDIATED)
+    _open_case(main_db, {"case_id": "rc-2", "scope_kind": "customer", "scope_ref": "50001"})
+    _add_fact(main_db, {"evidence_id": "ev-2", "case_id": "rc-2"})
+    _set_fact(main_db, FACT_IRRECOVERABLE, evidence_id="ev-2")
+    _set_case(main_db, REMEDIATED, "TRG", case_id="rc-2")
+    _set_case(main_db, {**REMEDIATED, "release_audit_event_id": "ae-g8"}, case_id="rc-2")
+    assert main_db.execute("SELECT case_id, release_kind, release_audit_event_id, follow_up_due_at FROM composite_recovery_cases ORDER BY case_id").fetchall() == [("rc-1", "governed_remediation", "ae-g1", T0 + 610_000_000), ("rc-2", "governed_remediation", "ae-g8", T0 + 610_000_000)]
+
+
+@pytest.mark.parametrize("changes, expected", [
+    (RELEASED, "accepted"), ({**RELEASED, "released_at": T0 + 5_150_000}, "accepted"),
+    ({"released_at": T0 + 5_100_000}, CHECK), ({"release_kind": "verified"}, CHECK), ({"release_audit_event_id": "ae-r1"}, CHECK),
+    ({**RELEASED, "release_audit_event_id": None}, CHECK), ({**RELEASED, "release_kind": None}, CHECK), ({**RELEASED, "release_kind": "resumed"}, CHECK),
+    ({**RELEASED, "follow_up_due_at": T0 + 6_000_000}, CHECK), ({"follow_up_due_at": T0 + 6_000_000}, CHECK),
+    ({**RELEASED, "released_at": T0 + 5_099_999}, "TRG"),
+    ({**RELEASED, "release_audit_event_id": "ae-missing"}, FK),
+], ids=lambda value: _case_id(value) or "base")
+def test_release_values(main_db, changes, expected):
+    _open_case(main_db)
+    _add_fact(main_db, FACT_VERIFIED)
+    _put10f(main_db, "composite_audit_events", **RELEASE_EVENT)
+    _set_case(main_db, changes, expected)
+
+
+def test_released_case_is_final(main_db):
+    _open_case(main_db)
+    _add_fact(main_db, FACT_VERIFIED)
+    _put10f(main_db, "composite_audit_events", **RELEASE_EVENT)
+    _set_case(main_db, RELEASED)
+    _set_case(main_db, {"released_at": None, "release_kind": None, "release_audit_event_id": None}, "TRG")
+    _set_case(main_db, {"released_at": T0 + 5_150_000}, "TRG")
+    _set_case(main_db, {"release_kind": "usage_settlement"}, "TRG")
+    _put10f(main_db, "composite_audit_events", **{**RELEASE_EVENT, "event_id": "ae-r2"})
+    _set_case(main_db, {"release_audit_event_id": "ae-r2"}, "TRG")
+    _set_case(main_db, {"follow_up_due_at": T0 + 6_000_000}, "TRG")
+    _add_fact(main_db, {"evidence_id": "ev-2", "recorded_at": T0 + 5_200_000}, "TRG")
+    _set_fact(main_db, {"resolution_ref": "another check"}, "TRG")
+    _sql10(main_db, "DELETE FROM composite_recovery_evidence WHERE evidence_id = 'ev-1'", expected="TRG")
+    _sql10(main_db, "DELETE FROM composite_recovery_cases WHERE case_id = 'rc-1'", expected="TRG")
+    assert _one(main_db, "SELECT released_at, release_kind, release_audit_event_id, follow_up_due_at FROM composite_recovery_cases") == (T0 + 5_100_000, "verified", "ae-r1", None)
+    assert _one(main_db, "SELECT count(*) FROM composite_recovery_evidence") == (1,)
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({}, "accepted"), ({"source_ref": None}, "accepted"), (FACT_VERIFIED, "accepted"), (FACT_IRRECOVERABLE, "accepted"),
+    ({**FACT_VERIFIED, "resolved_at": T0 + 5_000_000}, "accepted"),
+    *[({"fact_kind": kind}, "accepted") for kind in ("ownership", "purchase", "lifecycle", "token", "remote_identity", "usage", "coupon", "test_claim", "campaign", "cleanup")],
+    ({"fact_kind": "wallet"}, CHECK), ({"subject_ref": ""}, CHECK), ({"fact": ""}, CHECK), ({"source_ref": ""}, CHECK),
+    ({**FACT_VERIFIED, "status": "assumed"}, CHECK), ({"status": "verified"}, CHECK), ({**FACT_VERIFIED, "resolution_ref": None}, CHECK),
+    ({**FACT_VERIFIED, "resolved_at": None}, CHECK), ({**FACT_VERIFIED, "resolution_ref": ""}, CHECK),
+    ({"resolution_ref": "ledger entry 41", "resolved_at": T0 + 5_060_000}, CHECK), ({**FACT_VERIFIED, "resolved_at": T0 + 4_999_999}, CHECK),
+    ({"recorded_at": T0 + 4_999_999}, "TRG"),
+    ({"case_id": "rc-9"}, FK),
+    *[({col: None}, re.escape(f"NOT NULL constraint failed: composite_recovery_evidence.{col}")) for col in ("case_id", "fact_kind", "subject_ref", "fact", "recorded_at", "status")],
+], ids=lambda value: _case_id(value) or "base")
+def test_recovery_evidence_values(main_db, changes, expected):
+    _open_case(main_db)
+    _add_fact(main_db, changes, expected)
+
+
+def test_fact_is_resolved_once(main_db):
+    _open_case(main_db)
+    _add_fact(main_db)
+    _add_fact(main_db, {"evidence_id": "ev-2", "fact_kind": "token", "subject_ref": "composite_tokens:tok-1"})
+    _set_fact(main_db, {"status": "verified"}, CHECK)
+    _set_fact(main_db, {**FACT_VERIFIED, "resolved_at": T0 + 4_999_999}, CHECK)
+    _set_fact(main_db, FACT_VERIFIED)
+    _set_fact(main_db, {"status": "irrecoverable"}, "TRG")
+    _set_fact(main_db, {"status": "unknown", "resolution_ref": None, "resolved_at": None}, "TRG")
+    _set_fact(main_db, {"resolution_ref": "another check"}, "TRG")
+    _set_fact(main_db, {"resolved_at": T0 + 5_070_000}, "TRG")
+    _set_fact(main_db, FACT_IRRECOVERABLE, evidence_id="ev-2")
+    _set_fact(main_db, FACT_VERIFIED, "TRG", evidence_id="ev-2")
+    _sql10(main_db, "DELETE FROM composite_recovery_evidence WHERE evidence_id = 'ev-2'", expected="TRG")
+    assert main_db.execute("SELECT evidence_id, status, resolution_ref, resolved_at FROM composite_recovery_evidence ORDER BY evidence_id").fetchall() == [("ev-1", "verified", "ledger entry 41 in the pre-restore copy", T0 + 5_060_000), ("ev-2", "irrecoverable", "no newer copy or provider record exists", T0 + 5_060_000)]
+
+
+_FACT_FIXED_COLUMNS = [
+    ("evidence_id", "ev-9"), ("case_id", "rc-2"), ("fact_kind", "usage"), ("subject_ref", "financial_obligations:fo-2"),
+    ("fact", '{"question": "other"}'), ("source_ref", None), ("recorded_at", T0 + 5_000_001),
+]
+
+
+@pytest.mark.parametrize("column, value", _FACT_FIXED_COLUMNS, ids=[column for column, _ in _FACT_FIXED_COLUMNS])
+def test_fact_identity_never_changes(main_db, column, value):
+    _open_case(main_db)
+    _open_case(main_db, {"case_id": "rc-2", "scope_kind": "customer", "scope_ref": "50001"})
+    _add_fact(main_db)
+    _set_fact(main_db, {column: value}, "TRG")
+    assert _one(main_db, f"SELECT count(*) FROM composite_recovery_evidence WHERE evidence_id = 'ev-1' AND {column} IS ?", FACT_ROW[column]) == (1,)
+
+
+def test_subscription_hold_names_a_held_case(main_db):
+    _chain(main_db, until="composite_subscription_nodes")
+    _hold(main_db, "rc-1", "TRG")
+    _held_subscription(main_db, "sub-2", "rc-1", "TRG")
+    _open_case(main_db)
+    _hold(main_db, "rc-1")
+    _held_subscription(main_db, "sub-2", "rc-1")
+    _hold(main_db, None, "TRG")
+    _open_case(main_db, {"case_id": "rc-2", "scope_kind": "customer", "scope_ref": "50001"})
+    _hold(main_db, "rc-2")
+    _add_fact(main_db, FACT_VERIFIED)
+    _put10f(main_db, "composite_audit_events", **RELEASE_EVENT)
+    _set_case(main_db, RELEASED)
+    _hold(main_db, None, "TRG")
+    _sql10(main_db, "UPDATE composite_subscriptions SET customer_disabled = 1, recovery_hold_case = recovery_hold_case WHERE subscription_id = 'sub-2'")
+    _hold(main_db, None, subscription_id="sub-2")
+    _hold(main_db, "rc-1", "TRG", subscription_id="sub-2")
+    _held_subscription(main_db, "sub-3", "rc-1", "TRG")
+    assert main_db.execute("SELECT subscription_id, recovery_hold_case FROM composite_subscriptions ORDER BY subscription_id").fetchall() == [("sub-1", "rc-2"), ("sub-2", None)]
