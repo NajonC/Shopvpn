@@ -203,7 +203,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - A 1-second busy wait with bounded retries that surface overload.
   - Database work in a bounded thread executor, with no network waits inside a transaction.
   - `query_effect(key)` for reconciliation after an indeterminate commit
-- [ ] T034 [P] Write `tests/integration/test_migrations.py` before T035–T041 (FR-083; constitution IV). Run `migrate` twice on synthetic historical, current pre-feature and feature-shaped schemas, each with main, reseller (both filename conventions), no-live-bot and FSM files. Check:
+- [X] T034 [P] Write `tests/integration/test_migrations.py` before T035–T041 (FR-083; constitution IV). Run `migrate` twice on synthetic historical, current pre-feature and feature-shaped schemas, each with main, reseller (both filename conventions), no-live-bot and FSM files. Check:
   - foreign keys, integrity, indexes, and data, effect and capacity invariants;
   - legacy rows defaulting to `service_kind='legacy'`, with the owner preserved;
   - refusal of an unsupported future schema;

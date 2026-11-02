@@ -69,7 +69,7 @@ The interface these tests pin, which T035 builds in ``composite/migrations.py``:
 - Errors: ``MigrationError`` and its subclasses ``RegistryError``,
   ``UnsupportedSchema`` and ``MigrationFailed``.
 
-T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables, T034g1's the §11 processing-control table and the issuance switch, T034g2's its recovery-point and backup delivery-attempt tables, and T034g3's (the last section) its recovery-case and evidence tables with the subscription recovery hold; all fail until T040 adds them.
+T034a's tests pass since T035, T034b's since T036 and T037, T034c's since T038 and T034d's since T039. T034e's tests check the data-model §10 lifecycle-work, drift and discrepancy tables, T034f1's its batch tables, T034f2's its audit-event and notification tables, T034f3's its notification delivery-window and attempt tables, T034g1's the §11 processing-control table and the issuance switch, T034g2's its recovery-point and backup delivery-attempt tables, and T034g3's its recovery-case and evidence tables with the subscription recovery hold; all fail until T040 adds them. T034h's (the last section) check the ``users.test_used`` reconciliation T041 adds, described at that section; they also need T040's processing-control table.
 """
 
 from collections import Counter
@@ -81,6 +81,7 @@ from pathlib import Path
 import re
 import sqlite3
 import time
+import uuid
 
 import pytest
 
@@ -4961,3 +4962,276 @@ def test_subscription_hold_names_a_held_case(main_db):
     _hold(main_db, "rc-1", "TRG", subscription_id="sub-2")
     _held_subscription(main_db, "sub-3", "rc-1", "TRG")
     assert main_db.execute("SELECT subscription_id, recovery_hold_case FROM composite_subscriptions ORDER BY subscription_id").fetchall() == [("sub-1", "rc-2"), ("sub-2", None)]
+
+
+# users.test_used reconciliation (T034h: checks for T041)
+#
+# T041 adds ``reconcile_legacy_test_usage(main_path, *, crash=None) -> LegacyTestReconciliation`` to
+# composite/migrations.py: an upgrade step run on the main file after ``migrate`` and before admissions
+# reopen; ``migrate`` itself creates no hold (owner decisions, 2026-11-02). Legacy
+# ``try_reserve_test_slot`` counts a test in ``users.test_used`` before the panel call and keeps no record
+# of an attempt in progress, so only a delivery record proves a count, and every count beyond its proofs
+# is an unknown outcome that stays held.
+# - Refusals, before any change: a missing main file, or one below ``SCHEMA_VERSION``, raises
+#   ``MigrationError`` (not ``UnsupportedSchema``); one above it ``UnsupportedSchema(path, version)``;
+#   no ``composite_processing_control`` row, or ``admission_mode`` other than ``'maintenance'``,
+#   ``MigrationError``.
+# - Proofs for Telegram id T: ``custom_configs`` rows with ``user_id = T AND source = 'test'`` (only when
+#   the table has a ``source`` column) and ``test_configs`` rows with ``assigned_user_id = T AND
+#   is_used = 1``. Each proof covers one count.
+# - Each ``users`` row with ``test_used > 0``, in ascending ``users.id``, has
+#   ``R = test_used - min(test_used, proofs)`` unresolved counts; count k = 1..R has the ref
+#   ``legacy-test-<T>-<k>``. A ref with no ``ordinary_test`` reservation yet (in any state) gets one row: a
+#   new UUID4 ``reservation_id``; ``resource='ordinary_test'``; ``legacy_test_ref`` the ref; the control
+#   row's ``installation_id``; ``customer_telegram_id`` T; ``sequence`` one above the highest
+#   ``resource_reservations.sequence`` so far (0 when none); ``state='uncertain_hold'``;
+#   ``transition_key`` ``legacy-upgrade:<ref>``; ``accepted_at = transitioned_at`` = one UTC epoch-ms
+#   reading per run; every other column NULL.
+# - One ``BEGIN IMMEDIATE`` transaction on its own connection: the rows, ``crash("before commit")``,
+#   ``COMMIT``, ``crash("after commit")``. Anything raised before COMMIT rolls back and propagates unchanged.
+# - Nothing else changes: ``users.test_used`` keeps every count (the holds are part of it, not extra), and
+#   reseller and FSM files are not touched.
+# - Returns ``LegacyTestReconciliation(holds)``: a tuple of ``(T, ref)`` per row this run created, in
+#   creation order.
+
+LEGACY_INSTALLATION = "6f1c2a52-0d55-4c55-9a4e-0000000000aa"
+# (telegram_id, username, test_used), added after USERS (alice 1, bob 0)
+LEGACY_TEST_USERS = (
+    (50003, "carol", 2), (50004, "dave", 1), (50005, "erin", 1), (50006, "frank", 1), (50007, "gina", 0), (50008, "hugo", 3),
+)
+# current shape only: custom_configs (user_id, source); 59999 has no users row
+LEGACY_CUSTOM_CONFIGS = (
+    (50003, "test"), (50004, "test"), (50004, "test"), (50005, "custom_config"), (50007, "test"), (50008, "test"), (59999, "test"),
+)
+# current shape only: test_configs link-bank rows (assigned_user_id, is_used)
+LEGACY_BANK_LINKS = ((50006, 1), (50008, 1), (50008, 0))
+TEST_COUNTS = ((50001, 1), (50002, 0), (50003, 2), (50004, 1), (50005, 1), (50006, 1), (50007, 0), (50008, 3))
+# historical files have no custom_configs or test_configs, so no count is proven. In current files alice has
+# no proof; carol 1 proof for 2; dave 2 for 1; erin's row is a purchase; frank's bank link; hugo 2 for 3.
+LEGACY_HOLDS = {
+    "historical": (
+        (50001, "legacy-test-50001-1"), (50003, "legacy-test-50003-1"), (50003, "legacy-test-50003-2"),
+        (50004, "legacy-test-50004-1"), (50005, "legacy-test-50005-1"), (50006, "legacy-test-50006-1"),
+        (50008, "legacy-test-50008-1"), (50008, "legacy-test-50008-2"), (50008, "legacy-test-50008-3"),
+    ),
+    "current": (
+        (50001, "legacy-test-50001-1"), (50003, "legacy-test-50003-1"), (50005, "legacy-test-50005-1"),
+        (50008, "legacy-test-50008-1"),
+    ),
+}
+# custom_configs as an older release had it, before its source column
+OLD_CUSTOM_CONFIGS_DDL = (
+    "CREATE TABLE custom_configs (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER, user_id INTEGER NOT NULL, "
+    "panel_server_id INTEGER NOT NULL, username TEXT NOT NULL, volume_gb INTEGER NOT NULL, "
+    "duration_days INTEGER NOT NULL DEFAULT 30, subscription_url TEXT, status TEXT DEFAULT 'active', "
+    "created_at TEXT DEFAULT CURRENT_TIMESTAMP, expires_at TEXT)"
+)
+
+
+def _set_control(main, mode):
+    with closing(sqlite3.connect(main)) as conn:
+        conn.execute(
+            "INSERT INTO composite_processing_control (installation_id, admission_mode, maintenance_reason, mode_changed_at) "
+            "VALUES (?, ?, ?, ?)",
+            (LEGACY_INSTALLATION, mode, "upgrade" if mode == "maintenance" else None, T0),
+        )
+        conn.commit()
+
+
+def _legacy_tests(tmp_path, shape, *, migrate=True, control="maintenance"):
+    """An installation whose main file has legacy test counts and delivery records, then (optionally)
+    migrated and given its processing-control row."""
+    install = _build(tmp_path, shape)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.executemany("INSERT INTO users (telegram_id, username, test_used) VALUES (?, ?, ?)", LEGACY_TEST_USERS)
+        if shape == "current":
+            conn.executemany(
+                "INSERT INTO custom_configs (user_id, panel_server_id, username, volume_gb, duration_days, source) "
+                "VALUES (?, 1, ?, 1, 1, ?)",
+                [(tg, f"test{n:08d}", source) for n, (tg, source) in enumerate(LEGACY_CUSTOM_CONFIGS, 1)],
+            )
+            conn.executemany(
+                "INSERT INTO test_configs (link, is_used, assigned_user_id, assigned_at) "
+                "VALUES (?, ?, ?, '2026-10-01T00:00:00')",
+                [(f"vless://bank-{n}", used, tg) for n, (tg, used) in enumerate(LEGACY_BANK_LINKS, 1)],
+            )
+        conn.commit()
+    if migrate:
+        migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    if control is not None:
+        _set_control(install.main, control)
+    return install
+
+
+def _legacy_holds(main):
+    with closing(sqlite3.connect(main)) as conn:
+        return conn.execute(
+            "SELECT legacy_test_ref, customer_telegram_id, sequence FROM resource_reservations ORDER BY sequence"
+        ).fetchall()
+
+
+@pytest.mark.parametrize("shape", ("historical", "current"))
+def test_unproven_test_counts_become_holds(tmp_path, shape):
+    install = _legacy_tests(tmp_path, shape)
+    assert _legacy_holds(install.main) == []
+    result = migrations.reconcile_legacy_test_usage(install.main)
+    assert result.holds == LEGACY_HOLDS[shape]
+    assert _legacy_holds(install.main) == [(ref, tg, n) for n, (tg, ref) in enumerate(LEGACY_HOLDS[shape], 1)]
+
+
+def test_hold_rows_are_uncertain_ordinary_test_holds(tmp_path):
+    install = _legacy_tests(tmp_path, "current")
+    started = _now_ms()
+    migrations.reconcile_legacy_test_usage(install.main)
+    done = _now_ms()
+    with closing(sqlite3.connect(install.main)) as conn:
+        rows = conn.execute(
+            "SELECT reservation_id, resource, checkout_id, claim_id, legacy_order_id, legacy_test_ref, tenant_installation_id, "
+            "customer_telegram_id, coupon_code_id, campaign_id, sequence, state, transition_key, accepted_at, transitioned_at "
+            "FROM resource_reservations ORDER BY sequence"
+        ).fetchall()
+    assert [row[1:13] for row in rows] == [
+        ("ordinary_test", None, None, None, ref, LEGACY_INSTALLATION, tg, None, None, n, "uncertain_hold", f"legacy-upgrade:{ref}")
+        for n, (tg, ref) in enumerate(LEGACY_HOLDS["current"], 1)
+    ]
+    ids = [row[0] for row in rows]
+    assert len(set(ids)) == 4
+    assert all(str(uuid.UUID(rid)) == rid and uuid.UUID(rid).version == 4 for rid in ids)
+    clocks = {row[13:] for row in rows}
+    assert len(clocks) == 1
+    accepted_at, transitioned_at = clocks.pop()
+    assert isinstance(accepted_at, int) and accepted_at == transitioned_at
+    assert started <= accepted_at <= done
+
+
+@pytest.mark.parametrize("shape", ("historical", "current"))
+def test_reconciliation_changes_nothing_else(tmp_path, shape):
+    install = _legacy_tests(tmp_path, shape)
+    tables, objects = _snapshot(install.main)
+    others = {path: _dump(path) for path in (*install.members[1:], *install.fsm)}
+    migrations.reconcile_legacy_test_usage(install.main)
+    after_tables, after_objects = _snapshot(install.main)
+    assert after_objects == objects
+    assert tables["resource_reservations"][1] == [] and len(after_tables["resource_reservations"][1]) == len(LEGACY_HOLDS[shape])
+    assert {t: v for t, v in after_tables.items() if t != "resource_reservations"} == {
+        t: v for t, v in tables.items() if t != "resource_reservations"
+    }
+    with closing(sqlite3.connect(install.main)) as conn:
+        assert conn.execute("SELECT telegram_id, test_used FROM users ORDER BY id").fetchall() == list(TEST_COUNTS)
+    assert {path: _dump(path) for path in others} == others
+    assert migrations.issuance_enabled(install.main) is False
+
+
+@pytest.mark.parametrize("shape", ("historical", "current"))
+def test_rerun_adds_no_hold(tmp_path, shape):
+    install = _legacy_tests(tmp_path, shape)
+    migrations.reconcile_legacy_test_usage(install.main)
+    after_first = _dump(install.main)
+    assert migrations.reconcile_legacy_test_usage(install.main).holds == ()
+    assert _dump(install.main) == after_first
+
+
+def test_existing_reservations_are_kept_and_sequence_continues(tmp_path):
+    install = _legacy_tests(tmp_path, "current")
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute(
+            "INSERT INTO resource_reservations (reservation_id, resource, legacy_test_ref, tenant_installation_id, "
+            "customer_telegram_id, sequence, accepted_at, state, transition_key, transitioned_at) "
+            "VALUES ('rr-old-test', 'ordinary_test', 'legacy-test-50001-1', 'inst-main', 50001, 7, ?, 'released', "
+            "'confirmed-failure:legacy-test-50001-1', ?)",
+            (T0, T0 + 1_000),
+        )
+        conn.execute(
+            "INSERT INTO resource_reservations (reservation_id, resource, legacy_order_id, tenant_installation_id, "
+            "customer_telegram_id, coupon_code_id, sequence, accepted_at, state) "
+            "VALUES ('rr-old-coupon', 'coupon', 1, 'inst-main', 50001, 7, 12, ?, 'held')",
+            (T0,),
+        )
+        conn.commit()
+    result = migrations.reconcile_legacy_test_usage(install.main)
+    assert result.holds == LEGACY_HOLDS["current"][1:]
+    with closing(sqlite3.connect(install.main)) as conn:
+        rows = conn.execute(
+            "SELECT reservation_id, legacy_test_ref, sequence, state FROM resource_reservations ORDER BY sequence"
+        ).fetchall()
+    assert rows[:2] == [("rr-old-test", "legacy-test-50001-1", 7, "released"), ("rr-old-coupon", None, 12, "held")]
+    assert [row[1:] for row in rows[2:]] == [
+        ("legacy-test-50003-1", 13, "uncertain_hold"),
+        ("legacy-test-50005-1", 14, "uncertain_hold"),
+        ("legacy-test-50008-1", 15, "uncertain_hold"),
+    ]
+
+
+def test_custom_configs_without_source_prove_nothing(tmp_path):
+    install = _legacy_tests(tmp_path, "historical", migrate=False, control=None)
+    with closing(sqlite3.connect(install.main)) as conn:
+        conn.execute(OLD_CUSTOM_CONFIGS_DDL)
+        conn.executemany(
+            "INSERT INTO custom_configs (user_id, panel_server_id, username, volume_gb) VALUES (?, 1, ?, 1)",
+            [(50001, "testaaaaaaaa"), (50004, "testbbbbbbbb")],
+        )
+        conn.commit()
+    migrations.migrate(install.paths(_fresh_dir(tmp_path, "pre-1")), RELEASE)
+    _set_control(install.main, "maintenance")
+    assert migrations.reconcile_legacy_test_usage(install.main).holds == LEGACY_HOLDS["historical"]
+
+
+@pytest.mark.parametrize("problem", ("missing", "unmigrated", "no_control", "open", "future"))
+def test_reconciliation_refusals_change_nothing(tmp_path, problem):
+    if problem == "missing":
+        absent = tmp_path / "absent.db"
+        with pytest.raises(migrations.MigrationError) as raised:
+            migrations.reconcile_legacy_test_usage(absent)
+        assert not isinstance(raised.value, migrations.UnsupportedSchema)
+        assert not absent.exists()
+        return
+    control = {"unmigrated": None, "no_control": None, "open": "open", "future": "maintenance"}[problem]
+    install = _legacy_tests(tmp_path, "current", migrate=problem != "unmigrated", control=control)
+    future = migrations.SCHEMA_VERSION + 1
+    if problem == "future":
+        with closing(sqlite3.connect(install.main)) as conn:
+            conn.execute("INSERT INTO composite_schema_versions VALUES (?, 'synthetic-future', ?)", (future, _now_ms()))
+            conn.commit()
+    before = install.dumps()
+    with pytest.raises(migrations.MigrationError) as raised:
+        migrations.reconcile_legacy_test_usage(install.main)
+    if problem == "future":
+        assert isinstance(raised.value, migrations.UnsupportedSchema)
+        assert (raised.value.path, raised.value.version) == (_real(install.main), future)
+    else:
+        assert not isinstance(raised.value, migrations.UnsupportedSchema)
+    assert install.dumps() == before
+
+
+def test_crash_before_commit_keeps_no_hold(tmp_path):
+    install = _legacy_tests(tmp_path, "current")
+    before = _dump(install.main)
+    plan = CrashPlan().arm("before commit")
+    with pytest.raises(SimulatedCrash):
+        migrations.reconcile_legacy_test_usage(install.main, crash=plan)
+    assert (plan.crashed_at, plan.reached) == ("before commit", ("before commit",))
+    assert _dump(install.main) == before
+    assert migrations.reconcile_legacy_test_usage(install.main).holds == LEGACY_HOLDS["current"]
+
+
+def test_crash_after_commit_keeps_the_holds(tmp_path):
+    install = _legacy_tests(tmp_path, "current")
+    plan = CrashPlan().arm("after commit")
+    with pytest.raises(SimulatedCrash):
+        migrations.reconcile_legacy_test_usage(install.main, crash=plan)
+    assert (plan.crashed_at, plan.reached) == ("after commit", ("before commit", "after commit"))
+    assert _legacy_holds(install.main) == [(ref, tg, n) for n, (tg, ref) in enumerate(LEGACY_HOLDS["current"], 1)]
+    assert migrations.reconcile_legacy_test_usage(install.main).holds == ()
+
+
+def test_error_before_commit_propagates_and_keeps_no_hold(tmp_path):
+    install = _legacy_tests(tmp_path, "current")
+    before = _dump(install.main)
+
+    def fail(point):
+        if point == "before commit":
+            raise RuntimeError("disk full")
+
+    with pytest.raises(RuntimeError, match="^disk full$"):
+        migrations.reconcile_legacy_test_usage(install.main, crash=fail)
+    assert _dump(install.main) == before
