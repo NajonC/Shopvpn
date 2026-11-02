@@ -1067,6 +1067,130 @@ _LIFECYCLE_DDL = (
     BEGIN SELECT RAISE(ABORT, 'an unresolved divergence is kept'); END""",
 )
 
+# data-model.md §10: batch actions, their members and each move member's per-node mapping.
+# composite_subscriptions_customer is the parent key of the member foreign key onto
+# composite_subscriptions; composite_operations_subscription_kind (in _LIFECYCLE_DDL) is the
+# parent key of the one onto composite_operations.
+_BATCH_DDL = (
+    "CREATE UNIQUE INDEX composite_subscriptions_customer ON composite_subscriptions (subscription_id, customer_telegram_id)",
+    """CREATE TABLE composite_batches (
+    batch_id TEXT PRIMARY KEY,
+    action TEXT NOT NULL CHECK (action IN ('owner_suspend', 'owner_resume', 'cancellation', 'move', 'compensation')),
+    preview_digest BLOB NOT NULL UNIQUE CHECK (typeof(preview_digest) = 'blob' AND length(preview_digest) = 32),
+    actor TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (reason <> ''),
+    emergency INTEGER NOT NULL DEFAULT 0 CHECK (emergency IN (0, 1)),
+    emergency_acceptance_ref TEXT,
+    amount INTEGER CHECK (amount IS NULL OR (typeof(amount) = 'integer' AND amount > 0)),
+    member_count INTEGER NOT NULL CHECK (typeof(member_count) = 'integer' AND member_count > 0),
+    total_amount INTEGER,
+    previewed_at INTEGER NOT NULL,
+    authorized_at INTEGER CHECK (authorized_at IS NULL OR authorized_at >= previewed_at),
+    CHECK ((emergency = 1) = (emergency_acceptance_ref IS NOT NULL)),
+    CHECK (emergency = 0 OR action = 'move'),
+    CHECK ((action = 'compensation') = (amount IS NOT NULL)),
+    CHECK ((action = 'compensation') = (total_amount IS NOT NULL)),
+    CHECK (total_amount IS NULL OR total_amount = amount * member_count),
+    UNIQUE (batch_id, action),
+    UNIQUE (batch_id, amount)
+)""",
+    """CREATE TRIGGER composite_batches_saved_unauthorized BEFORE INSERT ON composite_batches
+    WHEN NEW.authorized_at IS NOT NULL
+    BEGIN SELECT RAISE(ABORT, 'a batch is authorized only after its members are saved'); END""",
+    """CREATE TRIGGER composite_batches_preview_fixed BEFORE UPDATE ON composite_batches
+    WHEN NEW.batch_id IS NOT OLD.batch_id OR NEW.action IS NOT OLD.action OR NEW.preview_digest IS NOT OLD.preview_digest
+        OR NEW.actor IS NOT OLD.actor OR NEW.reason IS NOT OLD.reason OR NEW.emergency IS NOT OLD.emergency
+        OR NEW.emergency_acceptance_ref IS NOT OLD.emergency_acceptance_ref OR NEW.amount IS NOT OLD.amount
+        OR NEW.member_count IS NOT OLD.member_count OR NEW.total_amount IS NOT OLD.total_amount
+        OR NEW.previewed_at IS NOT OLD.previewed_at
+        OR (OLD.authorized_at IS NOT NULL AND NEW.authorized_at IS NOT OLD.authorized_at)
+    BEGIN SELECT RAISE(ABORT, 'a batch preview is immutable and its authorization final'); END""",
+    """CREATE TRIGGER composite_batches_authorize_exact BEFORE UPDATE OF authorized_at ON composite_batches
+    WHEN OLD.authorized_at IS NULL AND NEW.authorized_at IS NOT NULL AND (
+        (SELECT count(*) FROM composite_batch_members WHERE batch_id = NEW.batch_id) <> NEW.member_count
+        OR EXISTS (SELECT 1 FROM composite_batch_members m WHERE m.batch_id = NEW.batch_id AND m.action = 'move'
+            AND NOT EXISTS (SELECT 1 FROM composite_batch_member_nodes n WHERE n.member_id = m.member_id)))
+    BEGIN SELECT RAISE(ABORT, 'authorization needs exactly the previewed members and mapping'); END""",
+    """CREATE TRIGGER composite_batches_kept BEFORE DELETE ON composite_batches
+    WHEN OLD.authorized_at IS NOT NULL
+    BEGIN SELECT RAISE(ABORT, 'an authorized batch is kept'); END""",
+    """CREATE TABLE composite_batch_members (
+    member_id TEXT PRIMARY KEY,
+    batch_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    subscription_id TEXT,
+    customer_telegram_id INTEGER NOT NULL,
+    subscription_context TEXT,
+    amount INTEGER,
+    obligation_kind TEXT CHECK (obligation_kind IS NULL OR obligation_kind = 'support_compensation'),
+    operation_id TEXT,
+    obligation_id TEXT UNIQUE,
+    result TEXT NOT NULL DEFAULT 'pending' CHECK (result IN ('pending', 'succeeded', 'failed')),
+    finished_at INTEGER,
+    failure_reason TEXT,
+    CHECK ((action = 'compensation') = (subscription_id IS NULL)),
+    CHECK ((action = 'compensation') = (amount IS NOT NULL)),
+    CHECK ((action = 'compensation') = (obligation_kind IS NOT NULL)),
+    CHECK (action = 'compensation' OR (obligation_id IS NULL AND subscription_context IS NULL)),
+    CHECK (action <> 'compensation' OR operation_id IS NULL),
+    CHECK ((result = 'pending') = (finished_at IS NULL)),
+    CHECK ((result = 'failed') = (failure_reason IS NOT NULL)),
+    CHECK (result = 'pending' OR operation_id IS NOT NULL OR obligation_id IS NOT NULL),
+    UNIQUE (batch_id, subscription_id),
+    UNIQUE (member_id, action, subscription_id),
+    FOREIGN KEY (batch_id, action) REFERENCES composite_batches (batch_id, action) ON DELETE RESTRICT,
+    FOREIGN KEY (batch_id, amount) REFERENCES composite_batches (batch_id, amount) ON DELETE RESTRICT,
+    FOREIGN KEY (subscription_id, customer_telegram_id) REFERENCES composite_subscriptions (subscription_id, customer_telegram_id) ON DELETE RESTRICT,
+    FOREIGN KEY (operation_id, subscription_id, action) REFERENCES composite_operations (operation_id, subscription_id, kind) ON DELETE RESTRICT,
+    FOREIGN KEY (obligation_id, customer_telegram_id, obligation_kind, amount) REFERENCES financial_obligations (obligation_id, beneficiary_telegram_id, kind, amount) ON DELETE RESTRICT
+)""",
+    "CREATE UNIQUE INDEX composite_batch_members_one_credit ON composite_batch_members (batch_id, customer_telegram_id) WHERE action = 'compensation'",
+    """CREATE TRIGGER composite_batch_members_saved_with_preview BEFORE INSERT ON composite_batch_members
+    WHEN NEW.operation_id IS NOT NULL OR NEW.obligation_id IS NOT NULL
+        OR EXISTS (SELECT 1 FROM composite_batches WHERE batch_id = NEW.batch_id AND authorized_at IS NOT NULL)
+    BEGIN SELECT RAISE(ABORT, 'members are saved with the preview, before any effect'); END""",
+    """CREATE TRIGGER composite_batch_members_effects_after_authorization BEFORE UPDATE OF operation_id, obligation_id ON composite_batch_members
+    WHEN (NEW.operation_id IS NOT OLD.operation_id OR NEW.obligation_id IS NOT OLD.obligation_id)
+        AND NOT EXISTS (SELECT 1 FROM composite_batches WHERE batch_id = NEW.batch_id AND authorized_at IS NOT NULL)
+    BEGIN SELECT RAISE(ABORT, 'a preview has no effects'); END""",
+    """CREATE TRIGGER composite_batch_members_fixed BEFORE UPDATE ON composite_batch_members
+    WHEN NEW.member_id IS NOT OLD.member_id OR NEW.batch_id IS NOT OLD.batch_id OR NEW.action IS NOT OLD.action
+        OR NEW.subscription_id IS NOT OLD.subscription_id OR NEW.customer_telegram_id IS NOT OLD.customer_telegram_id
+        OR NEW.subscription_context IS NOT OLD.subscription_context OR NEW.amount IS NOT OLD.amount
+        OR NEW.obligation_kind IS NOT OLD.obligation_kind
+        OR (OLD.operation_id IS NOT NULL AND NEW.operation_id IS NOT OLD.operation_id)
+        OR (OLD.obligation_id IS NOT NULL AND NEW.obligation_id IS NOT OLD.obligation_id)
+        OR (OLD.result <> 'pending' AND (NEW.result IS NOT OLD.result OR NEW.finished_at IS NOT OLD.finished_at
+            OR NEW.failure_reason IS NOT OLD.failure_reason))
+    BEGIN SELECT RAISE(ABORT, 'member identity is fixed and a finished member stays finished'); END""",
+    """CREATE TRIGGER composite_batch_members_kept BEFORE DELETE ON composite_batch_members
+    WHEN EXISTS (SELECT 1 FROM composite_batches WHERE batch_id = OLD.batch_id AND authorized_at IS NOT NULL)
+    BEGIN SELECT RAISE(ABORT, 'members of an authorized batch are kept'); END""",
+    """CREATE TABLE composite_batch_member_nodes (
+    member_id TEXT NOT NULL,
+    member_action TEXT NOT NULL CHECK (member_action = 'move'),
+    subscription_id TEXT NOT NULL,
+    logical_node_key TEXT NOT NULL,
+    target_binding_id TEXT NOT NULL REFERENCES composite_prepared_bindings (binding_id) ON DELETE RESTRICT,
+    target_descriptor TEXT NOT NULL,
+    owner_pick TEXT,
+    read_at INTEGER NOT NULL,
+    PRIMARY KEY (member_id, logical_node_key),
+    FOREIGN KEY (member_id, member_action, subscription_id) REFERENCES composite_batch_members (member_id, action, subscription_id) ON DELETE RESTRICT,
+    FOREIGN KEY (subscription_id, logical_node_key) REFERENCES composite_subscription_nodes (subscription_id, logical_node_key) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_batch_member_nodes_read_at_preview BEFORE INSERT ON composite_batch_member_nodes
+    WHEN EXISTS (SELECT 1 FROM composite_batch_members m JOIN composite_batches b ON b.batch_id = m.batch_id
+        WHERE m.member_id = NEW.member_id AND (b.authorized_at IS NOT NULL OR NEW.read_at > b.previewed_at))
+    BEGIN SELECT RAISE(ABORT, 'the mapping is read at preview and fixed by authorization'); END""",
+    """CREATE TRIGGER composite_batch_member_nodes_fixed BEFORE UPDATE ON composite_batch_member_nodes
+    BEGIN SELECT RAISE(ABORT, 'a previewed mapping never changes'); END""",
+    """CREATE TRIGGER composite_batch_member_nodes_kept BEFORE DELETE ON composite_batch_member_nodes
+    WHEN EXISTS (SELECT 1 FROM composite_batch_members m JOIN composite_batches b ON b.batch_id = m.batch_id
+        WHERE m.member_id = OLD.member_id AND b.authorized_at IS NOT NULL)
+    BEGIN SELECT RAISE(ABORT, 'the mapping of an authorized batch is kept'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -1172,7 +1296,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL:
         conn.execute(statement)
 
 
