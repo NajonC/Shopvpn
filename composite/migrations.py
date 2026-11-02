@@ -1191,6 +1191,101 @@ _BATCH_DDL = (
     BEGIN SELECT RAISE(ABORT, 'the mapping of an authorized batch is kept'); END""",
 )
 
+# data-model.md §10: audit events and outbound notifications.
+# composite_reminders_due is the parent key of the notification foreign key onto
+# composite_reminders (reminder_id, original_due_at); composite_subscriptions_customer
+# (in _BATCH_DDL) is the parent key of the one onto composite_subscriptions.
+_NOTICE_DDL = (
+    "CREATE UNIQUE INDEX composite_reminders_due ON composite_reminders (reminder_id, due_at)",
+    """CREATE TABLE composite_audit_events (
+    event_id TEXT PRIMARY KEY,
+    occurred_at INTEGER NOT NULL,
+    actor_domain TEXT NOT NULL CHECK (actor_domain IN ('telegram', 'web_admin', 'payment_callback', 'system', 'cli')),
+    actor_id TEXT NOT NULL CHECK (actor_id <> ''),
+    action TEXT NOT NULL CHECK (action <> ''),
+    resource_kind TEXT NOT NULL CHECK (resource_kind <> ''),
+    resource_id TEXT NOT NULL CHECK (resource_id <> ''),
+    reason TEXT CHECK (reason IS NULL OR reason <> ''),
+    evidence_ref TEXT,
+    diagnostics TEXT
+)""",
+    """CREATE TRIGGER composite_audit_events_no_update BEFORE UPDATE ON composite_audit_events
+    BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END""",
+    """CREATE TRIGGER composite_audit_events_no_delete BEFORE DELETE ON composite_audit_events
+    BEGIN SELECT RAISE(ABORT, 'audit events are kept'); END""",
+    """CREATE TABLE composite_notifications (
+    notification_id TEXT PRIMARY KEY,
+    notice_key TEXT NOT NULL CHECK (notice_key <> ''),
+    recipient_telegram_id INTEGER NOT NULL CHECK (typeof(recipient_telegram_id) = 'integer' AND recipient_telegram_id > 0),
+    kind TEXT NOT NULL CHECK (kind IN ('fulfillment', 'failure', 'support', 'replacement', 'move', 'owner_alert', 'reminder')),
+    subscription_id TEXT,
+    reminder_id TEXT UNIQUE,
+    operation_id TEXT REFERENCES composite_operations (operation_id) ON DELETE RESTRICT,
+    escalation_ref TEXT,
+    policy_version TEXT NOT NULL CHECK (policy_version <> ''),
+    original_due_at INTEGER NOT NULL,
+    original_target_at INTEGER NOT NULL,
+    original_missed_at INTEGER,
+    status TEXT NOT NULL CHECK (status IN ('waiting_eligibility', 'waiting_transport', 'waiting_opportunity', 'sending', 'uncertain_delivery', 'accepted', 'permanent_failure', 'exhausted', 'obsolete')),
+    block_reason TEXT,
+    next_opportunity_at INTEGER,
+    next_attempt_at INTEGER,
+    attempts_used INTEGER NOT NULL DEFAULT 0 CHECK (typeof(attempts_used) = 'integer' AND attempts_used BETWEEN 0 AND 5),
+    uncertain_since INTEGER,
+    nonacceptance_ref TEXT,
+    accepted_at INTEGER,
+    acceptance_ref TEXT,
+    stop_reason TEXT,
+    CHECK ((kind = 'reminder') = (reminder_id IS NOT NULL)),
+    CHECK (kind <> 'reminder' OR subscription_id IS NOT NULL),
+    CHECK ((kind = 'owner_alert') = (escalation_ref IS NOT NULL)),
+    CHECK (kind <> 'owner_alert' OR subscription_id IS NULL),
+    CHECK (original_target_at = original_due_at + 300000),
+    CHECK (original_missed_at IS NULL OR original_missed_at >= original_target_at),
+    CHECK ((status IN ('waiting_eligibility', 'waiting_transport')) = (block_reason IS NOT NULL)),
+    CHECK ((status = 'waiting_opportunity') = (next_opportunity_at IS NOT NULL)),
+    CHECK (status NOT IN ('waiting_eligibility', 'waiting_transport', 'waiting_opportunity') OR attempts_used < 5),
+    CHECK ((status = 'uncertain_delivery') = (uncertain_since IS NOT NULL)),
+    CHECK ((status = 'accepted') = (accepted_at IS NOT NULL)),
+    CHECK ((accepted_at IS NULL) = (acceptance_ref IS NULL)),
+    CHECK (accepted_at IS NULL OR accepted_at >= original_due_at),
+    CHECK (original_missed_at IS NULL OR accepted_at IS NULL OR accepted_at > original_target_at),
+    CHECK (accepted_at IS NULL OR accepted_at <= original_target_at OR original_missed_at IS NOT NULL),
+    CHECK ((status IN ('permanent_failure', 'exhausted', 'obsolete')) = (stop_reason IS NOT NULL)),
+    CHECK (status <> 'exhausted' OR attempts_used = 5),
+    UNIQUE (notice_key, recipient_telegram_id),
+    FOREIGN KEY (subscription_id, recipient_telegram_id) REFERENCES composite_subscriptions (subscription_id, customer_telegram_id) ON DELETE RESTRICT,
+    FOREIGN KEY (reminder_id, original_due_at) REFERENCES composite_reminders (reminder_id, due_at) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_notifications_saved_unsent BEFORE INSERT ON composite_notifications
+    WHEN NEW.status NOT IN ('waiting_eligibility', 'waiting_transport', 'sending') OR NEW.attempts_used IS NOT 0
+    BEGIN SELECT RAISE(ABORT, 'a notice is saved known-unsent with no attempt used'); END""",
+    """CREATE TRIGGER composite_notifications_identity_fixed BEFORE UPDATE ON composite_notifications
+    WHEN NEW.notification_id IS NOT OLD.notification_id OR NEW.notice_key IS NOT OLD.notice_key
+        OR NEW.recipient_telegram_id IS NOT OLD.recipient_telegram_id OR NEW.kind IS NOT OLD.kind
+        OR NEW.subscription_id IS NOT OLD.subscription_id OR NEW.reminder_id IS NOT OLD.reminder_id
+        OR NEW.operation_id IS NOT OLD.operation_id OR NEW.escalation_ref IS NOT OLD.escalation_ref
+        OR NEW.policy_version IS NOT OLD.policy_version OR NEW.original_due_at IS NOT OLD.original_due_at
+        OR NEW.original_target_at IS NOT OLD.original_target_at
+        OR (OLD.original_missed_at IS NOT NULL AND NEW.original_missed_at IS NOT OLD.original_missed_at)
+    BEGIN SELECT RAISE(ABORT, 'a notice identity and its original clocks are immutable'); END""",
+    """CREATE TRIGGER composite_notifications_final BEFORE UPDATE ON composite_notifications
+    WHEN OLD.status IN ('accepted', 'obsolete')
+    BEGIN SELECT RAISE(ABORT, 'an accepted or obsolete notice never rearms'); END""",
+    """CREATE TRIGGER composite_notifications_uncertain_held BEFORE UPDATE OF status ON composite_notifications
+    WHEN OLD.status = 'uncertain_delivery' AND NEW.status NOT IN ('uncertain_delivery', 'accepted')
+        AND (NEW.nonacceptance_ref IS NULL OR NEW.nonacceptance_ref IS OLD.nonacceptance_ref)
+    BEGIN SELECT RAISE(ABORT, 'an uncertain send leaves uncertainty only on new nonacceptance evidence'); END""",
+    """CREATE TRIGGER composite_notifications_attempts_reserved BEFORE UPDATE OF attempts_used ON composite_notifications
+    WHEN NEW.attempts_used IS NOT OLD.attempts_used AND NEW.attempts_used IS NOT OLD.attempts_used + 1
+    BEGIN SELECT RAISE(ABORT, 'attempts are reserved one at a time and never returned'); END""",
+    """CREATE TRIGGER composite_notifications_backoff_kept BEFORE UPDATE OF next_attempt_at ON composite_notifications
+    WHEN OLD.next_attempt_at IS NOT NULL AND (NEW.next_attempt_at IS NULL OR NEW.next_attempt_at < OLD.next_attempt_at)
+    BEGIN SELECT RAISE(ABORT, 'a persisted backoff is never shortened'); END""",
+    """CREATE TRIGGER composite_notifications_no_delete BEFORE DELETE ON composite_notifications
+    BEGIN SELECT RAISE(ABORT, 'notifications are kept'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -1296,7 +1391,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL:
         conn.execute(statement)
 
 
