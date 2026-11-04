@@ -1591,6 +1591,128 @@ _RECOVERY_DDL = (
     BEGIN SELECT RAISE(ABORT, 'delivery attempts are kept'); END""",
 )
 
+# data-model.md §11: recovery cases opened by a restore and the facts each one
+# must settle. A case opens held; its facts start unknown and are resolved once;
+# a case is released once, by an audited decision the facts allow. A subscription's
+# recovery hold names a held case and clears only when that case is released.
+_RECOVERY_CASE_DDL = (
+    """CREATE TABLE composite_recovery_cases (
+    case_id TEXT PRIMARY KEY,
+    installation_id TEXT NOT NULL CHECK (installation_id <> ''),
+    scope_kind TEXT NOT NULL CHECK (scope_kind IN ('record', 'customer', 'campaign', 'money', 'panel')),
+    scope_ref TEXT NOT NULL CHECK (scope_ref <> ''),
+    old_restore_epoch INTEGER NOT NULL CHECK (typeof(old_restore_epoch) = 'integer' AND old_restore_epoch >= 0),
+    new_restore_epoch INTEGER NOT NULL CHECK (typeof(new_restore_epoch) = 'integer'),
+    restored_point_id TEXT NOT NULL CHECK (restored_point_id <> ''),
+    restored_captured_at INTEGER NOT NULL,
+    restored_manifest_sha256 BLOB NOT NULL
+        CHECK (typeof(restored_manifest_sha256) = 'blob' AND length(restored_manifest_sha256) = 32),
+    pre_restore_set_ref TEXT NOT NULL CHECK (pre_restore_set_ref <> ''),
+    restrictions TEXT NOT NULL CHECK (restrictions <> ''),
+    opened_at INTEGER NOT NULL,
+    released_at INTEGER,
+    release_kind TEXT CHECK (release_kind IN ('verified', 'usage_settlement', 'governed_remediation')),
+    release_audit_event_id TEXT REFERENCES composite_audit_events (event_id) ON DELETE RESTRICT,
+    follow_up_due_at INTEGER,
+    CHECK (new_restore_epoch > old_restore_epoch),
+    CHECK (opened_at >= restored_captured_at),
+    CHECK ((released_at IS NULL) = (release_kind IS NULL) AND (released_at IS NULL) = (release_audit_event_id IS NULL)),
+    CHECK ((release_kind IS 'governed_remediation') = (follow_up_due_at IS NOT NULL)),
+    CHECK (follow_up_due_at IS NULL OR follow_up_due_at > released_at),
+    UNIQUE (new_restore_epoch, scope_kind, scope_ref)
+)""",
+    """CREATE TRIGGER composite_recovery_cases_open_held BEFORE INSERT ON composite_recovery_cases
+    WHEN NEW.released_at IS NOT NULL OR NEW.release_kind IS NOT NULL OR NEW.release_audit_event_id IS NOT NULL OR
+        NEW.follow_up_due_at IS NOT NULL
+    BEGIN SELECT RAISE(ABORT, 'a recovery case opens held'); END""",
+    """CREATE TRIGGER composite_recovery_cases_identity_fixed BEFORE UPDATE ON composite_recovery_cases
+    WHEN NEW.case_id IS NOT OLD.case_id OR NEW.installation_id IS NOT OLD.installation_id OR
+        NEW.scope_kind IS NOT OLD.scope_kind OR NEW.scope_ref IS NOT OLD.scope_ref OR
+        NEW.old_restore_epoch IS NOT OLD.old_restore_epoch OR NEW.new_restore_epoch IS NOT OLD.new_restore_epoch OR
+        NEW.restored_point_id IS NOT OLD.restored_point_id OR NEW.restored_captured_at IS NOT OLD.restored_captured_at OR
+        NEW.restored_manifest_sha256 IS NOT OLD.restored_manifest_sha256 OR
+        NEW.pre_restore_set_ref IS NOT OLD.pre_restore_set_ref OR NEW.restrictions IS NOT OLD.restrictions OR
+        NEW.opened_at IS NOT OLD.opened_at
+    BEGIN SELECT RAISE(ABORT, 'recovery case identity is immutable'); END""",
+    """CREATE TRIGGER composite_recovery_cases_release_final BEFORE UPDATE ON composite_recovery_cases
+    WHEN OLD.released_at IS NOT NULL AND (NEW.released_at IS NOT OLD.released_at OR
+        NEW.release_kind IS NOT OLD.release_kind OR NEW.release_audit_event_id IS NOT OLD.release_audit_event_id OR
+        NEW.follow_up_due_at IS NOT OLD.follow_up_due_at)
+    BEGIN SELECT RAISE(ABORT, 'a released recovery case is final'); END""",
+    """CREATE TRIGGER composite_recovery_cases_release_needs_facts BEFORE UPDATE ON composite_recovery_cases
+    WHEN OLD.released_at IS NULL AND NEW.released_at IS NOT NULL
+        AND NEW.release_kind IS NOT NULL AND NEW.release_audit_event_id IS NOT NULL
+        AND (
+            NOT EXISTS (SELECT 1 FROM composite_recovery_evidence f WHERE f.case_id = NEW.case_id)
+            OR EXISTS (SELECT 1 FROM composite_recovery_evidence f WHERE f.case_id = NEW.case_id AND f.status = 'unknown')
+            OR (NEW.release_kind = 'verified' AND EXISTS (
+                SELECT 1 FROM composite_recovery_evidence f WHERE f.case_id = NEW.case_id AND f.status <> 'verified'))
+            OR (NEW.release_kind = 'usage_settlement' AND (
+                NOT EXISTS (SELECT 1 FROM composite_recovery_evidence f
+                    WHERE f.case_id = NEW.case_id AND f.status = 'irrecoverable')
+                OR EXISTS (SELECT 1 FROM composite_recovery_evidence f
+                    WHERE f.case_id = NEW.case_id AND f.status = 'irrecoverable' AND f.fact_kind <> 'usage')))
+            OR (NEW.release_kind = 'governed_remediation' AND NOT EXISTS (
+                SELECT 1 FROM composite_recovery_evidence f
+                WHERE f.case_id = NEW.case_id AND f.status = 'irrecoverable' AND f.fact_kind <> 'usage'))
+        )
+    BEGIN SELECT RAISE(ABORT, 'the case facts do not allow this release'); END""",
+    """CREATE TRIGGER composite_recovery_cases_release_decision BEFORE UPDATE ON composite_recovery_cases
+    WHEN OLD.released_at IS NULL AND NEW.released_at IS NOT NULL AND EXISTS (
+        SELECT 1 FROM composite_audit_events e
+        WHERE e.event_id = NEW.release_audit_event_id AND (
+            e.resource_kind <> 'composite_recovery_cases' OR e.resource_id <> NEW.case_id OR e.reason IS NULL
+            OR e.occurred_at > NEW.released_at
+            OR EXISTS (SELECT 1 FROM composite_recovery_evidence f
+                WHERE f.case_id = NEW.case_id AND f.resolved_at > e.occurred_at)
+            OR (NEW.release_kind = 'governed_remediation'
+                AND (e.actor_domain IN ('system', 'payment_callback') OR e.evidence_ref IS NULL))))
+    BEGIN SELECT RAISE(ABORT, 'the release decision does not fit this case'); END""",
+    """CREATE TRIGGER composite_recovery_cases_no_delete BEFORE DELETE ON composite_recovery_cases
+    BEGIN SELECT RAISE(ABORT, 'recovery cases are kept'); END""",
+    """CREATE TABLE composite_recovery_evidence (
+    evidence_id TEXT PRIMARY KEY,
+    case_id TEXT NOT NULL REFERENCES composite_recovery_cases (case_id) ON DELETE RESTRICT,
+    fact_kind TEXT NOT NULL CHECK (fact_kind IN ('ownership', 'purchase', 'financial', 'lifecycle', 'token',
+        'remote_identity', 'usage', 'coupon', 'test_claim', 'campaign', 'cleanup')),
+    subject_ref TEXT NOT NULL CHECK (subject_ref <> ''),
+    fact TEXT NOT NULL CHECK (fact <> ''),
+    source_ref TEXT CHECK (source_ref <> ''),
+    recorded_at INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'unknown' CHECK (status IN ('unknown', 'verified', 'irrecoverable')),
+    resolution_ref TEXT CHECK (resolution_ref <> ''),
+    resolved_at INTEGER,
+    CHECK ((status = 'unknown') = (resolution_ref IS NULL) AND (status = 'unknown') = (resolved_at IS NULL)),
+    CHECK (resolved_at IS NULL OR resolved_at >= recorded_at)
+)""",
+    """CREATE TRIGGER composite_recovery_evidence_case_held BEFORE INSERT ON composite_recovery_evidence
+    WHEN EXISTS (SELECT 1 FROM composite_recovery_cases c
+        WHERE c.case_id = NEW.case_id AND (c.released_at IS NOT NULL OR NEW.recorded_at < c.opened_at))
+    BEGIN SELECT RAISE(ABORT, 'facts are recorded only on a held case after it opened'); END""",
+    """CREATE TRIGGER composite_recovery_evidence_identity_fixed BEFORE UPDATE ON composite_recovery_evidence
+    WHEN NEW.evidence_id IS NOT OLD.evidence_id OR NEW.case_id IS NOT OLD.case_id OR NEW.fact_kind IS NOT OLD.fact_kind OR
+        NEW.subject_ref IS NOT OLD.subject_ref OR NEW.fact IS NOT OLD.fact OR NEW.source_ref IS NOT OLD.source_ref OR
+        NEW.recorded_at IS NOT OLD.recorded_at
+    BEGIN SELECT RAISE(ABORT, 'recovery fact identity is immutable'); END""",
+    """CREATE TRIGGER composite_recovery_evidence_resolved_once BEFORE UPDATE ON composite_recovery_evidence
+    WHEN OLD.status <> 'unknown' AND (NEW.status IS NOT OLD.status OR NEW.resolution_ref IS NOT OLD.resolution_ref
+        OR NEW.resolved_at IS NOT OLD.resolved_at)
+    BEGIN SELECT RAISE(ABORT, 'a resolved fact is final'); END""",
+    """CREATE TRIGGER composite_recovery_evidence_no_delete BEFORE DELETE ON composite_recovery_evidence
+    BEGIN SELECT RAISE(ABORT, 'recovery facts are kept'); END""",
+    """CREATE TRIGGER composite_subscriptions_hold_case_on_insert BEFORE INSERT ON composite_subscriptions
+    WHEN NEW.recovery_hold_case IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM composite_recovery_cases c WHERE c.case_id = NEW.recovery_hold_case AND c.released_at IS NULL)
+    BEGIN SELECT RAISE(ABORT, 'a recovery hold names a held case'); END""",
+    """CREATE TRIGGER composite_subscriptions_hold_case_on_update BEFORE UPDATE OF recovery_hold_case ON composite_subscriptions
+    WHEN NEW.recovery_hold_case IS NOT OLD.recovery_hold_case AND (
+        (NEW.recovery_hold_case IS NOT NULL AND NOT EXISTS (SELECT 1 FROM composite_recovery_cases c
+            WHERE c.case_id = NEW.recovery_hold_case AND c.released_at IS NULL))
+        OR (NEW.recovery_hold_case IS NULL AND EXISTS (SELECT 1 FROM composite_recovery_cases c
+            WHERE c.case_id = OLD.recovery_hold_case AND c.released_at IS NULL)))
+    BEGIN SELECT RAISE(ABORT, 'a recovery hold clears only when its case is released'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -1703,7 +1825,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL + _CONTROL_DDL + _RECOVERY_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL + _CONTROL_DDL + _RECOVERY_DDL + _RECOVERY_CASE_DDL:
         conn.execute(statement)
 
 

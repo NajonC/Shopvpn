@@ -242,7 +242,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - `composite_manual_decisions`.
   - `resource_reservations`: resource `coupon`, `ordinary_test`, `campaign_place`; state `held`, `consumed`, `release_pending_refund`, `released`, `uncertain_hold`.
   - `composite_test_claims`; `composite_campaigns` (immutable lifetime cap 150); `composite_campaign_recipients`, unique on `(campaign, authenticated Telegram user)`
-- [ ] T040 Add the data-model §10–§11 DDL to `composite/migrations.py`, with no cascade deletion of financial, history or cleanup rows (FR-075; FR-085). Tests: T034.
+- [X] T040 Add the data-model §10–§11 DDL to `composite/migrations.py`, with no cascade deletion of financial, history or cleanup rows (FR-075; FR-085). Tests: T034.
   - `composite_operations`.
   - `composite_remote_work` and `composite_remote_attempts`: status `queued`, `dispatched`, `uncertain`, `confirmed`, `manual_hold`; `quarantine_until`.
   - `composite_drift_sweeps` (outcome `consistent`, `diverged`, `unknown`) and `composite_divergences`.
