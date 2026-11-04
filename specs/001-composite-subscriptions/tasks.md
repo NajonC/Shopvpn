@@ -249,7 +249,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - A descriptor-discrepancy record (data-model §10): the binding, each in-use descriptor that differs from the panel, the observed values, the detection time, and the closure time and reason.
   - `composite_batches` and `composite_batch_members`, each move member storing per logical node its target binding and the target descriptor read at preview, with the owner's pick (data-model §10); `composite_audit_events`; `composite_notifications` with the N-01 fields.
   - `composite_processing_control`, `composite_recovery_points`, `composite_recovery_cases` and `composite_recovery_evidence`
-- [ ] T041 Implement the upgrade-time reconciliation of `users.test_used` in `composite/migrations.py`, run with admissions quiesced (data-model §9; FR-027; FR-083). Preserve every prior count. Classify demonstrably pending legacy attempts into identity-based `ordinary_test` holds without counting them twice. Hold any unresolved remainder rather than subtracting it or assuming success. Tests: T034
+- [X] T041 Implement the upgrade-time reconciliation of `users.test_used` in `composite/migrations.py`, run with admissions quiesced (data-model §9; FR-027; FR-083). Preserve every prior count. Classify demonstrably pending legacy attempts into identity-based `ordinary_test` holds without counting them twice. Hold any unresolved remainder rather than subtracting it or assuming success. Tests: T034
 
 ### 2C — Domain types, secrets, authority and compatibility guards
 

@@ -11,6 +11,7 @@ import sqlite3
 import time
 from typing import Callable
 import urllib.parse
+import uuid
 
 from composite.repository import BUSY_TIMEOUT_S
 
@@ -1982,3 +1983,80 @@ def migrate(paths: AuthorizedPaths, expected_release: str, *, crash=None) -> Mig
             if conn is not None:
                 conn.close()
     return MigrationReport(tuple(outcomes))
+
+
+@dataclass(frozen=True)
+class LegacyTestReconciliation:
+    """The ordinary-test holds one reconciliation run created, in creation order."""
+
+    holds: tuple[tuple[int, str], ...]
+
+
+def _has_table(conn: sqlite3.Connection, table: str) -> bool:
+    return conn.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)).fetchone() is not None
+
+
+def _has_column(conn: sqlite3.Connection, table: str, column: str) -> bool:
+    return any(row[1] == column for row in conn.execute(f'PRAGMA table_info("{table}")'))
+
+
+def reconcile_legacy_test_usage(main_path, *, crash=None) -> LegacyTestReconciliation:
+    """Hold every counted legacy test that no delivery record proves (data-model §9).
+
+    Run on the migrated main file after ``migrate`` and before admissions reopen. ``users.test_used``
+    keeps every count: each hold is one of those counts, not an extra one.
+    """
+    path = os.path.realpath(main_path)
+    if not os.path.isfile(path):
+        raise MigrationError(f"main database is not a regular file: {path}")
+    conn = sqlite3.connect(path, isolation_level=None, timeout=BUSY_TIMEOUT_S)
+    try:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA synchronous = FULL")
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            version = _read_version(conn)
+            if version > SCHEMA_VERSION:
+                raise UnsupportedSchema(path, version)
+            if version < SCHEMA_VERSION:
+                raise MigrationError(f"{path} is not migrated to composite schema version {SCHEMA_VERSION}")
+            control = conn.execute("SELECT installation_id, admission_mode FROM composite_processing_control").fetchone()
+            if control is None or control[1] != "maintenance":
+                raise MigrationError("admissions must be in maintenance mode")
+            proofs = []
+            if _has_table(conn, "custom_configs") and _has_column(conn, "custom_configs", "source"):
+                proofs.append("SELECT count(*) FROM custom_configs WHERE user_id = ? AND source = 'test'")
+            if _has_table(conn, "test_configs"):
+                proofs.append("SELECT count(*) FROM test_configs WHERE assigned_user_id = ? AND is_used = 1")
+            now = time.time_ns() // 1_000_000
+            sequence = conn.execute("SELECT COALESCE(MAX(sequence), 0) FROM resource_reservations").fetchone()[0]
+            created = []
+            users = conn.execute("SELECT telegram_id, test_used FROM users WHERE test_used > 0 ORDER BY id").fetchall()
+            for telegram_id, used in users:
+                proven = sum(conn.execute(query, (telegram_id,)).fetchone()[0] for query in proofs)
+                for k in range(1, used - min(used, proven) + 1):
+                    ref = f"legacy-test-{telegram_id}-{k}"
+                    if conn.execute(
+                        "SELECT 1 FROM resource_reservations WHERE resource = 'ordinary_test' AND legacy_test_ref = ?", (ref,)
+                    ).fetchone():
+                        continue
+                    sequence += 1
+                    conn.execute(
+                        "INSERT INTO resource_reservations (reservation_id, resource, legacy_test_ref, tenant_installation_id, "
+                        "customer_telegram_id, sequence, accepted_at, state, transition_key, transitioned_at) "
+                        "VALUES (?, 'ordinary_test', ?, ?, ?, ?, ?, 'uncertain_hold', ?, ?)",
+                        (str(uuid.uuid4()), ref, control[0], telegram_id, sequence, now, f"legacy-upgrade:{ref}", now),
+                    )
+                    created.append((telegram_id, ref))
+            if crash is not None:
+                crash("before commit")
+            conn.execute("COMMIT")
+        except BaseException:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK")
+            raise
+        if crash is not None:
+            crash("after commit")
+        return LegacyTestReconciliation(tuple(created))
+    finally:
+        conn.close()
