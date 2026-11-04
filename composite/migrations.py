@@ -1286,6 +1286,101 @@ _NOTICE_DDL = (
     BEGIN SELECT RAISE(ABORT, 'notifications are kept'); END""",
 )
 
+# data-model.md §10: notification delivery opportunities (the 300-second windows,
+# automatic, reconciliation and owner-approved) and the send/lookup attempts made
+# in them. The attempt foreign key uses the opportunities UNIQUE
+# (opportunity_id, notification_id); both tables refer to _NOTICE_DDL tables.
+_DELIVERY_DDL = (
+    """CREATE TABLE composite_notification_opportunities (
+    opportunity_id TEXT PRIMARY KEY,
+    notification_id TEXT NOT NULL REFERENCES composite_notifications (notification_id) ON DELETE RESTRICT,
+    reason TEXT NOT NULL CHECK (reason IN ('original_due', 'unblocked', 'processing_resumed', 'retry_due', 'window_replaced', 'reconciliation', 'owner_recovery', 'owner_duplicate_risk')),
+    audit_event_id TEXT UNIQUE REFERENCES composite_audit_events (event_id) ON DELETE RESTRICT,
+    event_at INTEGER NOT NULL,
+    detected_at INTEGER NOT NULL,
+    ends_at INTEGER NOT NULL,
+    closed_at INTEGER,
+    close_reason TEXT CHECK (close_reason IN ('expired', 'blocked', 'accepted', 'uncertain', 'resolved', 'stopped')),
+    CHECK ((reason IN ('owner_recovery', 'owner_duplicate_risk')) = (audit_event_id IS NOT NULL)),
+    CHECK (detected_at >= event_at),
+    CHECK (ends_at = event_at + 300000),
+    CHECK ((closed_at IS NULL) = (close_reason IS NULL)),
+    CHECK (closed_at IS NULL OR closed_at >= detected_at),
+    CHECK (close_reason IS NULL OR (close_reason = 'expired') = (closed_at >= ends_at)),
+    UNIQUE (opportunity_id, notification_id)
+)""",
+    "CREATE UNIQUE INDEX composite_notification_opportunities_open ON composite_notification_opportunities (notification_id) WHERE closed_at IS NULL",
+    "CREATE UNIQUE INDEX composite_notification_opportunities_initial ON composite_notification_opportunities (notification_id) WHERE reason = 'original_due'",
+    """CREATE TRIGGER composite_notification_opportunities_allowed BEFORE INSERT ON composite_notification_opportunities
+    WHEN EXISTS (SELECT 1 FROM composite_notifications n WHERE n.notification_id = NEW.notification_id AND (
+        NEW.event_at < n.original_due_at
+        OR (NEW.reason IN ('original_due', 'unblocked', 'processing_resumed', 'retry_due', 'window_replaced') AND (n.status NOT IN ('waiting_eligibility', 'waiting_transport', 'waiting_opportunity', 'sending') OR n.attempts_used >= 5))
+        OR (NEW.reason = 'reconciliation' AND (n.status <> 'uncertain_delivery' OR n.attempts_used >= 5))
+        OR (NEW.reason = 'owner_recovery' AND n.status NOT IN ('exhausted', 'permanent_failure'))
+        OR (NEW.reason = 'owner_duplicate_risk' AND n.status <> 'uncertain_delivery')
+        OR (NEW.reason = 'original_due' AND NEW.event_at <> n.original_due_at)
+        OR (NEW.reason = 'retry_due' AND NEW.event_at IS NOT NULL AND NEW.event_at IS NOT n.next_attempt_at)
+        OR (NEW.reason = 'window_replaced' AND NEW.event_at IS NOT NULL AND NEW.event_at IS NOT n.next_opportunity_at)))
+    OR EXISTS (SELECT 1 FROM composite_audit_events e WHERE e.event_id = NEW.audit_event_id
+        AND (e.resource_kind <> 'composite_notifications' OR e.resource_id IS NOT NEW.notification_id))
+    BEGIN SELECT RAISE(ABORT, 'a delivery opportunity opens only for its notice state, time and owner action'); END""",
+    """CREATE TRIGGER composite_notification_opportunities_fixed BEFORE UPDATE ON composite_notification_opportunities
+    WHEN OLD.closed_at IS NOT NULL
+        OR NEW.opportunity_id IS NOT OLD.opportunity_id OR NEW.notification_id IS NOT OLD.notification_id
+        OR NEW.reason IS NOT OLD.reason OR NEW.audit_event_id IS NOT OLD.audit_event_id
+        OR NEW.event_at IS NOT OLD.event_at OR NEW.detected_at IS NOT OLD.detected_at OR NEW.ends_at IS NOT OLD.ends_at
+    BEGIN SELECT RAISE(ABORT, 'an opportunity keeps its identity and closes once'); END""",
+    """CREATE TRIGGER composite_notification_opportunities_no_delete BEFORE DELETE ON composite_notification_opportunities
+    BEGIN SELECT RAISE(ABORT, 'opportunities are kept'); END""",
+    """CREATE TABLE composite_notification_attempts (
+    attempt_id TEXT PRIMARY KEY,
+    notification_id TEXT NOT NULL,
+    opportunity_id TEXT NOT NULL,
+    allowance TEXT NOT NULL CHECK (allowance IN ('automatic', 'manual')),
+    attempt_number INTEGER NOT NULL CHECK (attempt_number BETWEEN 1 AND CASE WHEN allowance = 'manual' THEN 2 ELSE 5 END),
+    call_kind TEXT NOT NULL CHECK (call_kind IN ('send', 'lookup')),
+    reserved_at INTEGER NOT NULL,
+    dispatched_at INTEGER,
+    finished_at INTEGER,
+    outcome TEXT CHECK (outcome IN ('no_send', 'accepted', 'rejected', 'uncertain', 'not_accepted')),
+    evidence_ref TEXT,
+    CHECK ((finished_at IS NULL) = (outcome IS NULL)),
+    CHECK (dispatched_at IS NULL OR dispatched_at >= reserved_at),
+    CHECK (finished_at IS NULL OR finished_at >= reserved_at),
+    CHECK (finished_at IS NULL OR dispatched_at IS NULL OR finished_at >= dispatched_at),
+    CHECK (outcome NOT IN ('accepted', 'rejected', 'not_accepted') OR dispatched_at IS NOT NULL),
+    CHECK (outcome <> 'rejected' OR call_kind = 'send'),
+    CHECK (outcome <> 'not_accepted' OR call_kind = 'lookup'),
+    CHECK ((outcome IS NOT NULL AND outcome IN ('accepted', 'not_accepted')) = (evidence_ref IS NOT NULL)),
+    FOREIGN KEY (opportunity_id, notification_id) REFERENCES composite_notification_opportunities (opportunity_id, notification_id) ON DELETE RESTRICT
+)""",
+    "CREATE UNIQUE INDEX composite_notification_attempts_automatic ON composite_notification_attempts (notification_id, attempt_number) WHERE allowance = 'automatic'",
+    "CREATE UNIQUE INDEX composite_notification_attempts_in_flight ON composite_notification_attempts (notification_id) WHERE outcome IS NULL",
+    """CREATE TRIGGER composite_notification_attempts_allowed BEFORE INSERT ON composite_notification_attempts
+    WHEN EXISTS (SELECT 1 FROM composite_notification_opportunities o JOIN composite_notifications n ON n.notification_id = NEW.notification_id
+        WHERE o.opportunity_id = NEW.opportunity_id AND (
+            o.closed_at IS NOT NULL OR NEW.reserved_at < o.detected_at OR NEW.reserved_at >= o.ends_at
+            OR (o.reason IN ('owner_recovery', 'owner_duplicate_risk')) <> (NEW.allowance = 'manual')
+            OR (o.reason = 'reconciliation') <> (NEW.call_kind = 'lookup')
+            OR n.status <> CASE WHEN o.reason IN ('reconciliation', 'owner_duplicate_risk') THEN 'uncertain_delivery' ELSE 'sending' END
+            OR (NEW.allowance = 'automatic' AND (NEW.attempt_number <> n.attempts_used OR NEW.reserved_at < n.next_attempt_at))
+            OR (NEW.allowance = 'manual' AND (
+                NEW.attempt_number <> 1 + (SELECT count(*) FROM composite_notification_attempts p WHERE p.opportunity_id = NEW.opportunity_id)
+                OR (NEW.attempt_number = 2 AND NOT EXISTS (SELECT 1 FROM composite_notification_attempts p
+                    WHERE p.opportunity_id = NEW.opportunity_id AND p.attempt_number = 1 AND p.outcome = 'no_send' AND NEW.reserved_at >= p.finished_at + 30000))))))
+    BEGIN SELECT RAISE(ABORT, 'an attempt is reserved in an open window of its kind, in order and after its backoff'); END""",
+    """CREATE TRIGGER composite_notification_attempts_fixed BEFORE UPDATE ON composite_notification_attempts
+    WHEN OLD.outcome IS NOT NULL
+        OR NEW.attempt_id IS NOT OLD.attempt_id OR NEW.notification_id IS NOT OLD.notification_id
+        OR NEW.opportunity_id IS NOT OLD.opportunity_id OR NEW.allowance IS NOT OLD.allowance
+        OR NEW.attempt_number IS NOT OLD.attempt_number OR NEW.call_kind IS NOT OLD.call_kind
+        OR NEW.reserved_at IS NOT OLD.reserved_at
+        OR (OLD.dispatched_at IS NOT NULL AND NEW.dispatched_at IS NOT OLD.dispatched_at)
+    BEGIN SELECT RAISE(ABORT, 'an attempt keeps its identity, dispatch time and outcome'); END""",
+    """CREATE TRIGGER composite_notification_attempts_no_delete BEFORE DELETE ON composite_notification_attempts
+    BEGIN SELECT RAISE(ABORT, 'attempts are kept'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -1391,7 +1486,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL:
         conn.execute(statement)
 
 
