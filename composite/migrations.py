@@ -1381,6 +1381,62 @@ _DELIVERY_DDL = (
     BEGIN SELECT RAISE(ABORT, 'attempts are kept'); END""",
 )
 
+# data-model.md §11: the installation's one processing-control row (installation
+# identity, admission mode, operation generation, restore epoch, worker
+# incarnation and the composite issuance switch). migrate creates the table
+# empty; the row is written later from the external protected control file.
+_CONTROL_DDL = (
+    """CREATE TABLE composite_processing_control (
+    control_id INTEGER PRIMARY KEY CHECK (control_id = 1),
+    installation_id TEXT NOT NULL,
+    restore_epoch INTEGER NOT NULL DEFAULT 0 CHECK (restore_epoch >= 0),
+    operation_generation INTEGER NOT NULL DEFAULT 0 CHECK (operation_generation >= 0),
+    admission_mode TEXT NOT NULL CHECK (admission_mode IN ('open', 'maintenance')),
+    maintenance_reason TEXT,
+    mode_changed_at INTEGER NOT NULL,
+    worker_incarnation TEXT,
+    worker_epoch INTEGER,
+    issuance_enabled INTEGER NOT NULL DEFAULT 0 CHECK (issuance_enabled IN (0, 1)),
+    CHECK ((admission_mode = 'maintenance') = (maintenance_reason IS NOT NULL)),
+    CHECK ((worker_incarnation IS NULL) = (worker_epoch IS NULL))
+)""",
+    """CREATE TRIGGER composite_processing_control_starts_clean
+BEFORE INSERT ON composite_processing_control
+WHEN NEW.worker_incarnation IS NOT NULL OR NEW.worker_epoch IS NOT NULL OR NEW.issuance_enabled = 1
+BEGIN SELECT RAISE(ABORT, 'processing control starts with no worker and issuance off'); END""",
+    """CREATE TRIGGER composite_processing_control_kept
+BEFORE DELETE ON composite_processing_control
+BEGIN SELECT RAISE(ABORT, 'processing control is never deleted'); END""",
+    """CREATE TRIGGER composite_processing_control_installation
+BEFORE UPDATE ON composite_processing_control
+WHEN NEW.installation_id IS NOT OLD.installation_id
+BEGIN SELECT RAISE(ABORT, 'installation identity never changes'); END""",
+    """CREATE TRIGGER composite_processing_control_generation
+BEFORE UPDATE ON composite_processing_control
+WHEN (OLD.admission_mode <> 'maintenance' AND NEW.admission_mode = 'maintenance' AND NEW.operation_generation IS NOT OLD.operation_generation + 1)
+  OR (NOT (OLD.admission_mode <> 'maintenance' AND NEW.admission_mode = 'maintenance') AND NEW.operation_generation IS NOT OLD.operation_generation)
+BEGIN SELECT RAISE(ABORT, 'operation generation rises by one exactly when maintenance begins'); END""",
+    """CREATE TRIGGER composite_processing_control_mode_clock
+BEFORE UPDATE ON composite_processing_control
+WHEN (NEW.admission_mode IS NOT OLD.admission_mode AND NEW.mode_changed_at <= OLD.mode_changed_at)
+  OR (NEW.admission_mode IS OLD.admission_mode AND NEW.mode_changed_at IS NOT OLD.mode_changed_at)
+BEGIN SELECT RAISE(ABORT, 'mode_changed_at moves forward exactly when the admission mode changes'); END""",
+    """CREATE TRIGGER composite_processing_control_epoch
+BEFORE UPDATE ON composite_processing_control
+WHEN NEW.restore_epoch IS NOT OLD.restore_epoch
+ AND (NEW.restore_epoch < OLD.restore_epoch OR OLD.admission_mode <> 'maintenance' OR NEW.admission_mode <> 'maintenance')
+BEGIN SELECT RAISE(ABORT, 'the restore epoch only rises, and only during maintenance'); END""",
+    """CREATE TRIGGER composite_processing_control_worker_epoch
+BEFORE UPDATE ON composite_processing_control
+WHEN NEW.worker_epoch IS NOT OLD.worker_epoch AND NEW.worker_incarnation IS OLD.worker_incarnation
+BEGIN SELECT RAISE(ABORT, 'a worker incarnation never acknowledges another epoch'); END""",
+    """CREATE TRIGGER composite_processing_control_worker_registration
+BEFORE UPDATE ON composite_processing_control
+WHEN NEW.worker_incarnation IS NOT NULL AND NEW.worker_incarnation IS NOT OLD.worker_incarnation
+ AND (NEW.admission_mode <> 'open' OR NEW.worker_epoch IS NOT NEW.restore_epoch)
+BEGIN SELECT RAISE(ABORT, 'a new worker registers while admission is open, at the current restore epoch'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -1470,12 +1526,19 @@ def inspect_schema(path: str) -> SchemaInfo:
 
 
 def issuance_enabled(main_path: str) -> bool:
-    """Report whether composite issuance is enabled; always ``False`` for now.
-
-    Nothing can enable issuance yet: its switch belongs to the processing-control
-    record a later schema step adds, and ``migrate`` never sets it.
-    """
-    return False
+    """Report whether composite issuance is enabled: the main file's processing-control switch."""
+    conn = _readonly_connect(main_path)
+    try:
+        if _read_version(conn) > SCHEMA_VERSION:
+            return False
+        if conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'composite_processing_control'"
+        ).fetchone() is None:
+            return False
+        row = conn.execute("SELECT issuance_enabled FROM composite_processing_control WHERE control_id = 1").fetchone()
+        return row is not None and row[0] == 1
+    finally:
+        conn.close()
 
 
 def _main_v1(conn: sqlite3.Connection) -> None:
@@ -1486,7 +1549,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL + _CONTROL_DDL:
         conn.execute(statement)
 
 
