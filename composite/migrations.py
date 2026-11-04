@@ -1437,6 +1437,160 @@ WHEN NEW.worker_incarnation IS NOT NULL AND NEW.worker_incarnation IS NOT OLD.wo
 BEGIN SELECT RAISE(ABORT, 'a new worker registers while admission is open, at the current restore epoch'); END""",
 )
 
+# data-model.md §11: validated recovery points and their B-01 delivery attempts.
+# Each point starts delivering, unverified, with a deadline derived from its
+# predecessor; attempts are reserved before work, keep their path and outcome,
+# and a verified attempt must read back the validated archive. Both are kept.
+_RECOVERY_DDL = (
+    """CREATE TABLE composite_recovery_points (
+    recovery_point_id TEXT PRIMARY KEY,
+    installation_id TEXT NOT NULL CHECK (installation_id <> ''),
+    restore_epoch INTEGER NOT NULL CHECK (typeof(restore_epoch) = 'integer' AND restore_epoch >= 0),
+    captured_at INTEGER NOT NULL,
+    schema_version INTEGER NOT NULL CHECK (typeof(schema_version) = 'integer' AND schema_version >= 1),
+    release TEXT NOT NULL CHECK (release <> ''),
+    runtime_inventory TEXT NOT NULL CHECK (runtime_inventory <> ''),
+    manifest TEXT NOT NULL CHECK (manifest <> ''),
+    manifest_sha256 BLOB NOT NULL CHECK (typeof(manifest_sha256) = 'blob' AND length(manifest_sha256) = 32),
+    archive_ref TEXT NOT NULL CHECK (archive_ref <> ''),
+    archive_sha256 BLOB NOT NULL CHECK (typeof(archive_sha256) = 'blob' AND length(archive_sha256) = 32),
+    archive_bytes INTEGER NOT NULL CHECK (typeof(archive_bytes) = 'integer' AND archive_bytes > 0),
+    encryption_key_id TEXT NOT NULL CHECK (encryption_key_id <> ''),
+    validation_report TEXT NOT NULL CHECK (validation_report <> ''),
+    validated_at INTEGER NOT NULL,
+    destination_id TEXT NOT NULL CHECK (destination_id <> ''),
+    policy_version TEXT NOT NULL CHECK (policy_version <> ''),
+    predecessor_point_id TEXT REFERENCES composite_recovery_points (recovery_point_id) ON DELETE RESTRICT,
+    delivery_deadline INTEGER NOT NULL,
+    delivery_state TEXT NOT NULL DEFAULT 'delivering' CHECK (delivery_state IN ('delivering', 'verified', 'exhausted', 'stopped')),
+    delivery_closed_at INTEGER,
+    verified_at INTEGER,
+    verified_attempt_id TEXT,
+    age_target_missed_at INTEGER,
+    CHECK (validated_at >= captured_at),
+    CHECK ((delivery_state = 'delivering') = (delivery_closed_at IS NULL)),
+    CHECK (delivery_closed_at IS NULL OR delivery_closed_at >= validated_at),
+    CHECK ((verified_at IS NULL) = (verified_attempt_id IS NULL)),
+    CHECK (verified_at IS NULL OR delivery_state <> 'delivering'),
+    CHECK (delivery_state <> 'verified' OR verified_at IS NOT NULL),
+    CHECK (age_target_missed_at IS NULL OR (verified_at IS NOT NULL AND age_target_missed_at >= verified_at AND age_target_missed_at >= captured_at + 900000)),
+    FOREIGN KEY (verified_attempt_id, recovery_point_id) REFERENCES composite_recovery_delivery_attempts (attempt_id, recovery_point_id) ON DELETE RESTRICT
+)""",
+    """CREATE TRIGGER composite_recovery_points_captured BEFORE INSERT ON composite_recovery_points
+    WHEN NEW.delivery_state IS NOT 'delivering' OR NEW.verified_at IS NOT NULL OR NEW.verified_attempt_id IS NOT NULL OR NEW.age_target_missed_at IS NOT NULL
+        OR (NEW.predecessor_point_id IS NULL AND EXISTS (SELECT 1 FROM composite_recovery_points q WHERE q.verified_at <= NEW.captured_at))
+        OR EXISTS (SELECT 1 FROM composite_recovery_points p WHERE p.recovery_point_id = NEW.predecessor_point_id AND (
+            p.verified_at IS NULL OR p.verified_at > NEW.captured_at
+            OR EXISTS (SELECT 1 FROM composite_recovery_points q WHERE q.verified_at <= NEW.captured_at AND q.captured_at > p.captured_at)))
+        OR NEW.delivery_deadline IS NOT COALESCE(
+            (SELECT min(NEW.captured_at + 600000, p.captured_at + 900000) FROM composite_recovery_points p
+             WHERE p.recovery_point_id = NEW.predecessor_point_id AND p.captured_at + 900000 > NEW.captured_at),
+            NEW.captured_at + 600000)
+    BEGIN SELECT RAISE(ABORT, 'a recovery point starts delivering, unverified, with its predecessor and B-01 deadline'); END""",
+    """CREATE TRIGGER composite_recovery_points_fixed BEFORE UPDATE ON composite_recovery_points
+    WHEN (NEW.recovery_point_id IS NOT OLD.recovery_point_id OR NEW.installation_id IS NOT OLD.installation_id OR
+        NEW.restore_epoch IS NOT OLD.restore_epoch OR NEW.captured_at IS NOT OLD.captured_at OR
+        NEW.schema_version IS NOT OLD.schema_version OR NEW.release IS NOT OLD.release OR
+        NEW.runtime_inventory IS NOT OLD.runtime_inventory OR NEW.manifest IS NOT OLD.manifest OR
+        NEW.manifest_sha256 IS NOT OLD.manifest_sha256 OR NEW.archive_ref IS NOT OLD.archive_ref OR
+        NEW.archive_sha256 IS NOT OLD.archive_sha256 OR NEW.archive_bytes IS NOT OLD.archive_bytes OR
+        NEW.encryption_key_id IS NOT OLD.encryption_key_id OR
+        NEW.validation_report IS NOT OLD.validation_report OR NEW.validated_at IS NOT OLD.validated_at OR
+        NEW.destination_id IS NOT OLD.destination_id OR NEW.policy_version IS NOT OLD.policy_version OR
+        NEW.predecessor_point_id IS NOT OLD.predecessor_point_id OR
+        NEW.delivery_deadline IS NOT OLD.delivery_deadline)
+        OR (OLD.delivery_state <> 'delivering' AND (NEW.delivery_state IS NOT OLD.delivery_state OR NEW.delivery_closed_at IS NOT OLD.delivery_closed_at))
+        OR (OLD.verified_at IS NOT NULL AND (NEW.verified_at IS NOT OLD.verified_at OR NEW.verified_attempt_id IS NOT OLD.verified_attempt_id))
+        OR (OLD.age_target_missed_at IS NOT NULL AND NEW.age_target_missed_at IS NOT OLD.age_target_missed_at)
+    BEGIN SELECT RAISE(ABORT, 'a recovery point keeps its capture, deadline and recorded outcomes'); END""",
+    """CREATE TRIGGER composite_recovery_points_closed BEFORE UPDATE ON composite_recovery_points
+    WHEN OLD.delivery_state = 'delivering' AND NEW.delivery_state IS NOT 'delivering' AND (
+        EXISTS (SELECT 1 FROM composite_recovery_delivery_attempts a WHERE a.recovery_point_id = OLD.recovery_point_id AND a.outcome IS NULL)
+        OR (NEW.delivery_state IN ('exhausted', 'stopped') AND EXISTS (SELECT 1 FROM composite_recovery_delivery_attempts a WHERE a.recovery_point_id = OLD.recovery_point_id AND a.outcome = 'verified'))
+        OR (NEW.delivery_state = 'exhausted' AND NEW.delivery_closed_at < OLD.delivery_deadline
+            AND NOT EXISTS (SELECT 1 FROM composite_recovery_delivery_attempts a WHERE a.recovery_point_id = OLD.recovery_point_id AND a.allowance = 'automatic' AND a.attempt_number = 3))
+        OR (NEW.delivery_state = 'stopped'
+            AND NOT EXISTS (SELECT 1 FROM composite_recovery_delivery_attempts a WHERE a.recovery_point_id = OLD.recovery_point_id AND a.allowance = 'automatic' AND a.outcome = 'rejected'))
+        OR (NEW.delivery_state = 'verified'
+            AND NOT EXISTS (SELECT 1 FROM composite_recovery_delivery_attempts a WHERE a.attempt_id = NEW.verified_attempt_id AND a.allowance = 'automatic')))
+    BEGIN SELECT RAISE(ABORT, 'automatic delivery closes once, with no attempt in flight, for a reason its attempts and deadline support'); END""",
+    """CREATE TRIGGER composite_recovery_points_verified BEFORE UPDATE ON composite_recovery_points
+    WHEN OLD.verified_at IS NULL AND NEW.verified_at IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM composite_recovery_delivery_attempts a
+        WHERE a.attempt_id = NEW.verified_attempt_id AND a.recovery_point_id = OLD.recovery_point_id
+          AND a.outcome = 'verified' AND a.finished_at <= NEW.verified_at
+          AND (a.allowance = 'automatic') = (NEW.delivery_state = 'verified'))
+    BEGIN SELECT RAISE(ABORT, 'a recovery point is verified only by its own verified attempt'); END""",
+    """CREATE TRIGGER composite_recovery_points_missed BEFORE UPDATE ON composite_recovery_points
+    WHEN OLD.age_target_missed_at IS NULL AND NEW.age_target_missed_at IS NOT NULL AND EXISTS (
+        SELECT 1 FROM composite_recovery_points q WHERE q.captured_at > OLD.captured_at AND q.verified_at <= NEW.age_target_missed_at)
+    BEGIN SELECT RAISE(ABORT, 'the age target is missed only while no newer capture is verified'); END""",
+    """CREATE TRIGGER composite_recovery_points_no_delete BEFORE DELETE ON composite_recovery_points
+    BEGIN SELECT RAISE(ABORT, 'recovery points are kept'); END""",
+    """CREATE TABLE composite_recovery_delivery_attempts (
+    attempt_id TEXT PRIMARY KEY,
+    recovery_point_id TEXT NOT NULL REFERENCES composite_recovery_points (recovery_point_id) ON DELETE RESTRICT,
+    allowance TEXT NOT NULL CHECK (allowance IN ('automatic', 'recovery')),
+    audit_event_id TEXT REFERENCES composite_audit_events (event_id) ON DELETE RESTRICT,
+    attempt_number INTEGER NOT NULL CHECK (attempt_number BETWEEN 1 AND 3),
+    remote_path TEXT NOT NULL UNIQUE CHECK (remote_path <> ''),
+    reserved_at INTEGER NOT NULL,
+    dispatched_at INTEGER,
+    finished_at INTEGER,
+    outcome TEXT CHECK (outcome IN ('no_write', 'rejected', 'partial', 'uncertain', 'verified')),
+    failure_kind TEXT CHECK (failure_kind IN ('host_key_mismatch', 'credentials', 'checksum_mismatch', 'destination_space')),
+    next_attempt_at INTEGER,
+    readback_bytes INTEGER,
+    readback_sha256 BLOB,
+    completion_manifest_ref TEXT,
+    closure_evidence_ref TEXT,
+    CHECK ((allowance = 'recovery') = (audit_event_id IS NOT NULL)),
+    CHECK ((finished_at IS NULL) = (outcome IS NULL)),
+    CHECK (dispatched_at IS NULL OR dispatched_at >= reserved_at),
+    CHECK (finished_at IS NULL OR finished_at >= reserved_at),
+    CHECK (finished_at IS NULL OR dispatched_at IS NULL OR finished_at >= dispatched_at),
+    CHECK (outcome IS NULL OR outcome = 'no_write' OR dispatched_at IS NOT NULL),
+    CHECK ((outcome IS NOT NULL AND outcome = 'rejected') = (failure_kind IS NOT NULL)),
+    CHECK (next_attempt_at IS (CASE WHEN outcome IN ('no_write', 'partial', 'uncertain') AND attempt_number < 3
+        THEN finished_at + CASE attempt_number WHEN 1 THEN 15000 ELSE 45000 END END)),
+    CHECK (CASE WHEN outcome = 'verified'
+        THEN readback_bytes IS NOT NULL AND readback_sha256 IS NOT NULL AND completion_manifest_ref IS NOT NULL AND closure_evidence_ref IS NOT NULL
+        ELSE readback_bytes IS NULL AND readback_sha256 IS NULL AND completion_manifest_ref IS NULL AND closure_evidence_ref IS NULL END),
+    UNIQUE (attempt_id, recovery_point_id)
+)""",
+    "CREATE UNIQUE INDEX composite_recovery_delivery_attempts_automatic ON composite_recovery_delivery_attempts (recovery_point_id, attempt_number) WHERE allowance = 'automatic'",
+    "CREATE UNIQUE INDEX composite_recovery_delivery_attempts_recovery ON composite_recovery_delivery_attempts (audit_event_id, attempt_number) WHERE allowance = 'recovery'",
+    "CREATE UNIQUE INDEX composite_recovery_delivery_attempts_in_flight ON composite_recovery_delivery_attempts (recovery_point_id) WHERE outcome IS NULL",
+    """CREATE TRIGGER composite_recovery_delivery_attempts_reserved BEFORE INSERT ON composite_recovery_delivery_attempts
+    WHEN NEW.dispatched_at IS NOT NULL OR NEW.finished_at IS NOT NULL OR NEW.outcome IS NOT NULL OR NEW.failure_kind IS NOT NULL
+        OR NEW.next_attempt_at IS NOT NULL OR NEW.readback_bytes IS NOT NULL OR NEW.readback_sha256 IS NOT NULL
+        OR NEW.completion_manifest_ref IS NOT NULL OR NEW.closure_evidence_ref IS NOT NULL
+        OR EXISTS (SELECT 1 FROM composite_recovery_points p WHERE p.recovery_point_id = NEW.recovery_point_id AND (
+            (NEW.allowance = 'automatic' AND (p.delivery_state <> 'delivering' OR NEW.reserved_at < p.validated_at OR NEW.reserved_at >= p.delivery_deadline))
+            OR (NEW.allowance = 'recovery' AND (p.delivery_state NOT IN ('exhausted', 'stopped') OR p.verified_at IS NOT NULL))))
+        OR EXISTS (SELECT 1 FROM composite_audit_events e WHERE e.event_id = NEW.audit_event_id AND (
+            e.resource_kind <> 'composite_recovery_points' OR e.resource_id IS NOT NEW.recovery_point_id
+            OR NEW.reserved_at < e.occurred_at OR NEW.reserved_at >= e.occurred_at + 420000))
+        OR (NEW.attempt_number > 1 AND NOT EXISTS (SELECT 1 FROM composite_recovery_delivery_attempts prev
+            WHERE prev.recovery_point_id = NEW.recovery_point_id AND prev.allowance = NEW.allowance
+              AND prev.audit_event_id IS NEW.audit_event_id AND prev.attempt_number = NEW.attempt_number - 1
+              AND prev.next_attempt_at <= NEW.reserved_at))
+    BEGIN SELECT RAISE(ABORT, 'a delivery attempt is reserved before work, within its budget or audited window, after its backoff'); END""",
+    """CREATE TRIGGER composite_recovery_delivery_attempts_fixed BEFORE UPDATE ON composite_recovery_delivery_attempts
+    WHEN OLD.outcome IS NOT NULL OR (NEW.attempt_id IS NOT OLD.attempt_id OR NEW.recovery_point_id IS NOT OLD.recovery_point_id OR
+        NEW.allowance IS NOT OLD.allowance OR NEW.audit_event_id IS NOT OLD.audit_event_id OR
+        NEW.attempt_number IS NOT OLD.attempt_number OR NEW.remote_path IS NOT OLD.remote_path OR
+        NEW.reserved_at IS NOT OLD.reserved_at)
+        OR (OLD.dispatched_at IS NOT NULL AND NEW.dispatched_at IS NOT OLD.dispatched_at)
+    BEGIN SELECT RAISE(ABORT, 'a delivery attempt keeps its identity, path, dispatch time and outcome'); END""",
+    """CREATE TRIGGER composite_recovery_delivery_attempts_read_back BEFORE UPDATE ON composite_recovery_delivery_attempts
+    WHEN NEW.outcome IS 'verified' AND EXISTS (SELECT 1 FROM composite_recovery_points p WHERE p.recovery_point_id = NEW.recovery_point_id
+        AND (NEW.readback_bytes IS NOT p.archive_bytes OR NEW.readback_sha256 IS NOT p.archive_sha256))
+    BEGIN SELECT RAISE(ABORT, 'a verified delivery reads back the validated archive'); END""",
+    """CREATE TRIGGER composite_recovery_delivery_attempts_no_delete BEFORE DELETE ON composite_recovery_delivery_attempts
+    BEGIN SELECT RAISE(ABORT, 'delivery attempts are kept'); END""",
+)
+
 
 @dataclass(frozen=True)
 class AuthorizedPaths:
@@ -1549,7 +1703,7 @@ def _main_v1(conn: sqlite3.Connection) -> None:
         )
         conn.execute(f"ALTER TABLE {table} ADD COLUMN composite_ref TEXT")
         conn.execute(f"CREATE UNIQUE INDEX idx_{table}_composite_ref ON {table} (composite_ref)")
-    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL + _CONTROL_DDL:
+    for statement in _PANEL_DDL + _CATALOG_DDL + _ACCOUNTING_DDL + _COMMERCE_DDL + _LIFECYCLE_DDL + _BATCH_DDL + _NOTICE_DDL + _DELIVERY_DDL + _CONTROL_DDL + _RECOVERY_DDL:
         conn.execute(statement)
 
 
