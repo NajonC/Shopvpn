@@ -266,7 +266,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - the SHA-256 token digest;
   - the redaction filter on log records and exception text;
   - sanitized diagnostics carrying only operation, tenant and record IDs
-- [ ] T045 [P] Implement `composite/secrets.py` (data-model "Storage and identity rules"; FR-084): versioned AES-GCM encryption of tokens, child secrets, URIs and necessary remote references, using keys only from authorized environment or configuration; digest helpers; and a log redaction filter installed on composite loggers. Tests: T044
+- [X] T045 [P] Implement `composite/secrets.py` (data-model "Storage and identity rules"; FR-084): versioned AES-GCM encryption of tokens, child secrets, URIs and necessary remote references, using keys only from authorized environment or configuration; digest helpers; and a log redaction filter installed on composite loggers. Tests: T044
 - [ ] T046 [P] Implement `composite/audit.py`: an immutable audit-event writer (actor domain, action, resource, reason, evidence references) and the sanitized diagnostic builder used by every composite failure path, so that no failure is swallowed or reported as completed (constitution VII; FR-085). Tests: T044
 - [ ] T047 [P] Write `tests/integration/test_authority_matrix.py`. Each of these attempts must change nothing (FR-005; FR-006; FR-084; SC-012):
   - a forged callback actor and a cross-tenant selector;
