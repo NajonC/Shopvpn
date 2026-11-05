@@ -261,7 +261,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Independent restriction flags, never one mutable `enabled` flag.
   - Derived `expired` and `exhausted`.
   - The `desired_access`, publication and `confirmed_access` predicates
-- [ ] T044 [P] Write `tests/unit/test_secrets_and_audit.py`, checked with `tests/_harness/secret_scan.py` (FR-084; constitution III/VII):
+- [X] T044 [P] Write `tests/unit/test_secrets_and_audit.py`, checked with `tests/_harness/secret_scan.py` (FR-084; constitution III/VII):
   - an AES-GCM round trip with versioned key IDs and unique nonces, and failure on a missing or wrong key;
   - the SHA-256 token digest;
   - the redaction filter on log records and exception text;
