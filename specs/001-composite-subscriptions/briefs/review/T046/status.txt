@@ -1,0 +1,3 @@
+A  tests/unit/test_audit_writer.py
+?? specs/001-composite-subscriptions/briefs/T046.md
+?? specs/001-composite-subscriptions/briefs/review/T046/
