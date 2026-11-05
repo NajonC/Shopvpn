@@ -256,7 +256,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
 - [X] T042 [P] Write `tests/unit/test_models_predicates.py` (data-model §3):
   - the `desired_access` and publication predicates: a pending cancellation during an authorized renewal neither disables access nor invalidates the URL; owner suspension is status-only; expiry, exhaustion and customer or reporting disable keep the complete list;
   - `confirmed_access` aggregation (`unknown`, `partial`, `confirmed_eligible`, `confirmed_fresh_auth_denied`), including the RX-D8 rule
-- [ ] T043 Implement `composite/models.py` (data-model §3–§4 and §10; FR-051; FR-053). Tests: T042.
+- [X] T043 Implement `composite/models.py` (data-model §3–§4 and §10; FR-051; FR-053). Tests: T042.
   - State enums copied verbatim from data-model.md.
   - Independent restriction flags, never one mutable `enabled` flag.
   - Derived `expired` and `exhausted`.

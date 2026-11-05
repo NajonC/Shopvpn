@@ -19,13 +19,12 @@ Interface (all names in `composite.models`):
   `publication(facts, token_status) -> Publication` and
   `confirmed_access(evidence, now) -> ConfirmedAccess`.
 
-Cases the specs leave open are deliberately not pinned here (see the T042
-brief): access while `preparing`, whether a delivery block restricts access,
-and whether an unconfirmed child with matching read-backs is `unknown` or
-`partial`.
+The five open T042 decisions are pinned below by the owner-approved T043
+contract (2026-11-05); see briefs/T043.md for their provenance.
 """
 
 import dataclasses
+from enum import StrEnum
 
 import pytest
 
@@ -142,6 +141,7 @@ ENUM_VALUES = {
 @pytest.mark.parametrize("enum_name", sorted(ENUM_VALUES))
 def test_state_enums_copy_the_stored_values(enum_name):
     enum = getattr(m, enum_name)
+    assert issubclass(enum, StrEnum)
     values = ENUM_VALUES[enum_name]
     assert [(member.name, member.value) for member in enum] == [(v.upper(), v) for v in values]
     for value in values:
@@ -369,7 +369,7 @@ def test_blocked_or_incomplete_delivery_is_unavailable(changes):
     ids=["failed_unfulfilled", "failed_late_generation"],
 )
 def test_failed_initial_never_serves_entries(changes):
-    assert _publish(changes) in {m.Publication.NOT_FOUND, m.Publication.UNAVAILABLE}
+    assert _publish(changes) is m.Publication.NOT_FOUND
 
 
 # confirmed_access (RD-10, RX-D8) ----------------------------------------------
@@ -410,11 +410,8 @@ def _confirmed(evidence):
     return m.confirmed_access(evidence, NOW)
 
 
-def _not_confirmed(evidence):
-    return _confirmed(evidence) not in {
-        m.ConfirmedAccess.CONFIRMED_ELIGIBLE,
-        m.ConfirmedAccess.CONFIRMED_FRESH_AUTH_DENIED,
-    }
+def _partial(evidence):
+    return _confirmed(evidence) is m.ConfirmedAccess.PARTIAL
 
 
 @pytest.mark.parametrize("desired", sorted(CONFIRMED_FOR))
@@ -452,7 +449,7 @@ def test_some_attachments_matching_is_partial(desired, read_backs):
 
 @pytest.mark.parametrize("desired", sorted(CONFIRMED_FOR))
 def test_runtime_evidence_where_required(desired):
-    assert _not_confirmed(_evidence(desired, runtime_required=True))
+    assert _partial(_evidence(desired, runtime_required=True))
     with_runtime = _evidence(desired, runtime_required=True, runtime_evidence=True)
     assert _confirmed(with_runtime) is m.ConfirmedAccess(CONFIRMED_FOR[desired])
 
@@ -485,7 +482,7 @@ def test_request_that_cannot_undo_the_state_does_not_block(desired, carries):
 )
 def test_request_that_could_undo_the_state_blocks_until_its_quarantine_ends(desired, carries):
     for until in (IN_QUARANTINE, NOW + 1):
-        assert _not_confirmed(_evidence(desired, requests=[(carries, until)])), until
+        assert _partial(_evidence(desired, requests=[(carries, until)])), until
     for until in (NOW, NOW - 1):
         evidence = _evidence(desired, requests=[(carries, until)])
         assert _confirmed(evidence) is m.ConfirmedAccess(CONFIRMED_FOR[desired]), until
@@ -495,8 +492,101 @@ def test_one_blocking_request_among_harmless_ones_blocks():
     harmless = [("disabled", IN_QUARANTINE), ("removed", IN_QUARANTINE), ("enabled", NOW)]
     denied = _evidence("disabled", requests=harmless)
     assert _confirmed(denied) is m.ConfirmedAccess.CONFIRMED_FRESH_AUTH_DENIED
-    assert _not_confirmed(_evidence("disabled", requests=[*harmless, ("enabled", IN_QUARANTINE)]))
+    assert _partial(_evidence("disabled", requests=[*harmless, ("enabled", IN_QUARANTINE)]))
 
     eligible = _evidence("enabled", requests=[("enabled", IN_QUARANTINE), ("disabled", NOW - 1)])
     assert _confirmed(eligible) is m.ConfirmedAccess.CONFIRMED_ELIGIBLE
-    assert _not_confirmed(_evidence("enabled", requests=[("enabled", IN_QUARANTINE), ("removed", NOW + 1)]))
+    assert _partial(_evidence("enabled", requests=[("enabled", IN_QUARANTINE), ("removed", NOW + 1)]))
+
+
+# T043 owner decisions and boundary combinations (2026-11-05) -----------------
+
+
+def test_no_expiry_date_is_not_expired():
+    assert m.is_expired(_facts(expires_at=None), NOW) is False
+    assert m.is_expired(_facts(expires_at=0), NOW) is True
+
+
+@pytest.mark.parametrize("phase", [{}, PREPARING, RENEWAL_WAIT], ids=["fulfilled", "preparing", "renewal_wait"])
+@pytest.mark.parametrize("replacement", [False, True])
+@pytest.mark.parametrize("published", [False, True])
+def test_access_does_not_require_publication_or_completed_replacement(phase, replacement, published):
+    facts = _facts(**{**phase, "replacement_delivery_block": replacement, "has_published_generation": published})
+    assert m.desired_access(facts, NOW) is True
+
+
+@pytest.mark.parametrize("phase", [{}, PREPARING, RENEWAL_WAIT], ids=["fulfilled", "preparing", "renewal_wait"])
+@pytest.mark.parametrize("restriction", [EXPIRED, EXHAUSTED, *RESTRICTIONS.values(), {"initial_delivery_block": True}, {"cancel_final_started_at": 0}], ids=["expired", "exhausted", *RESTRICTIONS, "initial_block", "final_at_epoch"])
+def test_each_phase_respects_each_independent_access_restriction(phase, restriction):
+    assert m.desired_access(_facts(**{**phase, **restriction}), NOW) is False
+
+
+@pytest.mark.parametrize("blocked", [False, True])
+@pytest.mark.parametrize("published", [False, True])
+def test_initial_cancellation_denies_access_even_without_delivery_flag(blocked, published):
+    facts = _facts(**{**INITIAL_CANCEL, "initial_delivery_block": blocked, "has_published_generation": published})
+    assert m.desired_access(facts, NOW) is False
+
+
+@pytest.mark.parametrize("changes", [{}, {"owner_suspended": True}, PREPARING])
+def test_candidate_token_is_unavailable(changes):
+    assert _publish(changes, "candidate") is m.Publication.UNAVAILABLE
+
+
+@pytest.mark.parametrize("block", [PREPARING, INITIAL_CANCEL, {"initial_delivery_block": True}, {"replacement_delivery_block": True}, {"recovery_hold_case": "case-1"}], ids=["preparing", "initial_cancel", "initial_block", "replacement", "recovery"])
+def test_gate_two_precedes_owner_status(block):
+    assert _publish({**block, "owner_suspended": True}) is m.Publication.UNAVAILABLE
+
+
+@pytest.mark.parametrize("terminal", [{"lifecycle": "cancelled"}, {"lifecycle": "failed_unfulfilled"}, {"cancel_final_started_at": 0}], ids=["cancelled", "failed", "final_at_epoch"])
+@pytest.mark.parametrize("token", ["candidate", "current", "revoked", "superseded"])
+def test_terminal_publication_precedes_all_other_gates(terminal, token):
+    facts = {**terminal, "owner_suspended": True, "replacement_delivery_block": True, "recovery_hold_case": "case-1"}
+    assert _publish(facts, token) is m.Publication.NOT_FOUND
+
+
+@pytest.mark.parametrize("token", ["revoked", "superseded"])
+@pytest.mark.parametrize("block", [PREPARING, INITIAL_CANCEL, {"replacement_delivery_block": True}, {"recovery_hold_case": "case-1"}])
+def test_invalid_token_precedes_delivery_holds(token, block):
+    assert _publish(block, token) is m.Publication.NOT_FOUND
+
+
+@pytest.mark.parametrize("desired", sorted(CONFIRMED_FOR))
+def test_no_required_attachment_evidence_is_unknown(desired):
+    assert _confirmed(_evidence(desired, ())) is m.ConfirmedAccess.UNKNOWN
+
+
+def test_facts_and_evidence_are_immutable_and_predicates_do_not_mutate_them():
+    evidence = _evidence("enabled")
+    objects = [_facts(), evidence, evidence.read_backs[0], m.UncertainRequest(m.ChildDesiredState.ENABLED, NOW)]
+    for obj in objects:
+        field = dataclasses.fields(obj)[0].name
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            setattr(obj, field, getattr(obj, field))
+    before = [dataclasses.asdict(obj) for obj in objects]
+    m.is_expired(objects[0], NOW)
+    m.is_exhausted(objects[0])
+    m.desired_access(objects[0], NOW)
+    m.publication(objects[0], m.TokenStatus.CURRENT)
+    m.confirmed_access(evidence, NOW)
+    assert [dataclasses.asdict(obj) for obj in objects] == before
+
+
+@pytest.mark.parametrize("lifecycle", ["cancelled", "failed_unfulfilled"])
+def test_terminal_lifecycle_denies_access_independently_of_flags(lifecycle):
+    assert m.desired_access(_facts(lifecycle=lifecycle), NOW) is False
+
+
+def test_access_does_not_depend_on_availability_timestamp():
+    assert m.desired_access(_facts(available_at=None), NOW) is True
+
+
+@pytest.mark.parametrize("owner_suspended", [False, True])
+def test_initial_cancellation_blocks_publication_independently_of_delivery_flag(owner_suspended):
+    changes = {**INITIAL_CANCEL, "initial_delivery_block": False, "has_published_generation": True, "owner_suspended": owner_suspended}
+    assert _publish(changes) is m.Publication.UNAVAILABLE
+
+
+def test_unrecognized_cancellation_phase_does_not_publish_a_complete_list():
+    # No recognized prior-fulfillment phase: gate 5, even with a generation.
+    assert _publish({"lifecycle": "cancel_pending", "cancel_wait_kind": None}) is m.Publication.UNAVAILABLE
