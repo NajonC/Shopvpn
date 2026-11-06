@@ -1,0 +1,6 @@
+{
+  "miniapp/server.py": "63b15cf1f0ae0940dfc2085544b096b3e73ae778c94102488a8e485f7aa99cbc",
+  "tests/integration/test_composite_miniapp_custom_receipt_guards.py": "fc4f40419efd2a916510b7eb61d100e39df43ddd657bd4d70bd0c497680aff62",
+  "tests/characterization/test_unsupported_surfaces.py": "4dee58c924d83f592f2c76dd71626addea7774f69f91bb219d3b1c38710e4bfd",
+  "tests/characterization/test_receipt_linkage.py": "5282debcc60522ccd5ad4ea793a13ce2c9d481bb8dd79e088592f0e636feda42"
+}

@@ -288,6 +288,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Mobile-auth tokens are rejected for composite management until parity is verified (contracts/application.md).
   - Errors use 401, 403, opaque 404, 422, 409 and 503; a replayed accepted request returns its earlier 202 or 200
 - [ ] T050 [P] Write `tests/integration/test_composite_legacy_guards.py`. Every legacy path listed in T051–T053 rejects a composite product, order or subscription with an explicit reason before any side effect, and the T013–T031 characterization suites still pass for legacy rows (FR-081; SC-012)
+  - T050m accepted: Mini App custom checkout and stock/custom/renewal receipt guard tests;12 expected missing-T053 failures,80 reference passes and25 mutations detected; legacy partial/full wallet and receipt-storage/admin-delivery controls preserved.
   - T050l accepted: Mini App trial catalog/claim/retained-link guard tests;16 expected missing-T053 failures,101 reference passes and28 mutations detected; legacy allowance/fractional-unit/stock/unrelated-plan controls preserved.
   - T050k accepted: Mini App full-renewal selection/checkout guard tests;28 expected missing-T053 failures,122 reference passes and28 mutations detected; partial/full wallet and unrelated-panel legacy controls preserved.
   - T050j accepted: Mini App custom-service delete/toggle/rename/auto-renew/transfer/cut-access guard tests;36 expected missing-T053 failures,115 reference passes and25 mutations detected; legacy/unrelated-service controls preserved.
