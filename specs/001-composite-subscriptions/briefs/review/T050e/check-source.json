@@ -1,0 +1,5 @@
+{
+  "reseller_auto_provision.py": "5eddd2e0098f879631fa2863f8c2f38b9068f63c34345e58719dcf5052972c73",
+  "tests/integration/test_composite_reseller_provision_guards.py": "6a2e033ac5a232f9db45bba961c0907f6735f68a8ec81057152e80f6b1d042ac",
+  "tests/characterization/test_unsupported_surfaces.py": "4dee58c924d83f592f2c76dd71626addea7774f69f91bb219d3b1c38710e4bfd"
+}

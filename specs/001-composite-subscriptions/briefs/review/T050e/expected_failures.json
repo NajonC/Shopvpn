@@ -1,0 +1,34 @@
+{
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-product-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-product-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-order-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-order-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[test-plan-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[test-plan-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[fixed-product-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[fixed-product-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  }
+}
