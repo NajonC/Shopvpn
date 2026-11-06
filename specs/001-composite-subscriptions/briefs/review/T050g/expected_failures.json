@@ -1,0 +1,26 @@
+{
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-product-dict]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-product-sqlite]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-request-dict]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-request-sqlite]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[custom-request-dict]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[custom-request-sqlite]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  }
+}

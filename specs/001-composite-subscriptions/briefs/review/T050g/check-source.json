@@ -1,0 +1,5 @@
+{
+  "admin_panel/server.py": "ee9c2dc47c30d7c4a502e6a6f4b57ecfe93343f1468a7e601703da8c1bef7511",
+  "tests/integration/test_composite_reseller_web_guards.py": "db7f6de5ca9646a2a186b7763a70b5ca0472cf9b9f81088fe7a7514cc54e52da",
+  "tests/characterization/test_unsupported_surfaces.py": "4dee58c924d83f592f2c76dd71626addea7774f69f91bb219d3b1c38710e4bfd"
+}
