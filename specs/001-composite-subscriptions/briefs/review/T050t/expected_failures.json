@@ -1,0 +1,14 @@
+{
+  "implementing_task": "T053",
+  "reason": "AI stock config/selected order renewal composite guard absent",
+  "ids": [
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-config-dict]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-config-sqlite]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-order-dict]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-order-sqlite]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-config-dict]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-config-sqlite]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-order-dict]",
+    "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-order-sqlite]"
+  ]
+}
