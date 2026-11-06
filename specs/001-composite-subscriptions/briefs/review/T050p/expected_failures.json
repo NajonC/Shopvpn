@@ -1,0 +1,10 @@
+{
+  "implementing_task": "T053",
+  "reason": "AI wallet-purchase composite refusal absent",
+  "ids": [
+    "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[stock-dict]",
+    "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[stock-sqlite]",
+    "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[auto-dict]",
+    "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[auto-sqlite]"
+  ]
+}
