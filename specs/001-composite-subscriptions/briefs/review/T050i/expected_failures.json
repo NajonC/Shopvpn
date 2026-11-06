@@ -1,0 +1,114 @@
+{
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[customs-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[customs-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_custom-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_custom-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-row-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-row-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-row-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-row-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[history-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[history-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  }
+}
