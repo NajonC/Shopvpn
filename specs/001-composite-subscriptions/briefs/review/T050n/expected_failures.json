@@ -1,0 +1,18 @@
+{
+  "implementing_task": "T053",
+  "reason": "AI catalog composite refusal missing",
+  "ids": [
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-stock-dict]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-stock-sqlite]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-auto-dict]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-auto-sqlite]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-empty-dict]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-empty-sqlite]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-stock-dict]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-stock-sqlite]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-auto-dict]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-auto-sqlite]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-empty-dict]",
+    "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-empty-sqlite]"
+  ]
+}
