@@ -288,6 +288,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Mobile-auth tokens are rejected for composite management until parity is verified (contracts/application.md).
   - Errors use 401, 403, opaque 404, 422, 409 and 503; a replayed accepted request returns its earlier 202 or 200
 - [ ] T050 [P] Write `tests/integration/test_composite_legacy_guards.py`. Every legacy path listed in T051–T053 rejects a composite product, order or subscription with an explicit reason before any side effect, and the T013–T031 characterization suites still pass for legacy rows (FR-081; SC-012)
+  - T050b accepted: remaining T051 reminder/connection/auto-renew guard tests; 33 expected missing-T051 failures, reference/mutations verified.
   - T050a accepted: manual renewal-order and stock-product guard tests; six expected missing-T051 failures, reference/mutations verified. Remaining T050 paths are not yet complete.
 - [ ] T051 Add `service_kind` dispatch guards to the legacy renewal and alert paths in `renewal_engine.py`, `renewal_reminders.py`, `connect_alerts.py` and `stock_alerts.py`, so that composite records never enter legacy single-panel renewal, reminder, connection-alert or stock logic (FR-081; NG-02 automatic renewal). Tests: T050; characterization T018
 - [ ] T052 Add composite dispatch guards to the legacy approval, fulfillment and deletion paths (FR-081; NG-05). Composite rows are routed to `composite/service.py` or refused; legacy code never claims, provisions or rewards them. Tests: T050; characterization T013, T015 and T021.

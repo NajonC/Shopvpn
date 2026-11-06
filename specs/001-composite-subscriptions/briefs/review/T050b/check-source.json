@@ -1,0 +1,7 @@
+{
+  "renewal_reminders.py": "e73d95ffebf335bf1543af1709b89dadc0dac37faae6e726454c6b86ae0e0d93",
+  "connect_alerts.py": "97175e7eae047c519e7335e1b5ee4c2fbaba448803dd45d9c2f2b99f556d3f37",
+  "tests/integration/test_composite_auto_renewal_guards.py": "b9d2bec8850d199f27994e32244dff9fb8393b05357e1766b028daf46e8d207c",
+  "tests/integration/test_composite_reminder_guards.py": "fb62d955c0b2eb20ddc7b165c0de24b2cdccf9483c122a2cf7d2ce0d820ed8f2",
+  "tests/characterization/test_legacy_renewal_reminders.py": "84722b6b10d9fbdae768cb5fb8e8fbc3490b3a213575196210a56401c6e61ea3"
+}

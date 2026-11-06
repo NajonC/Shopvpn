@@ -1,0 +1,134 @@
+{
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[5000-dict]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[5000-sqlite]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[50000-dict]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[50000-sqlite]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_candidate_does_not_block_later_legacy[dict]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_candidate_does_not_block_later_legacy[sqlite]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_candidate_does_not_block_later_legacy[expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_candidate_does_not_block_later_legacy[volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_candidate_does_not_block_later_legacy[connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  }
+}
