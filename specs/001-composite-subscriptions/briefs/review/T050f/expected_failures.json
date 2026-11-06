@@ -1,0 +1,74 @@
+{
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[set_service_auto_renew-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[set_service_auto_renew-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[get_service_history-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[get_service_history-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_service_qr-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_service_qr-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_individual_configs-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_individual_configs-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_toggle_service_enabled-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_toggle_service_enabled-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_rename_service-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_rename_service-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_regenerate_service_access-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_regenerate_service_access-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_transfer_service-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_transfer_service-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_delete_service-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_delete_service-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  }
+}
