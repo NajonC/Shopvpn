@@ -1,0 +1,194 @@
+{
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  }
+}
