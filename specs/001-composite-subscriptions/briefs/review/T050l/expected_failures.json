@@ -1,0 +1,22 @@
+{
+  "implementing_task": "T053",
+  "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+  "ids": [
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_plan-plan-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_plan-plan-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_custom-custom-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_custom-custom-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_stock-stock-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_stock-stock-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-plan-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-plan-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-request-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-request-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-plan-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-plan-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-request-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-request-sqlite]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_stock-request-dict]",
+    "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_stock-request-sqlite]"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "miniapp/server.py": "63b15cf1f0ae0940dfc2085544b096b3e73ae778c94102488a8e485f7aa99cbc",
+  "test_config_provision.py": "da8a1d32405af0c8e95b45185ab7d00e09799a7a81d2c18cfa3e698f2f8d3180",
+  "tests/integration/test_composite_miniapp_trial_guards.py": "3dcd4de0a432b086bb03dec394fbae36bfc4d45d084887509c7a673e9705814e",
+  "tests/characterization/test_unsupported_surfaces.py": "4dee58c924d83f592f2c76dd71626addea7774f69f91bb219d3b1c38710e4bfd",
+  "tests/characterization/test_free_test_flow.py": "3e6b88540f7c55aba7805cc28dadcb5eee608a4b9b35bc7288c88f461385138f"
+}
