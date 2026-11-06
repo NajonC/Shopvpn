@@ -1,0 +1,5 @@
+{
+  "miniapp/server.py": "63b15cf1f0ae0940dfc2085544b096b3e73ae778c94102488a8e485f7aa99cbc",
+  "tests/integration/test_composite_miniapp_mutation_guards.py": "fe0f1f8036fd7c965284275cc86598b8cc10f4ba8c45b8725576744760583ebd",
+  "tests/characterization/test_unsupported_surfaces.py": "4dee58c924d83f592f2c76dd71626addea7774f69f91bb219d3b1c38710e4bfd"
+}
