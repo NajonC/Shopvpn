@@ -1,0 +1,50 @@
+{
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[order-dict]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[order-sqlite]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[product-dict]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[product-sqlite]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-dict-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-dict-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-sqlite-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-sqlite-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-dict-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-dict-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-sqlite-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-sqlite-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  }
+}
