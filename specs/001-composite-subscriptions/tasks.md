@@ -278,7 +278,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - [X] T047b: remaining web authority matrix (owner mapping, staff/reseller/full-access tenant refusals, signed-tenant mismatch, overlapping IDs, mobile/URL bearers and cookie same-origin/CSRF). Complete before marking T047 done.
     - [X] T047b1: authenticated web principal mapping tests accepted; 22 reference passes and 21 detected mutations; full offline suite 2967 passes and exactly 37 declared T048 failures (18 inherited, 19 new). See `briefs/T047b1.md`.
     - [X] T047b2: router dependency enforcement, same-origin/CSRF and mobile/subscription-URL bearer HTTP tests accepted; 68 reference passes and 21 detected mutations. Production router failures remain assigned to T049. See `briefs/T047b2.md`.
-- [ ] T048 Implement `Principal`, `CommandContext` and `CommandResult` in `composite/service.py`, following contracts/application.md (FR-005; FR-006; FR-084). Tests: T047.
+- [X] T048 Implement `Principal`, `CommandContext` and `CommandResult` in `composite/service.py`, following contracts/application.md (FR-005; FR-006; FR-084). Tests: T047.
   - The Telegram principal comes from authenticated `from_user.id`; callbacks use `call.from_user.id`.
   - The web principal comes from `get_current_admin` plus an explicit main-owner mapping.
   - Caller-supplied user and tenant IDs are ignored, and a URL bearer is never a principal
