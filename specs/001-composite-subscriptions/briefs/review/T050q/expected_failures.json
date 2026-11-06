@@ -1,0 +1,22 @@
+{
+  "implementing_task": "T053",
+  "reason": "AI custom renewal composite target/product refusal absent",
+  "ids": [
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-custom-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-custom-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-volume-custom-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-volume-custom-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-time-custom-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-time-custom-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-product-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-product-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-custom-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-custom-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-volume-custom-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-volume-custom-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-time-custom-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-time-custom-sqlite]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-product-dict]",
+    "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-product-sqlite]"
+  ]
+}
