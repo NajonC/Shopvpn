@@ -1,0 +1,7 @@
+{
+  "ai_support.py": "1297845ea834eee309443bbc9c9a11ffcea4e982e190d9dbb9c67adfffea5eeb",
+  "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+  "tests/integration/test_composite_ai_country_guards.py": "901dfbf4a934ea15c4df3ad39be1c28b884e617eb1eff42f3caf8a177852b8bb",
+  "tests/integration/test_composite_ai_catalog_legacy.py": "6dc1987657d7a54d51948af2f556d70ef500e95a2ab30b3eae55d93c3167b207",
+  "tests/characterization/test_legacy_renewal_reminders.py": "84722b6b10d9fbdae768cb5fb8e8fbc3490b3a213575196210a56401c6e61ea3"
+}
