@@ -12,6 +12,7 @@ import asyncio
 import base64
 import contextvars
 import hmac
+import hashlib
 import json
 import logging
 import os
@@ -23,8 +24,9 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
+from urllib.parse import urlsplit
 
-from fastapi import FastAPI, Request, Response, Depends, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, Request, Response, Depends, HTTPException, UploadFile, File, Form, APIRouter
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -45,6 +47,7 @@ from database import Database, WEB_ADMIN_PERMISSIONS, MENU_BUTTON_META
 import button_registry
 import extra_gateway_registry
 from admin_panel.security import hash_password, verify_password, create_session_token, verify_session_token
+from composite import service as composite_service
 from admin_panel import mobile_auth
 from asset_versioning import file_digest, static_version, ApiNoStoreMiddleware
 from admin_panel.telegram_notify import send_message as tg_send, send_document as tg_send_document, fetch_telegram_file, get_me as tg_get_me
@@ -693,6 +696,119 @@ def require_main_tenant(admin=Depends(get_current_admin)):
     if admin["tenant"]:
         raise HTTPException(403, "این بخش فقط در پنل بات اصلی در دسترس است.")
     return admin
+
+
+def _canonical_composite_origin(value):
+    """Validate a configured public origin; return it unchanged or None."""
+    if not isinstance(value, str) or not value or value != value.strip():
+        return None
+    try:
+        parsed = urlsplit(value)
+        if (parsed.scheme not in ("http", "https") or not parsed.netloc
+                or parsed.username is not None or parsed.password is not None
+                or parsed.path or parsed.query or parsed.fragment):
+            return None
+        host = parsed.hostname
+        port = parsed.port
+    except (ValueError, UnicodeError):
+        return None
+    if not host or any(char.isspace() or char in "\\%<>{}|^`" for char in host):
+        return None
+    host_part = f"[{host}]" if ":" in host else host
+    expected = f"{parsed.scheme}://{host_part}" + (f":{port}" if port is not None else "")
+    # An origin is serialized without the scheme's default port.
+    if port == (443 if parsed.scheme == "https" else 80):
+        return None
+    return value if value == expected else None
+
+
+def create_composite_router(*, main_installation_id, main_owner_web_admin_id, public_origin) -> APIRouter:
+    """Create the guarded composite router.
+
+    Trusted values come from COMPOSITE_MAIN_INSTALLATION_ID,
+    COMPOSITE_MAIN_OWNER_WEB_ADMIN_ID, and COMPOSITE_PUBLIC_ORIGIN. Missing
+    or invalid settings leave the router mounted but return sanitized 503s
+    after authentication and role checks, preserving legacy startup.
+    """
+    installation_ok = isinstance(main_installation_id, str) and bool(main_installation_id.strip())
+    owner_ok = type(main_owner_web_admin_id) is int and main_owner_web_admin_id > 0
+    origin = _canonical_composite_origin(public_origin)
+    configured = installation_ok and owner_ok and origin is not None
+    router = APIRouter(prefix="/api/composite")
+
+    async def composite_gate(request: Request):
+        authorization = request.headers.get("authorization", "")
+        if authorization.split(None, 1)[:1] and authorization.split(None, 1)[0].lower() == "bearer":
+            raise HTTPException(403, "دسترسی کافی نیست.")
+
+        # The legacy verifier assumes ASCII; untrusted cookies must not turn
+        # its encoding/comparison errors into composite server failures.
+        try:
+            (request.cookies.get(COOKIE_NAME) or "").encode("ascii")
+        except UnicodeEncodeError:
+            raise HTTPException(401, "نشست منقضی شده یا نامعتبر است.") from None
+        admin = await get_current_admin(request)
+        require_owner(admin)
+        require_main_tenant(admin)
+        if not configured:
+            raise HTTPException(503, "پیکربندی سرویس در دسترس نیست.")
+
+        try:
+            principal = composite_service.web_principal(
+                admin,
+                main_installation_id=main_installation_id,
+                main_owner_web_admin_id=main_owner_web_admin_id,
+            )
+        except composite_service.AuthorityError:
+            raise HTTPException(403, "دسترسی کافی نیست.") from None
+
+        if request.method.upper() not in {"GET", "HEAD", "OPTIONS"}:
+            raw_headers = request.scope.get("headers", [])
+            origin_values = [v for k, v in raw_headers if k.lower() == b"origin"]
+            csrf_values = [v for k, v in raw_headers if k.lower() == b"x-composite-csrf"]
+            token = request.cookies.get(COOKIE_NAME)
+            try:
+                request_origin = origin_values[0].decode("ascii") if len(origin_values) == 1 else None
+                csrf = csrf_values[0].decode("ascii") if len(csrf_values) == 1 else None
+            except (UnicodeDecodeError, AttributeError):
+                request_origin = csrf = None
+            expected_csrf = hmac.new(
+                ADMIN_PANEL_SECRET.encode("utf-8"),
+                b"composite-csrf-v1\0" + (token or "").encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            if (request_origin != origin or csrf is None
+                    or not hmac.compare_digest(csrf, expected_csrf)):
+                raise HTTPException(403, "درخواست معتبر نیست.")
+
+        request.state.composite_principal = principal
+        return principal
+
+    router.dependencies.append(Depends(composite_gate))
+    return router
+
+
+def create_configured_composite_router() -> APIRouter:
+    """Read COMPOSITE_MAIN_INSTALLATION_ID, COMPOSITE_MAIN_OWNER_WEB_ADMIN_ID,
+    and COMPOSITE_PUBLIC_ORIGIN; absent or invalid settings fail closed with
+    HTTP 503 after authenticated authorization checks.
+    """
+    installation = os.getenv("COMPOSITE_MAIN_INSTALLATION_ID")
+    raw_owner = os.getenv("COMPOSITE_MAIN_OWNER_WEB_ADMIN_ID")
+    try:
+        owner = int(raw_owner) if raw_owner is not None and raw_owner.strip().isdigit() else None
+    except (TypeError, ValueError):
+        owner = None
+    origin = os.getenv("COMPOSITE_PUBLIC_ORIGIN")
+    return create_composite_router(
+        main_installation_id=installation,
+        main_owner_web_admin_id=owner,
+        public_origin=origin,
+    )
+
+
+composite_router = create_configured_composite_router()
+app.include_router(composite_router)
 
 
 def require_full_access_tenant(admin=Depends(get_current_admin)):

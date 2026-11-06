@@ -282,7 +282,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - The Telegram principal comes from authenticated `from_user.id`; callbacks use `call.from_user.id`.
   - The web principal comes from `get_current_admin` plus an explicit main-owner mapping.
   - Caller-supplied user and tenant IDs are ignored, and a URL bearer is never a principal
-- [ ] T049 Add the `/api/composite/` router scaffold to `admin_panel/server.py`, with no business routes yet (FR-005). Tests: T047.
+- [X] T049 Add the `/api/composite/` router scaffold to `admin_panel/server.py`, with no business routes yet (FR-005). Tests: T047.
   - Every route requires both `require_owner` and `require_main_tenant`.
   - Cookie mutations require same-origin/CSRF validation.
   - Mobile-auth tokens are rejected for composite management until parity is verified (contracts/application.md).

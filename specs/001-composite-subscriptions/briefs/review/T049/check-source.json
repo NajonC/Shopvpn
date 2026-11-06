@@ -1,0 +1,11 @@
+{
+  "head": "4b0b49575be8b53fd9aa1f7c18e6be798f4802b1",
+  "hashes": {
+    "admin_panel/server.py": "ee9c2dc47c30d7c4a502e6a6f4b57ecfe93343f1468a7e601703da8c1bef7511",
+    "composite/service.py": "e60a307a83f38b23ad80c5e806297a345eb1c6c16ed7c17402b953e34b7813af",
+    "admin_panel/security.py": "d37d94910902907f9362cca31ade66d65d7a92f88312bd3eae85abb2e6b39746",
+    "tests/integration/test_authority_matrix.py": "2d52f54a1fd7f2480b07249d1c0ea5703fa62ab93a34f0968df30bb7eab8c671",
+    "tests/integration/test_composite_router.py": "9028e28b3a33979b6b9513e326102001a55e7302c7297923d01768925143aff3",
+    "specs/001-composite-subscriptions/briefs/review/T049/verify.py": "4039e9b532f6827d9907c2020c8b7f1c8988b556c130078d2f6a8605cd916a04"
+  }
+}
