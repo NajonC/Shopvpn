@@ -1,0 +1,7 @@
+{
+  "renewal_engine.py": "a664dabf8310e7b2fed69f127658e81cf2d36c18956e26ce33773256bbbd467a",
+  "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+  "tests/integration/test_composite_legacy_guards.py": "03d3b03df34e4b07b6cbaac501a538df04751e36518cf7908e34813c7bde9218",
+  "tests/integration/test_composite_stock_guards.py": "bf1eb3a8fd7b8bcf03916932a5bc6e4fa14aa21eb715b2398bd61466132a6eed",
+  "tests/characterization/test_legacy_renewal_reminders.py": "84722b6b10d9fbdae768cb5fb8e8fbc3490b3a213575196210a56401c6e61ea3"
+}

@@ -1,0 +1,26 @@
+{
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[custom-dict]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[custom-sqlite]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[config-dict]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[config-sqlite]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_stock_guards::test_composite_stock_refused_before_alert_state[dict]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_stock_guards::test_composite_stock_refused_before_alert_state[sqlite]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  }
+}
