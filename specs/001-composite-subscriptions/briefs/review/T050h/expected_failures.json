@@ -1,0 +1,210 @@
+{
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-request-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-request-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  }
+}

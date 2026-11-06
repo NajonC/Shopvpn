@@ -288,6 +288,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Mobile-auth tokens are rejected for composite management until parity is verified (contracts/application.md).
   - Errors use 401, 403, opaque 404, 422, 409 and 503; a replayed accepted request returns its earlier 202 or 200
 - [ ] T050 [P] Write `tests/integration/test_composite_legacy_guards.py`. Every legacy path listed in T051–T053 rejects a composite product, order or subscription with an explicit reason before any side effect, and the T013–T031 characterization suites still pass for legacy rows (FR-081; SC-012)
+  - T050h accepted: Mini App catalog checkout/all order-invoice guard tests;52 expected missing-T053 failures, reference/mutations verified.
   - T050g accepted: reseller web product/request guard tests; two expected missing-T052 and four missing-T053 failures, reference/mutations verified.
   - T050f accepted: nine AI custom-service shortcut guard tests;18 expected missing-T053 failures, reference/mutations verified.
   - T050e accepted: reseller auto/test/fixed provision guard tests; eight expected missing-T052 failures, reference/mutations verified.
