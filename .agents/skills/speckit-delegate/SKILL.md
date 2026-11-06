@@ -25,7 +25,7 @@ All optional, in any order:
 - [brief-template.md](brief-template.md): the brief you fill in for each packet.
 - [coder-rules.md](coder-rules.md): standing rules and the report format. Append it unchanged to every coder prompt.
 - [effort.md](effort.md): orchestrator model and effort, independent coder settings, task overrides and escalation rules. Read when selecting or handing off a packet.
-- [verification.md](verification.md): required reference and mutation checks, acceptance by packet type, and reusable evidence. Read when designing tests and reviewing a behavioral packet.
+- [verification.md](verification.md): required reference and mutation checks, acceptance by packet type, and reusable evidence. Read when designing tests and reviewing a behavioral packet, and follow its [long-running checks](verification.md#long-running-checks) workflow before launching a full suite or long mutation campaign.
 
 ## Setup (once per session)
 

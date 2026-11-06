@@ -14,6 +14,26 @@ Before delegating, map the packet's authoritative requirements to exact test cas
 
 For refusals, make every unrelated precondition valid. Otherwise a foreign key, duplicate fixture row or neighboring CHECK can mask the rule under test. For successful transitions, assert the resulting state and relevant retained history, not merely absence of an exception. Sensitive tests remain orchestrator-owned under SKILL.md step 4.
 
+## Long-running checks
+
+In T3 Code's Codex harness, run full offline suites and long mutation campaigns as bounded background commands and let completion notifications resume the thread. This workflow has been verified here; Codex does not need the Claude-only `t3_background_wait` tool.
+
+1. Set a real execution deadline with a short forced-kill grace, sized from observed runtime. For the current roughly ten-minute offline suite, `timeout --kill-after=15s 20m` is a suitable starting point. Tool `yield_time_ms` controls how long a call waits; it does **not** terminate a hung process.
+2. Launch through `exec_command` with a short yield (for example `yield_time_ms: 1000`) and capture output in a unique local log. Let the harness retain the command session; do not detach it with `&` or `nohup`. Keep the command's exit status intact.
+3. Save the command, session ID, log path, deadline and source revision/diff in the brief's reviewer section, with the check marked pending. Do independent work only while keeping the source/tests under examination stable; do not start a coder that could change them. On resumption, use the recorded run rather than launching a duplicate.
+4. When only the check remains, send one short pending-status message and **end the turn**. Do not poll with `write_stdin`, log reads, sleeps, watchers or scheduled wakeups, and do not send periodic "still running" messages.
+5. When the completion notification arrives, retrieve the completed command's exit status and saved summary, then continue review and acceptance. Timeout (`124`), forced termination (`137`), interruption or missing completion leaves verification incomplete; inspect the cause before deciding to rerun. Never mark a packet accepted while its required check is pending.
+
+Example command from the repository root, passed to `exec_command` with the short yield above:
+
+```sh
+SHOPVPN_CHECK_LOG=$(mktemp /tmp/shopvpn-offline.XXXXXX.log)
+printf 'Test log: %s\n' "$SHOPVPN_CHECK_LOG"
+timeout --kill-after=15s 20m .venv/bin/python -m pytest tests/characterization tests/unit tests/contract tests/integration tests/acceptance --network=deny -q > "$SHOPVPN_CHECK_LOG" 2>&1
+```
+
+Outside a harness with verified completion notifications, use its documented waiting mechanism; do not promise automatic resumption without support. Background execution changes how the orchestrator waits, not the acceptance checks below.
+
 ## Acceptance by packet type
 
 ### Characterization
