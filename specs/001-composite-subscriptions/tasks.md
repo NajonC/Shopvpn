@@ -274,6 +274,8 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - a signed-tenant mismatch, and overlapping Telegram and web numeric IDs;
   - a mobile token on composite routes, and a cookie mutation without same-origin/CSRF;
   - a subscription-URL bearer attempting management
+  - [X] T047a: Telegram principal/customer resource authority tests accepted; 18 reference passes and 17 detected mutations. Production failures remain assigned to T048. See `briefs/T047a.md`.
+  - [ ] T047b: remaining web authority matrix (owner mapping, staff/reseller/full-access tenant refusals, signed-tenant mismatch, overlapping IDs, mobile/URL bearers and cookie same-origin/CSRF). Complete before marking T047 done.
 - [ ] T048 Implement `Principal`, `CommandContext` and `CommandResult` in `composite/service.py`, following contracts/application.md (FR-005; FR-006; FR-084). Tests: T047.
   - The Telegram principal comes from authenticated `from_user.id`; callbacks use `call.from_user.id`.
   - The web principal comes from `get_current_admin` plus an explicit main-owner mapping.

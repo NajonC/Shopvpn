@@ -1,0 +1,92 @@
+[
+  {
+    "test": "test_authenticated_sender_and_trusted_installation_define_principal[message]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_authenticated_sender_and_trusted_installation_define_principal[callback]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_forged_callback_actor_cannot_manage_message_actor_resource",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_cross_tenant_resource_refused_even_when_customer_ids_match",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_non_main_transport_cannot_manage_main_or_own_tenant_resource[own]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_non_main_transport_cannot_manage_main_or_own_tenant_resource[foreign]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[False-False]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[True-False]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[False-True]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[True-True]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_ownership_is_not_hardcoded_to_fixture_actor[202]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_ownership_is_not_hardcoded_to_fixture_actor[303]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_missing_authenticated_sender_never_falls_back_to_payload_or_message[None]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_missing_authenticated_sender_never_falls_back_to_payload_or_message[sender1]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[identity_domain-web_admin]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[identity_domain-subscription_url]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[authenticated_interface-miniapp]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048"
+  },
+  {
+    "test": "test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[role-owner]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048"
+  }
+]
