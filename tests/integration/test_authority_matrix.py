@@ -316,3 +316,189 @@ def test_web_invalid_session_never_reaches_principal_or_effect(authority_web, st
         web_effect(store, map_web(admin))
     assert error.value.status_code == 401
     assert snapshot(store) == before
+
+
+# T047b2: exercise the production router dependency stack through real ASGI
+# requests. Probe handlers are test-only effect/read witnesses, not business APIs.
+HTTP_ORIGIN = "https://panel.example.invalid"
+
+
+def csrf_header(web, cookie):
+    import hashlib
+    import hmac
+
+    # Independent signer; never call the production CSRF implementation.
+    return hmac.new(
+        web.panel.ADMIN_PANEL_SECRET.encode(),
+        b"composite-csrf-v1\0" + cookie.encode(), hashlib.sha256,
+    ).hexdigest()
+
+
+def http_probe(web, *, mapped_owner=1):
+    from fastapi import FastAPI
+    from starlette.requests import Request
+
+    router = web.panel.create_composite_router(
+        main_installation_id=MAIN, main_owner_web_admin_id=mapped_owner,
+        public_origin=HTTP_ORIGIN,
+    )
+    effects = []
+
+    async def read(request: Request):
+        effects.append("read")
+        return {"ok": True}
+
+    async def write(request: Request):
+        effects.append("write")
+        return {"ok": True}
+
+    # No endpoint-level guards: the actual router must protect every handler.
+    router.add_api_route("/_authority_read", read, methods=["GET"])
+    router.add_api_route("/_authority_write", write, methods=["POST", "PUT", "PATCH", "DELETE"])
+    app = FastAPI()
+    app.include_router(router)
+    return app, effects
+
+
+def http_call(app, method, *, cookie=None, headers=None, query=""):
+    import asyncio
+    import httpx
+
+    request_headers = dict(headers or {})
+    if cookie is not None:
+        request_headers["Cookie"] = "panel_session=" + cookie
+    path = "/api/composite/" + ("_authority_read" if method == "GET" else "_authority_write")
+
+    async def send():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app, raise_app_exceptions=True),
+            base_url=HTTP_ORIGIN,
+        ) as client:
+            return await client.request(method, path + query, headers=request_headers,
+                                        json={"id": 1, "role": "owner", "tenant": ""})
+
+    return asyncio.run(send())
+
+
+def http_state(web, effects):
+    # Includes token last-used telemetry, audit, wallet and all other DB rows.
+    dumps = []
+    for db in (web.main, web.tenant):
+        with db._get_conn() as conn:
+            dumps.append(tuple(conn.iterdump()))
+    return tuple(dumps), tuple(effects)
+
+
+def http_refused(web, app, effects, method, status, **kwargs):
+    before = http_state(web, effects)
+    response = http_call(app, method, **kwargs)
+    assert response.status_code == status, response.text
+    assert http_state(web, effects) == before
+    # Responses may retain legacy localized auth messages, but no credentials.
+    headers = kwargs.get("headers") or {}
+    authorization = headers.get("Authorization", "")
+    raw_bearer = authorization.partition(" ")[2]
+    for secret in (kwargs.get("cookie"), raw_bearer, headers.get("X-Composite-CSRF")):
+        if secret:
+            assert secret not in response.text
+    return response
+
+
+@pytest.mark.parametrize("actor", [1, 2])
+@pytest.mark.parametrize("method", ["GET", "POST", "PUT", "PATCH", "DELETE"])
+def test_http_router_allows_explicit_main_owner(authority_web, actor, method):
+    web = authority_web
+    app, effects = http_probe(web, mapped_owner=actor)
+    cookie = web_cookie(web, actor, role="support")
+    headers = {} if method == "GET" else {
+        "Origin": HTTP_ORIGIN, "X-Composite-CSRF": csrf_header(web, cookie),
+    }
+    before = http_state(web, [])
+    response = http_call(app, method, cookie=cookie, headers=headers, query="?b=1&user_id=999")
+    assert response.status_code == 200, response.text
+    assert response.json() == {"ok": True}
+    assert effects == ["read" if method == "GET" else "write"]
+    assert http_state(web, [])[0] == before[0]
+
+
+@pytest.mark.parametrize("actor,tenant,mapped_owner", [
+    (3, "", 3), (4, "", 4), (1, "1", 1), (2, "", 1),
+], ids=["orders-staff", "admin-staff", "full-access-reseller", "telegram-number-overlap"])
+@pytest.mark.parametrize("method", ["GET", "POST"])
+def test_http_router_refuses_roles_tenants_and_unmapped_owner(authority_web, actor, tenant, mapped_owner, method):
+    web = authority_web
+    app, effects = http_probe(web, mapped_owner=mapped_owner)
+    cookie = web_cookie(web, actor, tenant=tenant)
+    http_refused(web, app, effects, method, 403, cookie=cookie, query="?b=&tenant=&id=1",
+                 headers={"Origin": HTTP_ORIGIN, "X-Composite-CSRF": csrf_header(web, cookie)})
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
+@pytest.mark.parametrize("invalid", ["missing-origin", "foreign-origin", "null-origin", "http-origin", "port-origin",
+                                     "suffix-origin", "missing-csrf", "wrong-csrf", "other-session-csrf"])
+def test_http_cookie_mutations_require_origin_and_session_csrf(authority_web, method, invalid):
+    web = authority_web
+    app, effects = http_probe(web)
+    cookie = web_cookie(web)
+    headers = {"Origin": HTTP_ORIGIN, "X-Composite-CSRF": csrf_header(web, cookie)}
+    origins = {"foreign-origin": "https://other.example.invalid", "null-origin": "null",
+               "http-origin": "http://panel.example.invalid", "port-origin": HTTP_ORIGIN + ":444",
+               "suffix-origin": HTTP_ORIGIN + ".attacker.invalid"}
+    if invalid == "missing-origin":
+        del headers["Origin"]
+        headers["Referer"] = HTTP_ORIGIN + "/"  # no implicit weaker fallback
+    elif invalid in origins:
+        headers["Origin"] = origins[invalid]
+        if invalid == "foreign-origin":
+            headers["Host"] = "other.example.invalid"
+        headers["X-Forwarded-Host"] = "other.example.invalid"
+        headers["X-Forwarded-Proto"] = "https"
+    elif invalid == "missing-csrf":
+        del headers["X-Composite-CSRF"]
+    elif invalid == "wrong-csrf":
+        headers["X-Composite-CSRF"] = "0" * 64
+    else:
+        headers["X-Composite-CSRF"] = csrf_header(web, web_cookie(web, ttl_seconds=7200))
+    http_refused(web, app, effects, method, 403, cookie=cookie, headers=headers)
+
+
+@pytest.mark.parametrize("kind", ["missing", "tampered", "expired", "inactive", "url-cookie", "url-query"])
+def test_http_router_requires_valid_session(authority_web, kind):
+    web = authority_web
+    app, effects = http_probe(web)
+    cookie = web_cookie(web, ttl_seconds=-60 if kind == "expired" else 3600)
+    query = ""
+    if kind == "missing":
+        cookie = None
+    elif kind == "tampered":
+        cookie = cookie[:-1] + ("1" if cookie[-1] == "0" else "0")
+    elif kind == "inactive":
+        with web.main._get_conn() as conn:
+            conn.execute("UPDATE web_admins SET is_active=0 WHERE id=1")
+    elif kind == "url-cookie":
+        cookie = "synthetic-subscription-bearer"
+    elif kind == "url-query":
+        cookie = None
+        query = "?token=synthetic-subscription-bearer&user_id=1&tenant="
+    http_refused(web, app, effects, "GET", 401, cookie=cookie, query=query)
+
+
+@pytest.mark.parametrize("kind", ["mobile", "subscription"])
+@pytest.mark.parametrize("cookie_present", [False, True])
+@pytest.mark.parametrize("method", ["GET", "POST"])
+def test_http_bearers_rejected_before_any_database_change(authority_web, kind, cookie_present, method):
+    import hashlib
+
+    web = authority_web
+    app, effects = http_probe(web)
+    bearer = "synthetic-subscription-bearer"
+    if kind == "mobile":
+        # Independently construct a valid PAT and seed its real authentication row.
+        bearer = "spat_bWFpbg_synthetic-authority-mobile"
+        digest = hashlib.sha256(bearer.encode()).hexdigest()
+        web.main.create_mobile_token(1, "Synthetic", digest, "synthetic")
+        assert web.main.get_mobile_token_by_hash(digest)["last_used_at"] is None
+    cookie = web_cookie(web)
+    http_refused(web, app, effects, method, 403, cookie=cookie if cookie_present else None,
+                 headers={"Authorization": "bEaReR " + bearer, "Origin": HTTP_ORIGIN,
+                          "X-Composite-CSRF": csrf_header(web, cookie)})

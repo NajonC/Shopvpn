@@ -1,0 +1,632 @@
+[
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_authenticated_sender_and_trusted_installation_define_principal[message]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_authenticated_sender_and_trusted_installation_define_principal[callback]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_forged_callback_actor_cannot_manage_message_actor_resource",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_cross_tenant_resource_refused_even_when_customer_ids_match",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_non_main_transport_cannot_manage_main_or_own_tenant_resource[own]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_non_main_transport_cannot_manage_main_or_own_tenant_resource[foreign]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[False-False]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[True-False]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[False-True]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_own_resources_allowed_despite_untrusted_selectors_or_buyer_status[True-True]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_ownership_is_not_hardcoded_to_fixture_actor[202]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_ownership_is_not_hardcoded_to_fixture_actor[303]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'telegram_principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_missing_authenticated_sender_never_falls_back_to_payload_or_message[None]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_missing_authenticated_sender_never_falls_back_to_payload_or_message[sender1]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[identity_domain-web_admin]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[identity_domain-subscription_url]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[authenticated_interface-miniapp]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_matching_numeric_id_cannot_replace_customer_domain_interface_or_role[role-owner]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'Principal'",
+    "implementation_task": "T048",
+    "packet": "T047a"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_explicit_owner_mapping_preserves_web_domain_and_configured_identity[1-synthetic-main-installation]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'web_principal'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_explicit_owner_mapping_preserves_web_domain_and_configured_identity[2-synthetic-main-second]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'web_principal'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_database_staff_role_cannot_be_replaced_by_signed_owner_claim[orders-permission]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_database_staff_role_cannot_be_replaced_by_signed_owner_claim[admin-permissions]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_signed_tenant_cannot_be_replaced_by_main_selector[reseller-owner]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_signed_tenant_cannot_be_replaced_by_main_selector[full-access-tenant]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_telegram_owner_number_does_not_authorize_unmapped_web_owner",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_mapping_must_be_explicit_valid_web_id[None]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_mapping_must_be_explicit_valid_web_id[0]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_mapping_must_be_explicit_valid_web_id[1]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_mapping_must_be_explicit_valid_web_id[True]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[missing-tenant]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[main-alias]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[other-tenant]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[bool-id]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[string-id]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[missing-id]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_adapter_refuses_incomplete_or_wrong_authentication_domain[mobile-identity]",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'AuthorityError'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_web_valid_identity_never_becomes_customer_authority_on_equal_numbers",
+    "reason": "AttributeError: module 'composite.service' has no attribute 'web_principal'",
+    "implementation_task": "T048",
+    "packet": "T047b1"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[GET-1]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[GET-2]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[POST-1]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[POST-2]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[PUT-1]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[PUT-2]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[PATCH-1]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[PATCH-2]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[DELETE-1]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_allows_explicit_main_owner[DELETE-2]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[GET-orders-staff]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[GET-admin-staff]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[GET-full-access-reseller]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[GET-telegram-number-overlap]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[POST-orders-staff]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[POST-admin-staff]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[POST-full-access-reseller]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_refuses_roles_tenants_and_unmapped_owner[POST-telegram-number-overlap]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-origin-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-origin-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-origin-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-origin-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[foreign-origin-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[foreign-origin-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[foreign-origin-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[foreign-origin-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[null-origin-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[null-origin-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[null-origin-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[null-origin-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[http-origin-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[http-origin-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[http-origin-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[http-origin-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[port-origin-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[port-origin-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[port-origin-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[port-origin-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[suffix-origin-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[suffix-origin-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[suffix-origin-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[suffix-origin-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-csrf-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-csrf-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-csrf-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[missing-csrf-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[wrong-csrf-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[wrong-csrf-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[wrong-csrf-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[wrong-csrf-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[other-session-csrf-POST]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[other-session-csrf-PUT]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[other-session-csrf-PATCH]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_cookie_mutations_require_origin_and_session_csrf[other-session-csrf-DELETE]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_requires_valid_session[missing]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_requires_valid_session[tampered]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_requires_valid_session[expired]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_requires_valid_session[inactive]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_requires_valid_session[url-cookie]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_router_requires_valid_session[url-query]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[GET-False-mobile]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[GET-False-subscription]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[GET-True-mobile]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[GET-True-subscription]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[POST-False-mobile]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[POST-False-subscription]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[POST-True-mobile]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  },
+  {
+    "test_id": "tests/integration/test_authority_matrix.py::test_http_bearers_rejected_before_any_database_change[POST-True-subscription]",
+    "reason": "AttributeError: module 'admin_panel.server' has no attribute 'create_composite_router'",
+    "implementation_task": "T049",
+    "packet": "T047b2"
+  }
+]
