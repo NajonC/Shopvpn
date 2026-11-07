@@ -592,4 +592,4 @@ Results:
 ]
 ```
 
-Independent valid mutations, relevant assertion failures only. No survivors/errors/skips. Scratch auto-cleaned. Reference checks selected owned service before random custom username selected-product/FSM/pricing effects; real SQL and legacy controls preserved. No production implementation claim.
+Independent valid mutations, relevant assertion failures only. No survivors/errors/skips. Scratch auto-cleaned. Reference checks selected owned service before custom duration selected-product/wallet/order/FSM effects; real SQL and legacy controls preserved. No production implementation claim.

@@ -60,7 +60,7 @@ def main():
                     assert c.get('classname') in {p.removesuffix('.py').replace('/','.') for p in PACKET}
             records.append({'name':name,'disposition':'passed' if name=='reference' else 'killed','cases':len(cases),'failed_test_ids':[c.get('classname')+'::'+c.get('name') for c,_ in failed]})
             print(name, records[-1]['disposition'], len(cases), flush=True)
-    (HERE/'evidence.md').write_text('# T050ae reference and mutation evidence\n\nSource hashes:\n```json\n'+json.dumps(hashes,indent=2)+'\n```\n\nResults:\n```json\n'+json.dumps(records,indent=2)+'\n```\n\nIndependent valid mutations, relevant assertion failures only. No survivors/errors/skips. Scratch auto-cleaned. Reference checks selected owned service before random custom username selected-product/FSM/pricing effects; real SQL and legacy controls preserved. No production implementation claim.\n')
+    (HERE/'evidence.md').write_text('# T050ae reference and mutation evidence\n\nSource hashes:\n```json\n'+json.dumps(hashes,indent=2)+'\n```\n\nResults:\n```json\n'+json.dumps(records,indent=2)+'\n```\n\nIndependent valid mutations, relevant assertion failures only. No survivors/errors/skips. Scratch auto-cleaned. Reference checks selected owned service before custom volume selected-product/pricing/FSM effects; real SQL and legacy controls preserved. No production implementation claim.\n')
 
 
 if __name__ == '__main__':
