@@ -1,0 +1,7 @@
+{
+  "protected_hashes_match": true,
+  "hashes": {
+    "tests/integration/test_composite_telegram_custom_selection_guards.py": "f4d6e181b96731bc5d201e4497a1c00f2a387e9ee76fdbc4314e59b7ecf11de5",
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90"
+  }
+}

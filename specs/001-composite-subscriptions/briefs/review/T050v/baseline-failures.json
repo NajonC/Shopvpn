@@ -1,0 +1,1470 @@
+{
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[custom-dict]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[custom-sqlite]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[config-dict]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_legacy_guards::test_composite_manual_renewal_refused_without_effects[config-sqlite]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_stock_guards::test_composite_stock_refused_before_alert_state[dict]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_stock_guards::test_composite_stock_refused_before_alert_state[sqlite]": {
+    "reason": "missing composite refusal before effects",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[5000-dict]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[5000-sqlite]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[50000-dict]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_renewal_refused_before_effects[50000-sqlite]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_candidate_does_not_block_later_legacy[dict]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_auto_renewal_guards::test_composite_auto_candidate_does_not_block_later_legacy[sqlite]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-dict-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[1001-sqlite-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-dict-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-pool-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-pool-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-pool-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-custom-expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-custom-volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_reminder_candidate_refused[None-sqlite-custom-connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_candidate_does_not_block_later_legacy[expiry]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_candidate_does_not_block_later_legacy[volume]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_reminder_guards::test_composite_candidate_does_not_block_later_legacy[connection]": {
+    "reason": "missing composite refusal or batch continuation",
+    "implementation_task": "T051"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[order-dict]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[order-sqlite]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[product-dict]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_delivery_guards::test_composite_delivery_refused_before_publication[product-sqlite]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-dict-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-dict-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-sqlite-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[order-sqlite-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-dict-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-dict-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-sqlite-1]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_direct_guards::test_composite_direct_refused_before_provision[product-sqlite-2]": {
+    "reason": "missing composite order/product dispatch before legacy side effects",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-telegram-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[approve-web-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-telegram-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-dict-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-stock-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-direct-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-custom-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-renewal-order]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-stock-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_order_review_guards::test_composite_order_review_refused_before_effects[reject-web-sqlite-direct-product]": {
+    "reason": "legacy order review executes composite before refusal",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-product-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-product-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-order-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[auto-order-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[test-plan-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[test-plan-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[fixed-product-dict]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_provision_guards::test_composite_reseller_provision_refused_before_effects[fixed-product-sqlite]": {
+    "reason": "missing composite reseller provision guard",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[set_service_auto_renew-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[set_service_auto_renew-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[get_service_history-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[get_service_history-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_service_qr-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_service_qr-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_individual_configs-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_individual_configs-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_toggle_service_enabled-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_toggle_service_enabled-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_rename_service-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_rename_service-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_regenerate_service_access-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_regenerate_service_access-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_transfer_service-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_transfer_service-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_delete_service-dict]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_service_guards::test_composite_ai_service_shortcut_refused[request_delete_service-sqlite]": {
+    "reason": "AI shortcut accepts composite custom service",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-product-dict]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-product-sqlite]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T052"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-request-dict]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[fixed-request-sqlite]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[custom-request-dict]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_reseller_web_guards::test_composite_reseller_web_refused_before_effects[custom-request-sqlite]": {
+    "reason": "web supply builds unsupported composite input",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-request-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[purchase-request-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[crypto-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[abangateway-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[blupal-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[noapay-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[custom:synthetic-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[card_auto-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:zarinpal-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:aqayepardakht-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tetra98-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:cubepay-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:nowpayments-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-product-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-product-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-order-dict]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_purchase_invoice_guards::test_composite_miniapp_purchase_invoice_refused[extra:tgstars-order-sqlite]": {
+    "reason": "unsupported composite Mini App checkout/invoice reaches legacy path",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[orders-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[customs-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[customs-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_pool-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_custom-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[sub_custom-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-row-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_pool-row-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-row-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[expiring_custom-row-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-order-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-order-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-product-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[invoice_status-product-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[history-custom-dict]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_retrieval_guards::test_composite_miniapp_retrieval_refused[history-custom-sqlite]": {
+    "reason": "Mini App retrieval accepts composite metadata",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[delete-custom-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[delete-custom-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[delete-order-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[delete-order-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[delete-product-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[delete-product-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[toggle-custom-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[toggle-custom-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[toggle-order-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[toggle-order-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[toggle-product-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[toggle-product-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[rename-custom-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[rename-custom-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[rename-order-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[rename-order-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[rename-product-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[rename-product-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[auto-renew-custom-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[auto-renew-custom-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[auto-renew-order-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[auto-renew-order-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[auto-renew-product-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[auto-renew-product-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[transfer-custom-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[transfer-custom-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[transfer-order-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[transfer-order-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[transfer-product-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[transfer-product-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[cut-access-custom-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[cut-access-custom-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[cut-access-order-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[cut-access-order-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[cut-access-product-dict]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_mutation_guards::test_composite_miniapp_mutation_refused[cut-access-product-sqlite]": {
+    "reason": "Composite Mini App custom mutation dispatch guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-custom-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-custom-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-order-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-order-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-parent_product-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-parent_product-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-selected-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[plans-selected-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-custom-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-custom-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-custom-100000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-custom-100000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-order-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-order-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-order-100000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-order-100000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-parent_product-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-parent_product-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-parent_product-100000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-parent_product-100000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-selected-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-selected-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-selected-100000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-selected-100000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-request-30000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-request-30000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-request-100000-dict]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_renewal_guards::test_composite_miniapp_renewal_refused[checkout-request-100000-sqlite]": {
+    "reason": "Unsupported composite Mini App full-renewal selection/checkout guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_plan-plan-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_plan-plan-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_custom-custom-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_custom-custom-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_stock-stock-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[status_stock-stock-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-plan-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-plan-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-request-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_explicit-request-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-plan-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-plan-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-request-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_implicit-request-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_stock-request-dict]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_trial_guards::test_composite_miniapp_trial_refused[claim_stock-request-sqlite]": {
+    "reason": "Composite Mini App trial catalog/claim/retained-link guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[purchase-request-30000-dict]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[purchase-request-30000-sqlite]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[purchase-request-100000-dict]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[purchase-request-100000-sqlite]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_stock-order-30000-dict]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_stock-order-30000-sqlite]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_stock-product-30000-dict]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_stock-product-30000-sqlite]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_custom-order-30000-dict]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_custom-order-30000-sqlite]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_renewal-order-30000-dict]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_miniapp_custom_receipt_guards::test_composite_miniapp_custom_receipt_refused[receipt_renewal-order-30000-sqlite]": {
+    "reason": "Composite Mini App custom checkout/receipt guards absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-stock-dict]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-stock-sqlite]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-auto-dict]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-auto-sqlite]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-empty-dict]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[list_products-empty-sqlite]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-stock-dict]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-stock-sqlite]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-auto-dict]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-auto-sqlite]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-empty-dict]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_catalog_guards::test_composite_ai_catalog_refused[show_purchase_options-empty-sqlite]": {
+    "reason": "AI catalog composite refusal missing",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_trial_guards::test_composite_ai_trial_refused[False-dict]": {
+    "reason": "AI active trial-plan composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_trial_guards::test_composite_ai_trial_refused[False-sqlite]": {
+    "reason": "AI active trial-plan composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_trial_guards::test_composite_ai_trial_refused[True-dict]": {
+    "reason": "AI active trial-plan composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_trial_guards::test_composite_ai_trial_refused[True-sqlite]": {
+    "reason": "AI active trial-plan composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[stock-dict]": {
+    "reason": "AI wallet-purchase composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[stock-sqlite]": {
+    "reason": "AI wallet-purchase composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[auto-dict]": {
+    "reason": "AI wallet-purchase composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_wallet_guards::test_composite_ai_wallet_shortcut_refused[auto-sqlite]": {
+    "reason": "AI wallet-purchase composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-custom-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-custom-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-volume-custom-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-volume-custom-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-time-custom-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-time-custom-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-product-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[calculate_renewal_cost-full-product-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-custom-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-custom-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-volume-custom-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-volume-custom-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-time-custom-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-time-custom-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-product-dict]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_renewal_guards::test_composite_ai_custom_renewal_refused[renew_service_with_wallet-full-product-sqlite]": {
+    "reason": "AI custom renewal composite target/product refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_country_guards::test_composite_ai_country_discovery_refused[alpha-dict]": {
+    "reason": "AI country discovery composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_country_guards::test_composite_ai_country_discovery_refused[alpha-sqlite]": {
+    "reason": "AI country discovery composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_country_guards::test_composite_ai_country_discovery_refused[gamma-dict]": {
+    "reason": "AI country discovery composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_country_guards::test_composite_ai_country_discovery_refused[gamma-sqlite]": {
+    "reason": "AI country discovery composite refusal absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_service_qr-config-dict]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_service_qr-config-sqlite]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_service_qr-order-dict]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_service_qr-order-sqlite]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_individual_configs-config-dict]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_individual_configs-config-sqlite]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_individual_configs-order-dict]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_retrieval_guards::test_composite_ai_stock_retrieval_refused[request_individual_configs-order-sqlite]": {
+    "reason": "AI stock config/selected approved order retrieval composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-config-dict]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-config-sqlite]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-order-dict]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[calculate_renewal_cost-order-sqlite]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-config-dict]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-config-sqlite]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-order-dict]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_stock_renewal_guards::test_composite_ai_stock_renewal_refused[renew_service_with_wallet-order-sqlite]": {
+    "reason": "AI stock config/selected order renewal composite guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[config-dict]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[config-sqlite]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[order-dict]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[order-sqlite]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[custom-dict]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[custom-sqlite]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[pending-dict]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  },
+  "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[pending-sqlite]": {
+    "reason": "AI account composite config/approved order/custom/pending guard absent",
+    "implementation_task": "T053"
+  }
+}
