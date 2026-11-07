@@ -1,0 +1,16 @@
+{
+  "implementing_task": "T053",
+  "reason": "Telegram composite autorenew toggles reach legacy writes/card reads instead of refusal",
+  "ids": [
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[0-dict]",
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[0-sqlite]",
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[1-dict]",
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[1-sqlite]"
+  ],
+  "messages": {
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[0-dict]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='edit_text', chat_id=5101, message_id=1, text='\ud83d\udee0 \u06a9\u0627\u0646\u0641\u06cc\u06af \u0634\u062e\u0635\u06cc \u00abalpha\u00bb\\n\ud83d\udcf6 \u062d\u062c\u0645: 10 \u06af\u06cc\u06af | \u23f3 \u0645\u062f\u062a: 30 \u0631\u0648...\u062f\u06cc\u06a9 \u0627\u0646\u0642\u0636\u0627\u060c \u0627\u0632 \u06a9\u06cc\u0641 \u067e\u0648\u0644 \u06a9\u0633\u0631 \u0648 \u062a\u0645\u062f\u06cc\u062f \u0645\u06cc\\u200c\u0634\u0648\u062f.', parse_mode=None, reply_markup=None, show_alert=False, delivered=True)])",
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[0-sqlite]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='edit_text', chat_id=5101, message_id=1, text='\ud83d\udee0 \u06a9\u0627\u0646\u0641\u06cc\u06af \u0634\u062e\u0635\u06cc \u00abalpha\u00bb\\n\ud83d\udcf6 \u062d\u062c\u0645: 10 \u06af\u06cc\u06af | \u23f3 \u0645\u062f\u062a: 30 \u0631\u0648...\u062f\u06cc\u06a9 \u0627\u0646\u0642\u0636\u0627\u060c \u0627\u0632 \u06a9\u06cc\u0641 \u067e\u0648\u0644 \u06a9\u0633\u0631 \u0648 \u062a\u0645\u062f\u06cc\u062f \u0645\u06cc\\u200c\u0634\u0648\u062f.', parse_mode=None, reply_markup=None, show_alert=False, delivered=True)])",
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[1-dict]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='edit_text', chat_id=5101, message_id=1, text='\ud83d\udee0 \u06a9\u0627\u0646\u0641\u06cc\u06af \u0634\u062e\u0635\u06cc \u00abalpha\u00bb\\n\ud83d\udcf6 \u062d\u062c\u0645: 10 \u06af\u06cc\u06af | \u23f3 \u0645\u062f\u062a: 30 \u0631\u0648...sage_id=None, text='\u2705 \u062a\u0645\u062f\u06cc\u062f \u062e\u0648\u062f\u06a9\u0627\u0631 \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u0634\u062f.', parse_mode=None, reply_markup=None, show_alert=False, delivered=True)])",
+    "tests.integration.test_composite_telegram_autorenew_guards::test_composite_autorenew_refused[1-sqlite]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='edit_text', chat_id=5101, message_id=1, text='\ud83d\udee0 \u06a9\u0627\u0646\u0641\u06cc\u06af \u0634\u062e\u0635\u06cc \u00abalpha\u00bb\\n\ud83d\udcf6 \u062d\u062c\u0645: 10 \u06af\u06cc\u06af | \u23f3 \u0645\u062f\u062a: 30 \u0631\u0648...sage_id=None, text='\u2705 \u062a\u0645\u062f\u06cc\u062f \u062e\u0648\u062f\u06a9\u0627\u0631 \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u0634\u062f.', parse_mode=None, reply_markup=None, show_alert=False, delivered=True)])"
+  }
+}

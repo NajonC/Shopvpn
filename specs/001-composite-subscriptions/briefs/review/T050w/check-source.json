@@ -1,0 +1,7 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "tests/integration/test_composite_telegram_autorenew_guards.py": "69ceabbe4a71cd1beed7015d5db93a1fd0b6e021ab59a996f9ad9af9160c6ecd",
+    "tests/characterization/test_legacy_renewal_reminders.py": "84722b6b10d9fbdae768cb5fb8e8fbc3490b3a213575196210a56401c6e61ea3"
+  }
+}
