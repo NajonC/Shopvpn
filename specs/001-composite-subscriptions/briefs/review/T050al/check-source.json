@@ -1,0 +1,12 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "noapay_client.py": "1bfdc826fd8215b070d6047f08f411e57c5f4b5bf8e7976db627d6bb89f1d024",
+    "tests/integration/test_composite_telegram_custom_noapay_guards.py": "076d5b7653365deba8a435a73b130644120ed4d2f1504a3f186d1c7d27789d68",
+    "tests/integration/test_composite_telegram_custom_selection_guards.py": "f4d6e181b96731bc5d201e4497a1c00f2a387e9ee76fdbc4314e59b7ecf11de5",
+    "tests/integration/test_composite_telegram_custom_card_entry_guards.py": "5454c34cb1301538ce5982fdea3555e04285e05380b4784ba73723e874cf4c83",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817"
+  }
+}
