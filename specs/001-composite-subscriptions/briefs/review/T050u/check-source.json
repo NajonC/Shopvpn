@@ -1,0 +1,7 @@
+{
+  "ai_support.py": "1297845ea834eee309443bbc9c9a11ffcea4e982e190d9dbb9c67adfffea5eeb",
+  "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+  "tests/integration/test_composite_ai_account_guards.py": "6773f7267c2cc6c481d25fb0fe6ae98f81b679bfbaaa35e7fb6cce3f1f25c6d6",
+  "tests/integration/test_composite_ai_stock_retrieval_guards.py": "be01b981a1df43edcc9fff1ba14f50509b05dab1a52b9f8f285e315e869e3f8a",
+  "tests/characterization/test_legacy_renewal_reminders.py": "84722b6b10d9fbdae768cb5fb8e8fbc3490b3a213575196210a56401c6e61ea3"
+}

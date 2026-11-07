@@ -1,0 +1,14 @@
+{
+  "implementing_task": "T053",
+  "reason": "AI account composite config/approved order/custom/pending guard absent",
+  "ids": [
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[config-dict]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[config-sqlite]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[order-dict]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[order-sqlite]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[custom-dict]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[custom-sqlite]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[pending-dict]",
+    "tests.integration.test_composite_ai_account_guards::test_composite_ai_account_refused_before_external_reads[pending-sqlite]"
+  ]
+}
