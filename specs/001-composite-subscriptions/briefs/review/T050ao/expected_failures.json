@@ -1,0 +1,4 @@
+{
+  "tests.integration.test_composite_telegram_custom_fixed_checkout_guards::test_composite_fixed_checkout_refused[dict]": "AssertionError: assert (['calc_custom...config_order'] == []\n  \n  Left contains 2 more items, first extra item: 'calc_custom_config_product_price'\n  Use -v to get more diff)",
+  "tests.integration.test_composite_telegram_custom_fixed_checkout_guards::test_composite_fixed_checkout_refused[sqlite]": "AssertionError: assert (['calc_custom...config_order'] == []\n  \n  Left contains 2 more items, first extra item: 'calc_custom_config_product_price'\n  Use -v to get more diff)"
+}
