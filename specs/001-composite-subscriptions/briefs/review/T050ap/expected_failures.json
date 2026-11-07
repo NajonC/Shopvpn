@@ -1,0 +1,6 @@
+{
+  "tests.integration.test_composite_telegram_custom_wallet_guards::test_composite_full_wallet_refused[fixed-dict]": "AssertionError: assert ([('factory', ...ame', 10, 17)] == []\n  \n  Left contains 2 more items, first extra item: ('factory', 1, '3xui')\n  Use -v to get more diff)",
+  "tests.integration.test_composite_telegram_custom_wallet_guards::test_composite_full_wallet_refused[fixed-sqlite]": "AssertionError: assert ([('factory', ...ame', 10, 17)] == []\n  \n  Left contains 2 more items, first extra item: ('factory', 1, '3xui')\n  Use -v to get more diff)",
+  "tests.integration.test_composite_telegram_custom_wallet_guards::test_composite_full_wallet_refused[choice-dict]": "AssertionError: assert ([('factory', ...ame', 10, 30)] == []\n  \n  Left contains 2 more items, first extra item: ('factory', 1, '3xui')\n  Use -v to get more diff)",
+  "tests.integration.test_composite_telegram_custom_wallet_guards::test_composite_full_wallet_refused[choice-sqlite]": "AssertionError: assert ([('factory', ...ame', 10, 30)] == []\n  \n  Left contains 2 more items, first extra item: ('factory', 1, '3xui')\n  Use -v to get more diff)"
+}
