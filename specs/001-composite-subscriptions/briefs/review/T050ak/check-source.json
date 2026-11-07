@@ -1,0 +1,10 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "blupal_client.py": "6a5841b5eda7001e721f79b48c817b0901c3958289778670b9ef21265f5b8fee",
+    "tests/integration/test_composite_telegram_custom_blupal_guards.py": "125ec68988baef0a7c7a4849bf661319feb5428f96c1c2e4d498bea99e42d2b4",
+    "tests/integration/test_composite_telegram_custom_card_entry_guards.py": "5454c34cb1301538ce5982fdea3555e04285e05380b4784ba73723e874cf4c83"
+  }
+}
