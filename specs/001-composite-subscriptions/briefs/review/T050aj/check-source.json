@@ -1,0 +1,10 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "abangateway_client.py": "a2b5033763181589822afe2c0566c6933637e30bd7eac39d00936ca23a94170d",
+    "tests/integration/test_composite_telegram_custom_abangateway_guards.py": "0b525d12cc80495024c95fc6eac3e6bf8fbaec22a7bf7c1ee5b33e67f0850538",
+    "tests/integration/test_composite_telegram_custom_card_entry_guards.py": "5454c34cb1301538ce5982fdea3555e04285e05380b4784ba73723e874cf4c83"
+  }
+}
