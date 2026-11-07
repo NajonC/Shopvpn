@@ -1,0 +1,8 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_telegram_card_status_guards.py": "346f9d1b077984600dea4c8c9155587c651cfea75b315e94ca6c8aad2abb5483",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817"
+  }
+}
