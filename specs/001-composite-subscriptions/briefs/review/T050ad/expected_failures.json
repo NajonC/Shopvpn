@@ -1,0 +1,4 @@
+{
+  "tests.integration.test_composite_telegram_custom_random_username_guards::test_composite_random_username_refused[dict]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='callback_answer', chat_id=None, message_id=None, text=None, parse_mode=None, reply_markup=None, s..., copy_text=None, callback_game=None, pay=None, disabled=None)]], force_reply=None), show_alert=False, delivered=True)])",
+  "tests.integration.test_composite_telegram_custom_random_username_guards::test_composite_random_username_refused[sqlite]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='callback_answer', chat_id=None, message_id=None, text=None, parse_mode=None, reply_markup=None, s..., copy_text=None, callback_game=None, pay=None, disabled=None)]], force_reply=None), show_alert=False, delivered=True)])"
+}

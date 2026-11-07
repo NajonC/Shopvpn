@@ -1,0 +1,10 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "tests/integration/test_composite_telegram_custom_random_username_guards.py": "8fae89194beafd37156d497d85d61679c11a9468a53345d179d5a54a7fd67c4c",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "tests/integration/test_composite_telegram_custom_selection_guards.py": "f4d6e181b96731bc5d201e4497a1c00f2a387e9ee76fdbc4314e59b7ecf11de5",
+    "tests/integration/test_composite_ai_catalog_legacy.py": "6dc1987657d7a54d51948af2f556d70ef500e95a2ab30b3eae55d93c3167b207",
+    "tests/_harness/legacy_bot.py": "66efe5eaef7e63cecbe173a2cc9dc91b1aabc4743412e3e81f782e1c738f7ac1"
+  }
+}
