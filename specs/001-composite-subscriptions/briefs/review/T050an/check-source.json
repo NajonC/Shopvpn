@@ -1,0 +1,11 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_telegram_custom_receipt_guards.py": "3dd32088c6988c476b489a3bb8b9feb9a5696f2bc1487da54fdea1ead1f7d66a",
+    "keyboards.py": "8850b83a2dea39335c806d8d0eb1ee1fe258831b5f97324eb34e58bfbb5800fe",
+    "tests/integration/test_composite_telegram_custom_selection_guards.py": "f4d6e181b96731bc5d201e4497a1c00f2a387e9ee76fdbc4314e59b7ecf11de5",
+    "tests/integration/test_composite_telegram_custom_card_entry_guards.py": "5454c34cb1301538ce5982fdea3555e04285e05380b4784ba73723e874cf4c83",
+    "tests/characterization/test_receipt_linkage.py": "5282debcc60522ccd5ad4ea793a13ce2c9d481bb8dd79e088592f0e636feda42"
+  }
+}

@@ -288,6 +288,7 @@ Each task pins today's observable behavior, including known unsafe behavior, usi
   - Mobile-auth tokens are rejected for composite management until parity is verified (contracts/application.md).
   - Errors use 401, 403, opaque 404, 422, 409 and 503; a replayed accepted request returns its earlier 202 or 200
 - [ ] T050 [P] Write `tests/integration/test_composite_legacy_guards.py`. Every legacy path listed in T051–T053 rejects a composite product, order or subscription with an explicit reason before any side effect, and the T013–T031 characterization suites still pass for legacy rows (FR-081; SC-012)
+  - T050an accepted: test-only custom payment guards; 47 reference passes, 26 valid mutations detected; 8 intended missingT053 failures. T050 remains unchecked; batch al–ao ongoing.
   - T050am accepted: test-only custom payment guards; 41 reference passes, 28 valid mutations detected; 4 intended missingT053 failures. T050 remains unchecked; batch al–ao ongoing.
   - T050al accepted: test-only custom payment guards; 35 reference passes, 27 valid mutations detected; 4 intended missingT053 failures. T050 remains unchecked; batch al–ao ongoing.
   - T050ak accepted: custom BluPal invoice entry guards;four expected missing-T053 failures,35referencepasses,27validmutations detected; real helper/SQL, exact amount/identity/link/check/re-entry preserved. Four authorized ah–ak parts complete; T050 remains unchecked. Next T050al Noapay custom invoice entry; remaining inventory briefs/review/T050ak/remaining.md.
