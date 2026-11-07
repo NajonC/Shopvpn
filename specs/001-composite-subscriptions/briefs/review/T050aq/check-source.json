@@ -1,0 +1,9 @@
+{
+  "hashes": {
+    "tests/integration/test_composite_telegram_custom_wallet_taken_guards.py": "8440dae43fffd9fb9346aefdb446566d393e5de571e4da205a0c05779b50c58a",
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "panel_providers/__init__.py": "f1b7a7e011afab52c09b728ddb260aa312215888add8fca014950d232a33aa76",
+    "tests/integration/test_composite_telegram_custom_wallet_guards.py": "cd9f8a138eeabd5e6e785c85b1faff48a0af45d0fda1eeab63bb4b653de86f65"
+  }
+}
