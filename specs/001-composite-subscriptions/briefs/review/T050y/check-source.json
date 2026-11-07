@@ -1,0 +1,9 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "tests/integration/test_composite_telegram_rename_submit_guards.py": "dd1579378cbda04854a1e1adbe86eff775c6fd8684bc3ecc8fad1b555cc9a410",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "tests/integration/test_composite_telegram_rename_entry_guards.py": "9018439cd5041fba7f6ca05717a51cd799b625056d063b308b2750217c4079c7",
+    "tests/integration/test_composite_telegram_autorenew_guards.py": "69ceabbe4a71cd1beed7015d5db93a1fd0b6e021ab59a996f9ad9af9160c6ecd"
+  }
+}
