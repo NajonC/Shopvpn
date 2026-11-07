@@ -1,0 +1,16 @@
+{
+  "implementing_task": "T053",
+  "reason": "Composite rename entry proceeds to FSM/prompt instead of refusal",
+  "ids": [
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[none-dict]",
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[none-sqlite]",
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[matching-dict]",
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[matching-sqlite]"
+  ],
+  "messages": {
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[none-dict]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='callback_answer', chat_id=None, message_id=None, text=None, parse_mode=None, reply_markup=None, s..., copy_text=None, callback_game=None, pay=None, disabled=None)]], force_reply=None), show_alert=False, delivered=True)])",
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[none-sqlite]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='callback_answer', chat_id=None, message_id=None, text=None, parse_mode=None, reply_markup=None, s..., copy_text=None, callback_game=None, pay=None, disabled=None)]], force_reply=None), show_alert=False, delivered=True)])",
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[matching-dict]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='callback_answer', chat_id=None, message_id=None, text=None, parse_mode=None, reply_markup=None, s..., copy_text=None, callback_game=None, pay=None, disabled=None)]], force_reply=None), show_alert=False, delivered=True)])",
+    "tests.integration.test_composite_telegram_rename_entry_guards::test_composite_rename_entry_refused[matching-sqlite]": "AssertionError: assert (2 == 1)\n +  where 2 = len([TelegramEvent(kind='callback_answer', chat_id=None, message_id=None, text=None, parse_mode=None, reply_markup=None, s..., copy_text=None, callback_game=None, pay=None, disabled=None)]], force_reply=None), show_alert=False, delivered=True)])"
+  }
+}
