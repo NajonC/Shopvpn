@@ -1,0 +1,10 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "crypto_payment.py": "c4a4d94372bfd85411d8d3d9361fa89b0dd1305b43fbed422bece4026869c0de",
+    "plisio_client.py": "1541bfce5527a7012a9fd7acbf261b38dab44de27a7b0ce71c4a6dbe882b621b",
+    "tests/integration/test_composite_telegram_custom_crypto_guards.py": "46bf051466b86508db204c4313896dc6b0ebb34cd1fb2b0348eba26d21414e1e",
+    "tests/integration/test_composite_telegram_custom_card_entry_guards.py": "5454c34cb1301538ce5982fdea3555e04285e05380b4784ba73723e874cf4c83"
+  }
+}
