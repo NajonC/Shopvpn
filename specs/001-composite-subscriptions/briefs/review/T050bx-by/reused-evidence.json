@@ -1,0 +1,41 @@
+{
+  "T050bf-bg": {
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_gateway_stock_guards.py": "ac13e25ef64931523941bf9b5e614b66e90a54f6dfa0a7599f017f4ba9ba9597",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "panel_providers/__init__.py": "f1b7a7e011afab52c09b728ddb260aa312215888add8fca014950d232a33aa76"
+  },
+  "T050bj-bk": {
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "direct_panel_provision.py": "50214cabd6217a7d59053fe9fe1775cf3229f01a243b63c8d4fc2087ec62cbf3",
+    "tests/integration/test_composite_gateway_direct_guards.py": "99063679a667eeb93bb2e63ddb1b0e8b11c5945642468d571dd895a86e40b7ba",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "panel_providers/__init__.py": "f1b7a7e011afab52c09b728ddb260aa312215888add8fca014950d232a33aa76"
+  },
+  "T050bl-bm": {
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "reseller_auto_provision.py": "5eddd2e0098f879631fa2863f8c2f38b9068f63c34345e58719dcf5052972c73",
+    "tests/integration/test_composite_gateway_auto_guards.py": "ddc89431ac2d0402f562c57e53fbd4fb5ee5d40f8cc5c379760e9201ca5fffc1",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "panel_providers/__init__.py": "f1b7a7e011afab52c09b728ddb260aa312215888add8fca014950d232a33aa76"
+  },
+  "T050bh-bi": {
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "renewal_engine.py": "a664dabf8310e7b2fed69f127658e81cf2d36c18956e26ce33773256bbbd467a",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_gateway_pool_renewal_guards.py": "9fba787a58d7f387d55a16c54d828019b278fbd5fce1a2d154d69da0189bb15f",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "panel_providers/__init__.py": "f1b7a7e011afab52c09b728ddb260aa312215888add8fca014950d232a33aa76"
+  }
+}
