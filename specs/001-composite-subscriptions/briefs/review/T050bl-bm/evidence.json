@@ -1,0 +1,573 @@
+{
+  "hashes": {
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "reseller_auto_provision.py": "5eddd2e0098f879631fa2863f8c2f38b9068f63c34345e58719dcf5052972c73",
+    "tests/integration/test_composite_gateway_auto_guards.py": "ddc89431ac2d0402f562c57e53fbd4fb5ee5d40f8cc5c379760e9201ca5fffc1",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "panel_providers/__init__.py": "f1b7a7e011afab52c09b728ddb260aa312215888add8fca014950d232a33aa76"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "cases": 237,
+      "disposition": "passed",
+      "failed_test_ids": []
+    },
+    {
+      "name": "abangateway_payment.py:omit_order",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:omit_product",
+      "cases": 3,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-product-dict-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:reason",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:early_claim",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:overstrict",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:status",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:claim",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:quantity",
+      "cases": 23,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms1-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:owner",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:approval",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:reward",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:amount",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:price",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:admin",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:recipient",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:release",
+      "cases": 35,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[owner-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "abangateway_payment.py:delivery",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:omit_order",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:omit_product",
+      "cases": 3,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-product-dict-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:reason",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:early_claim",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:overstrict",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:status",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:claim",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:quantity",
+      "cases": 23,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms1-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:owner",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:approval",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:reward",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:amount",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:price",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:admin",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:recipient",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:release",
+      "cases": 35,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[owner-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "blupal_payment.py:delivery",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-blupal_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:omit_order",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:omit_product",
+      "cases": 3,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-product-dict-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:reason",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:early_claim",
+      "cases": 1,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_composite_auto_refused[success-order-dict-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:overstrict",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:status",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:claim",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:quantity",
+      "cases": 23,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms1-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:owner",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:approval",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:reward",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:amount",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:price",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:admin",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:recipient",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:release",
+      "cases": 35,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[owner-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "noapay_payment.py:delivery",
+      "cases": 17,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-noapay_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:volume",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:duration",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:total",
+      "cases": 67,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms1-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:rollback",
+      "cases": 139,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[second-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:retry",
+      "cases": 151,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[collision-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:mirror",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:persist",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:source",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:fixed_amount",
+      "cases": 73,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms1-None-dict-fixed_product-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:volume_amount",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:omit_consume_fixed",
+      "cases": 55,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-fixed_product-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:omit_consume_volume",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "reseller_auto_provision.py:overstrict_unlimited",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "database.py:history",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "database.py:linkage",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "database.py:credit_race",
+      "cases": 157,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[race-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "database.py:credit_log",
+      "cases": 49,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-abangateway_payment]"
+      ]
+    },
+    {
+      "name": "database.py:fixed_race",
+      "cases": 160,
+      "disposition": "killed",
+      "failed_test_ids": [
+        "tests.integration.test_composite_gateway_auto_guards::test_legacy_auto_failures[race-fixed_product-abangateway_payment]"
+      ]
+    }
+  ],
+  "scratch": "auto-cleaned"
+}
