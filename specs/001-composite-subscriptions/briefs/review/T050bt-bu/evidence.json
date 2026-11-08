@@ -1,0 +1,258 @@
+{
+  "hashes": {
+    "handlers_admin.py": "73d8781de295b74025735702b21df2548f28e54f83c89e8e0d87210068b63648",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_admin_blupal_catalog_status_guards.py": "fbd18f94f3032168a27bbdc2b888628b4bb8a0b3970ff04a0ee7f45344d20b21",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817",
+    "tests/integration/test_composite_admin_aban_catalog_status_guards.py": "fd7b80b4a6590e9f539d9ca0fa5148c232a935746b81da5d2aa6e50170c304d2"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 241,
+      "failed_ids": []
+    },
+    {
+      "name": "omit_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "omit_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "omit_product",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-product-stock-dict]"
+      ]
+    },
+    {
+      "name": "both_required",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_order_ref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_product_ref",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-product-stock-dict]"
+      ]
+    },
+    {
+      "name": "no_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "early_ack",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "early_verify",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "legacy_overstrict",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "no_authority",
+      "disposition": "killed",
+      "cases": 209,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_blupal_catalog_opaque[unauthorized-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_invoice",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_composite_blupal_catalog[pending-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "no_order_finalizer",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_finalizer_ref",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_pending",
+      "disposition": "killed",
+      "cases": 113,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[pending-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_cancel",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[cancelled-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "no_completed_fence",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_remote_ref",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "no_status_write",
+      "disposition": "killed",
+      "cases": 129,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[expired-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "ignore_claim_loss",
+      "disposition": "killed",
+      "cases": 193,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[claim_lost-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_quantity",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_delivery_price",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_reward_base",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "skip_renewal",
+      "disposition": "killed",
+      "cases": 71,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-renewal-dict]"
+      ]
+    },
+    {
+      "name": "skip_approve_renewal",
+      "disposition": "killed",
+      "cases": 71,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-renewal-dict]"
+      ]
+    },
+    {
+      "name": "skip_approve_stock",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "skip_approve_auto",
+      "disposition": "killed",
+      "cases": 67,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-direct-dict]"
+      ]
+    },
+    {
+      "name": "wrong_direct_dispatch",
+      "disposition": "killed",
+      "cases": 67,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[paid-None-direct-dict]"
+      ]
+    },
+    {
+      "name": "no_release_failure",
+      "disposition": "killed",
+      "cases": 99,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[fulfillment_failure-None-direct-dict]"
+      ]
+    },
+    {
+      "name": "sql_claim_without_condition",
+      "disposition": "killed",
+      "cases": 193,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_blupal_catalog_status_guards::test_legacy_blupal_catalog[claim_lost-None-stock-dict]"
+      ]
+    }
+  ]
+}
