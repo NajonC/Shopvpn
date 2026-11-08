@@ -1,0 +1,264 @@
+{
+  "hashes": {
+    "extra_gateway_admin.py": "0e23901c858c74bd7a66a12d1e32452a17845e4f2fdff74a3af0c3b26ccfe0c7",
+    "tests/integration/test_composite_extra_admin_view_cancel_guards.py": "c3592852db06f1ad0593944551d236736fb5b67a48dfde2e20b3748ff82e0196",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 429,
+      "failed_ids": []
+    },
+    {
+      "name": "cb_view_xgw_invoice_order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_product_alias",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-product-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_ref_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_selected_product",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-product-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_alert",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_overstrict",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_remove_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_authority",
+      "disposition": "killed",
+      "cases": 385,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_admin_view_cancel_opaque[unauthorized-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_wrong_invoice",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_delete_before_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_order_alias",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_product_alias",
+      "disposition": "killed",
+      "cases": 26,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-product-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_ref_domain",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_selected_product",
+      "disposition": "killed",
+      "cases": 26,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-product-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_reason",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_alert",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_overstrict",
+      "disposition": "killed",
+      "cases": 265,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_cancel[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_remove_guard",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_authority",
+      "disposition": "killed",
+      "cases": 386,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_admin_view_cancel_opaque[unauthorized-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_wrong_invoice",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_delete_before_guard",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_composite_admin_view_cancel[new-order-dict-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "view_active",
+      "disposition": "killed",
+      "cases": 169,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[pending-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "view_stars_controls",
+      "disposition": "killed",
+      "cases": 165,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[new-tgstars-None-dict]"
+      ]
+    },
+    {
+      "name": "view_stars_amount",
+      "disposition": "killed",
+      "cases": 165,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[new-tgstars-None-dict]"
+      ]
+    },
+    {
+      "name": "view_ordinary_amount",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "view_ref_display",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "view_back_gateway",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_view[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "cancel_drop_delete",
+      "disposition": "killed",
+      "cases": 265,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_cancel[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "cancel_wrong_delete",
+      "disposition": "killed",
+      "cases": 265,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_cancel[new-zarinpal-None-dict]"
+      ]
+    },
+    {
+      "name": "cancel_wrong_refresh",
+      "disposition": "killed",
+      "cases": 265,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_view_cancel_guards::test_legacy_admin_invoice_cancel[new-zarinpal-None-dict]"
+      ]
+    }
+  ]
+}
