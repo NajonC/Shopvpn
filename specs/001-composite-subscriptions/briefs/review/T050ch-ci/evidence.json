@@ -1,0 +1,161 @@
+{
+  "hashes": {
+    "extra_gateway_user.py": "ba354262bfe31338fd9a9de491c67489f4dbef21d1988948bb46f2d0b8e30de9",
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "tests/integration/test_composite_extra_user_guards.py": "ff59ed9fe867fd9055c5439be337b4bc66ea4da39132906dd9617e8429587db0",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 106,
+      "failed_ids": []
+    },
+    {
+      "name": "omit_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "omit_product",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-product-dict]"
+      ]
+    },
+    {
+      "name": "wrong_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "wrong_product",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-product-dict]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "early_ack",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "early_process",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "authority",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_extra_user_opaque[unauthorized]"
+      ]
+    },
+    {
+      "name": "wrong_invoice",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_composite_extra_user[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "completed_fence",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "expiry_fence",
+      "disposition": "killed",
+      "cases": 53,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[cancelled-None-dict]"
+      ]
+    },
+    {
+      "name": "failed_write",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[failed-None-dict]"
+      ]
+    },
+    {
+      "name": "pending_settles",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "ignore_claim_loss",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[claim_lost-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_release",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[delivery-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_delivery_ref",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_fulfillment",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_user_guards::test_legacy_extra_user[paid-None-dict]"
+      ]
+    }
+  ]
+}
