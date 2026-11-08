@@ -1,0 +1,243 @@
+{
+  "hashes": {
+    "extra_gateway_user.py": "ba354262bfe31338fd9a9de491c67489f4dbef21d1988948bb46f2d0b8e30de9",
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "tests/integration/test_composite_extra_topup_entry_controls.py": "99b3e9d6929bf151cee0bf1276163406c6e20ed977c85f2c2639792b6a1574fc",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 111,
+      "failed_ids": []
+    },
+    {
+      "name": "available",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[disabled-zarinpal]"
+      ]
+    },
+    {
+      "name": "policy",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[policy-zarinpal]"
+      ]
+    },
+    {
+      "name": "amount",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "actor",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reference_id",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "kind",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "rollback",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[remote-zarinpal]"
+      ]
+    },
+    {
+      "name": "error_reply",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[remote-zarinpal]"
+      ]
+    },
+    {
+      "name": "label",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "new_amount",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "new_owner",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "zero_boundary",
+      "disposition": "killed",
+      "cases": 43,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[zero-zarinpal]"
+      ]
+    },
+    {
+      "name": "global_composite_ban",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "stars_payload",
+      "disposition": "killed",
+      "cases": 6,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "stars_amount",
+      "disposition": "killed",
+      "cases": 6,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "stars_currency",
+      "disposition": "killed",
+      "cases": 6,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "stars_error",
+      "disposition": "killed",
+      "cases": 72,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[telegram-tgstars]"
+      ]
+    },
+    {
+      "name": "check_link",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "pay_link",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "cube_exact",
+      "disposition": "killed",
+      "cases": 4,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-cubepay]"
+      ]
+    },
+    {
+      "name": "tetra_link",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-tetra98]"
+      ]
+    },
+    {
+      "name": "done_kind",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "persist_amount",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "cube_fee",
+      "disposition": "killed",
+      "cases": 4,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-cubepay]"
+      ]
+    },
+    {
+      "name": "star_round",
+      "disposition": "killed",
+      "cases": 6,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "reject_wrong_row",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_failure_boundaries[remote-zarinpal]"
+      ]
+    },
+    {
+      "name": "repeated_request_reuse",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_entry_controls::test_topup_success_repeated_request[None-dict-zarinpal]"
+      ]
+    }
+  ]
+}
