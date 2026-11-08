@@ -1,0 +1,241 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 199,
+      "failed_ids": []
+    },
+    {
+      "name": "order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "ref_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_identity",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "remove_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "recipient",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_caller_admission[order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "cadence",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "batch_limit",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "housekeeping_frequency",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "purge_age",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "interval",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "legacy_recipient",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "unpaid_notification",
+      "disposition": "killed",
+      "cases": 29,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[pending-None]"
+      ]
+    },
+    {
+      "name": "drop_send",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_poll_legacy_cadence_and_continuation[paid-None]"
+      ]
+    },
+    {
+      "name": "expire_stale_extra_invoices_remove_filter",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "expire_stale_extra_invoices_order_alias",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "expire_stale_extra_invoices_product_alias",
+      "disposition": "killed",
+      "cases": 43,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[new-product-zarinpal]"
+      ]
+    },
+    {
+      "name": "expire_stale_extra_invoices_overstrict",
+      "disposition": "killed",
+      "cases": 101,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_selected_legacy_order[new-zarinpal-None]"
+      ]
+    },
+    {
+      "name": "expire_stale_extra_invoices_reference_domain",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "expire_stale_extra_invoices_kind_domain",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_other_reference_domains[new-wallet_topup]"
+      ]
+    },
+    {
+      "name": "purge_old_extra_invoices_remove_filter",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[completed-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "purge_old_extra_invoices_order_alias",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[completed-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "purge_old_extra_invoices_product_alias",
+      "disposition": "killed",
+      "cases": 67,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[completed-product-zarinpal]"
+      ]
+    },
+    {
+      "name": "purge_old_extra_invoices_overstrict",
+      "disposition": "killed",
+      "cases": 125,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_selected_legacy_order[completed-zarinpal-None]"
+      ]
+    },
+    {
+      "name": "purge_old_extra_invoices_reference_domain",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_preserves_composite_references[completed-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "purge_old_extra_invoices_kind_domain",
+      "disposition": "killed",
+      "cases": 99,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_guards::test_housekeeping_other_reference_domains[completed-wallet_topup]"
+      ]
+    }
+  ]
+}
