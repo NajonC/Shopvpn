@@ -1,0 +1,194 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "tests/integration/test_composite_extra_stars_guards.py": "06c3ee6dc55fc79057732d2873632857ad59bf4cb10076723bce4bf4d8dab095",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 107,
+      "failed_ids": []
+    },
+    {
+      "name": "order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-product-dict]"
+      ]
+    },
+    {
+      "name": "wrong_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "wrong_product",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-product-dict]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "early_metadata",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "early_claim",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_composite_extra_stars[paid-order-dict]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "owner",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[foreign-None-dict]"
+      ]
+    },
+    {
+      "name": "gateway",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[gateway-None-dict]"
+      ]
+    },
+    {
+      "name": "amount",
+      "disposition": "killed",
+      "cases": 53,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[amount-None-dict]"
+      ]
+    },
+    {
+      "name": "currency",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[currency-None-dict]"
+      ]
+    },
+    {
+      "name": "metadata",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_charge",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "ignore_claim",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "metadata_after_claim",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_delivery",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "release_failure",
+      "disposition": "killed",
+      "cases": 29,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[delivery-None-dict]"
+      ]
+    },
+    {
+      "name": "claim_unconditional",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "quantity",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "price",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "reward",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_guards::test_legacy_extra_stars[paid-None-dict]"
+      ]
+    }
+  ]
+}
