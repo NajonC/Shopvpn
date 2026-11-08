@@ -1,0 +1,185 @@
+{
+  "hashes": {
+    "handlers_admin.py": "73d8781de295b74025735702b21df2548f28e54f83c89e8e0d87210068b63648",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_manual_catalog_guards.py": "e4eb197a961fd76e2754bcdec44b3ab3ef0d862b22aa7830ba3d92e30c8977ed",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 155,
+      "failed_ids": []
+    },
+    {
+      "name": "repeat_fences",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "omit_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "omit_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "omit_product",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-product-stock-dict]"
+      ]
+    },
+    {
+      "name": "no_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "early_claim",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "authority",
+      "disposition": "killed",
+      "cases": 105,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_manual_catalog_opaque[unauthorized-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-order-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_product",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_composite_manual_catalog[success-product-stock-dict]"
+      ]
+    },
+    {
+      "name": "claim",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "quantity",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-failure-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "stock_approve",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "auto_approve",
+      "disposition": "killed",
+      "cases": 27,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-direct-dict]"
+      ]
+    },
+    {
+      "name": "delivery_price",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "reward_base",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "reward_skip",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "wrong_recipient",
+      "disposition": "killed",
+      "cases": 27,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-direct-dict]"
+      ]
+    },
+    {
+      "name": "direct_dispatch",
+      "disposition": "killed",
+      "cases": 27,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-success-None-direct-dict]"
+      ]
+    },
+    {
+      "name": "release_stock",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-failure-None-stock-dict]"
+      ]
+    },
+    {
+      "name": "release_provision",
+      "disposition": "killed",
+      "cases": 35,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_catalog_guards::test_legacy_manual_catalog[0-failure-None-direct-dict]"
+      ]
+    }
+  ]
+}
