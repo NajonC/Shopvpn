@@ -1,0 +1,240 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "tests/integration/test_composite_extra_direct_callers_guards.py": "15ba326efd75583f6f930c8ead23c8867c7ff16ba846ca1f893f8ba1ff096b89",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 275,
+      "failed_ids": []
+    },
+    {
+      "name": "process_invoice_order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_product_alias",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-product-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_reference_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_selected_product",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-product-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_overstrict",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "process_invoice_remove_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_claim_before_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "process_invoice_credit_before_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-process]"
+      ]
+    },
+    {
+      "name": "deliver_order_alias",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_product_alias",
+      "disposition": "killed",
+      "cases": 26,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-product-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_reference_domain",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_selected_product",
+      "disposition": "killed",
+      "cases": 26,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-product-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_reason",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_overstrict",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "deliver_remove_guard",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_claim_before_guard",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "deliver_credit_before_guard",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_composite_caller_local_admission[pending-order-dict-zarinpal-deliver]"
+      ]
+    },
+    {
+      "name": "unpaid_delivery",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "drop_delivery",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "release_wrong_invoice",
+      "disposition": "killed",
+      "cases": 157,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[delivery-None-dict]"
+      ]
+    },
+    {
+      "name": "omit_release",
+      "disposition": "killed",
+      "cases": 157,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[delivery-None-dict]"
+      ]
+    },
+    {
+      "name": "result_text",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "delivery_reference",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "approved_rejected",
+      "disposition": "killed",
+      "cases": 149,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[prior-None-dict]"
+      ]
+    },
+    {
+      "name": "registered_notifier",
+      "disposition": "killed",
+      "cases": 213,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_deliver_legacy_chain[registered-paid-None-dict]"
+      ]
+    },
+    {
+      "name": "notifier_forwarding",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    },
+    {
+      "name": "drop_finalizer",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_callers_guards::test_direct_process_legacy_chain[paid-None-dict]"
+      ]
+    }
+  ]
+}
