@@ -1,0 +1,208 @@
+{
+  "hashes": {
+    "handlers_admin.py": "73d8781de295b74025735702b21df2548f28e54f83c89e8e0d87210068b63648",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "tests/integration/test_composite_admin_abangateway_status_guards.py": "7285d1fea867db8b57ee8974bf249d21b4d29ca0bd2f6f31d3066fdf617d3923",
+    "tests/characterization/test_callbacks_fsm.py": "b9c63f3386ab154a9082415edcfdbdd61dc7fb895d1e91b5fd1401fe4edd1817"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 85,
+      "failed_ids": []
+    },
+    {
+      "name": "omit_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "omit_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "omit_product",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-product-dict]"
+      ]
+    },
+    {
+      "name": "both_required",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "wrong_order_ref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "wrong_product_ref",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-product-dict]"
+      ]
+    },
+    {
+      "name": "no_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "early_ack",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "early_verify",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "legacy_overstrict",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "topup_overstrict",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "no_authority",
+      "disposition": "killed",
+      "cases": 73,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_admin_aban_opaque[unauthorized-dict]"
+      ]
+    },
+    {
+      "name": "wrong_invoice",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_composite_admin_aban_refused[pending-order-dict]"
+      ]
+    },
+    {
+      "name": "no_order_finalizer",
+      "disposition": "killed",
+      "cases": 53,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[paid_prior-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_finalizer_ref",
+      "disposition": "killed",
+      "cases": 53,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[paid_prior-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_topup_ref",
+      "disposition": "killed",
+      "cases": 75,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_admin_aban_topup[dict]"
+      ]
+    },
+    {
+      "name": "wrong_pending",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_cancel",
+      "disposition": "killed",
+      "cases": 29,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[cancelled-None-dict]"
+      ]
+    },
+    {
+      "name": "no_completed_fence",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[completed-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_remote_ref",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "no_status_write",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[expired-None-dict]"
+      ]
+    },
+    {
+      "name": "no_verify",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[already_verified-None-dict]"
+      ]
+    },
+    {
+      "name": "no_complete",
+      "disposition": "killed",
+      "cases": 53,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_legacy_admin_aban_exact[paid_prior-None-dict]"
+      ]
+    },
+    {
+      "name": "no_approve_topup",
+      "disposition": "killed",
+      "cases": 75,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_abangateway_status_guards::test_admin_aban_topup[dict]"
+      ]
+    }
+  ]
+}
