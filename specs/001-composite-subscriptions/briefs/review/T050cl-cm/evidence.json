@@ -1,0 +1,219 @@
+{
+  "hashes": {
+    "extra_gateway_user.py": "ba354262bfe31338fd9a9de491c67489f4dbef21d1988948bb46f2d0b8e30de9",
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "tests/integration/test_composite_extra_order_entry_guards.py": "bc65f6932a51756dbc1923bcb7dea3d46f90e0b2aca97c2d958eaaf01913c45e",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 202,
+      "failed_ids": []
+    },
+    {
+      "name": "order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_composite_order_entry[success-False-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_composite_order_entry[success-False-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_link",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_composite_order_entry[success-False-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_composite_order_entry[success-False-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "status",
+      "disposition": "killed",
+      "cases": 123,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_boundaries[zarinpal-closed]"
+      ]
+    },
+    {
+      "name": "available",
+      "disposition": "killed",
+      "cases": 124,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_boundaries[zarinpal-disabled]"
+      ]
+    },
+    {
+      "name": "policy",
+      "disposition": "killed",
+      "cases": 125,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_boundaries[zarinpal-policy]"
+      ]
+    },
+    {
+      "name": "amount",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "actor",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reference_id",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "error_reply",
+      "disposition": "killed",
+      "cases": 126,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_boundaries[zarinpal-remote]"
+      ]
+    },
+    {
+      "name": "label",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "stars_payload",
+      "disposition": "killed",
+      "cases": 102,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "stars_amount",
+      "disposition": "killed",
+      "cases": 102,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "stars_currency",
+      "disposition": "killed",
+      "cases": 102,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "check_link",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "pay_link",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "cube_exact",
+      "disposition": "killed",
+      "cases": 100,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-cubepay]"
+      ]
+    },
+    {
+      "name": "tetra_link",
+      "disposition": "killed",
+      "cases": 99,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-tetra98]"
+      ]
+    },
+    {
+      "name": "kind",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "persist_amount",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "cube_fee",
+      "disposition": "killed",
+      "cases": 100,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-cubepay]"
+      ]
+    },
+    {
+      "name": "remote_label",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "repeat",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_order_entry_guards::test_legacy_order_entry_repeat[None-dict-zarinpal]"
+      ]
+    }
+  ]
+}
