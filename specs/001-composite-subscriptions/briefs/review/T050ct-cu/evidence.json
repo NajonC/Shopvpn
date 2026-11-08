@@ -1,0 +1,192 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "tests/integration/test_composite_extra_direct_check_guards.py": "025008823ace8a6f20f45d115c25ae4d9849dc0f537cad6142a8beb6eb2751cb",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 375,
+      "failed_ids": []
+    },
+    {
+      "name": "order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "selected_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "selected_product",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "explicit_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "late_terminal_guard",
+      "disposition": "killed",
+      "cases": 6,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-order-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "terminal_completed",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "terminal_cancelled",
+      "disposition": "killed",
+      "cases": 241,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[cancelled-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "stars_unpaid",
+      "disposition": "killed",
+      "cases": 102,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-tgstars]"
+      ]
+    },
+    {
+      "name": "failed_expiry",
+      "disposition": "killed",
+      "cases": 169,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[failed-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "pending_claim",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[pending-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "claim_identity",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "lost_claim",
+      "disposition": "killed",
+      "cases": 289,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[claim_lost-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "gateway_error",
+      "disposition": "killed",
+      "cases": 193,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[error-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "remote_amount",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "remote_identity",
+      "disposition": "killed",
+      "cases": 97,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "cube_units",
+      "disposition": "killed",
+      "cases": 100,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-cubepay]"
+      ]
+    },
+    {
+      "name": "now_payment_id",
+      "disposition": "killed",
+      "cases": 101,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-nowpayments]"
+      ]
+    },
+    {
+      "name": "now_price",
+      "disposition": "killed",
+      "cases": 101,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_legacy_contract[paid-None-dict-nowpayments]"
+      ]
+    },
+    {
+      "name": "claim_before_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "wallet_side_effect",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_check_guards::test_direct_check_composite_admission[paid-order-dict-zarinpal]"
+      ]
+    }
+  ]
+}
