@@ -1,0 +1,225 @@
+{
+  "hashes": {
+    "handlers_admin.py": "73d8781de295b74025735702b21df2548f28e54f83c89e8e0d87210068b63648",
+    "renewal_engine.py": "a664dabf8310e7b2fed69f127658e81cf2d36c18956e26ce33773256bbbd467a",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_manual_custom_renewal_guards.py": "9888c92a99420b4ee751aa44217ca69be7bd54787e61de38402c850a2212e8e3",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 189,
+      "failed_ids": []
+    },
+    {
+      "name": "repeat_fences",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "omit_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-order-dict]"
+      ]
+    },
+    {
+      "name": "omit_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-order-dict]"
+      ]
+    },
+    {
+      "name": "omit_target",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-target-dict]"
+      ]
+    },
+    {
+      "name": "omit_product",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-product-dict]"
+      ]
+    },
+    {
+      "name": "wrong_target",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-target-dict]"
+      ]
+    },
+    {
+      "name": "wrong_product",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-product-dict]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-order-dict]"
+      ]
+    },
+    {
+      "name": "early_claim",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_composite_manual_custom_renewal[success-order-dict]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "claim",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "approval",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "release",
+      "disposition": "killed",
+      "cases": 43,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[factory-full-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_renewal",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "recipient",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "audit",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "illicit_reward",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "ownership",
+      "disposition": "killed",
+      "cases": 79,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[foreign-full-None-dict]"
+      ]
+    },
+    {
+      "name": "volume",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "days",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "name",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "preserve",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "reset",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "readback",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "local_volume",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    },
+    {
+      "name": "local_days",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_manual_custom_renewal_guards::test_legacy_manual_custom_renewal[success-full-None-dict]"
+      ]
+    }
+  ]
+}
