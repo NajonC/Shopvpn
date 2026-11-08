@@ -1,0 +1,18 @@
+{
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-order-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-order-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-product-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-product-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[pending-order-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[pending-order-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[pending-product-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[pending-product-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[completed-order-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[completed-order-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[completed-product-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[completed-product-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[cancelled-order-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[cancelled-order-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[cancelled-product-dict]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False",
+  "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[cancelled-product-sqlite]": "AssertionError: missing T052 direct payable composite refusal\nassert True is False"
+}

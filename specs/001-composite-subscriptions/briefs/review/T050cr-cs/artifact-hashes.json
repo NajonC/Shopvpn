@@ -1,0 +1,10 @@
+{
+  "specs/001-composite-subscriptions/briefs/review/T050cp-cq/compare.py": "053c14867368c1435d4a49913bd5e7d62306e5590de2f4bd0ed27910b28a7878",
+  "specs/001-composite-subscriptions/briefs/review/T050cp-cq/variants.py": "476c9183af30e1b3fc825036ace609a559600490d84dcb78d5ed1e697ba14db8",
+  "specs/001-composite-subscriptions/briefs/review/T050cp-cq/verify.py": "c8f0658e51355a9633692681523a647d7684eafe7d0d7afc7a78f198025c4ab8",
+  "specs/001-composite-subscriptions/briefs/review/T050cr-cs/compare.py": "053c14867368c1435d4a49913bd5e7d62306e5590de2f4bd0ed27910b28a7878",
+  "specs/001-composite-subscriptions/briefs/review/T050cr-cs/variants.py": "76561b53c2a64ae94a28b8383c64979cf95ca3c6ac6bf1984801839f39fa592d",
+  "specs/001-composite-subscriptions/briefs/review/T050cr-cs/verify.py": "ce6c4ca73cdef09423eaf6cf9a99451560bca14b7860f30026f4c797bc12f6e3",
+  "tests/integration/test_composite_extra_direct_create_guards.py": "76f2aabf6e2175fa021942e3aee9d2f3d102e6616211f2a8c390918648c86283",
+  "tests/integration/test_composite_extra_direct_payable_guards.py": "a59e504e908105eae48c76174df35ab939b769e0f80140c79272bdae2105f34f"
+}

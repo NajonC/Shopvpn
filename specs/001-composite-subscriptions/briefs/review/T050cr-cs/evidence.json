@@ -1,0 +1,160 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "tests/integration/test_composite_extra_direct_payable_guards.py": "a59e504e908105eae48c76174df35ab939b769e0f80140c79272bdae2105f34f",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 115,
+      "failed_ids": []
+    },
+    {
+      "name": "order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-order-dict]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-product-dict]"
+      ]
+    },
+    {
+      "name": "product_link",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-product-dict]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_legacy_order_status[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "order_status",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_legacy_order_status[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "approved_order",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_legacy_order_status[approved-None-dict]"
+      ]
+    },
+    {
+      "name": "missing_order",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_legacy_order_status[missing-None-dict]"
+      ]
+    },
+    {
+      "name": "topup_status",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_topup_reference_status[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "approved_topup",
+      "disposition": "killed",
+      "cases": 43,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_topup_reference_status[approved-None-dict]"
+      ]
+    },
+    {
+      "name": "missing_topup",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_topup_reference_status[missing-None-dict]"
+      ]
+    },
+    {
+      "name": "topup_reference",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_topup_reference_status[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "reference_domain",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_legacy_order_status[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "kind_dispatch",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_topup_reference_status[pending-None-dict]"
+      ]
+    },
+    {
+      "name": "reseller_default",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_reseller_predicate_is_not_settlement[777-new-dict]"
+      ]
+    },
+    {
+      "name": "invoice_status",
+      "disposition": "killed",
+      "cases": 63,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_reseller_predicate_is_not_settlement[777-pending-dict]"
+      ]
+    },
+    {
+      "name": "global_composite_ban",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_topup_reference_status[pending-composite-dict]"
+      ]
+    },
+    {
+      "name": "claim_side_effect",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-order-dict]"
+      ]
+    },
+    {
+      "name": "wallet_side_effect",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_direct_payable_guards::test_direct_composite_reference_not_payable[new-order-dict]"
+      ]
+    }
+  ]
+}
