@@ -1,0 +1,161 @@
+{
+  "hashes": {
+    "extra_gateway_admin.py": "0e23901c858c74bd7a66a12d1e32452a17845e4f2fdff74a3af0c3b26ccfe0c7",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_list_alias_page_guards.py": "9f723d959e5c0cf25adf9a9c13f28371736e1e12dbf9f7834b5ccdb1d0ff2def",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 104,
+      "failed_ids": []
+    },
+    {
+      "name": "order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "target",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-renewal_target]"
+      ]
+    },
+    {
+      "name": "product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_product]"
+      ]
+    },
+    {
+      "name": "ref_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "custom_catalog",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_product]"
+      ]
+    },
+    {
+      "name": "stock_catalog",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-stock_renewal_product]"
+      ]
+    },
+    {
+      "name": "kind_domain",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_other_kind_collision_list[new-wallet_topup]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_legacy[None-custom_order]"
+      ]
+    },
+    {
+      "name": "omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "first50",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_hidden_composite_housekeeping[pending-beyond50]"
+      ]
+    },
+    {
+      "name": "first200",
+      "disposition": "killed",
+      "cases": 56,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_hidden_composite_housekeeping[pending-beyond200]"
+      ]
+    },
+    {
+      "name": "crossgateway",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_hidden_composite_housekeeping[pending-other_gateway]"
+      ]
+    },
+    {
+      "name": "early",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "filter",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "drop_legacy",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "alert",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_list_alias_admission[pending-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "empty",
+      "disposition": "killed",
+      "cases": 65,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_list_alias_page_guards::test_composite_only_list_empty"
+      ]
+    }
+  ]
+}
