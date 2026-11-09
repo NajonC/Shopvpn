@@ -1,0 +1,265 @@
+{
+  "hashes": {
+    "extra_gateway_admin.py": "0e23901c858c74bd7a66a12d1e32452a17845e4f2fdff74a3af0c3b26ccfe0c7",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_cancel_alias_guards.py": "dc94948e49f2a0c438d2dcb389633c10765542c99c984dbf99b948aa9a23c904",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 227,
+      "failed_ids": []
+    },
+    {
+      "name": "callback_order_alias",
+      "disposition": "killed",
+      "cases": 62,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_target_alias",
+      "disposition": "killed",
+      "cases": 86,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[renewal_target-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_product_alias",
+      "disposition": "killed",
+      "cases": 68,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_product-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_ref_domain",
+      "disposition": "killed",
+      "cases": 62,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_target_id",
+      "disposition": "killed",
+      "cases": 86,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[renewal_target-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_custom_domain",
+      "disposition": "killed",
+      "cases": 68,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_product-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_ordinary_domain",
+      "disposition": "killed",
+      "cases": 110,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[stock_renewal_product-dict-view]"
+      ]
+    },
+    {
+      "name": "callback_overstrict",
+      "disposition": "killed",
+      "cases": 117,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_legacy_cancel_aliases[custom_order-view-None]"
+      ]
+    },
+    {
+      "name": "direct_order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "direct_target_alias",
+      "disposition": "killed",
+      "cases": 85,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[renewal_target-dict-direct]"
+      ]
+    },
+    {
+      "name": "direct_product_alias",
+      "disposition": "killed",
+      "cases": 7,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-product-zarinpal]"
+      ]
+    },
+    {
+      "name": "direct_ref_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "direct_target_id",
+      "disposition": "killed",
+      "cases": 85,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[renewal_target-dict-direct]"
+      ]
+    },
+    {
+      "name": "direct_custom_domain",
+      "disposition": "killed",
+      "cases": 67,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_product-dict-direct]"
+      ]
+    },
+    {
+      "name": "direct_ordinary_domain",
+      "disposition": "killed",
+      "cases": 7,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-product-zarinpal]"
+      ]
+    },
+    {
+      "name": "direct_overstrict",
+      "disposition": "killed",
+      "cases": 115,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_legacy_cancel_aliases[custom_order-direct-None]"
+      ]
+    },
+    {
+      "name": "direct_ref_kind",
+      "disposition": "killed",
+      "cases": 170,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_reference_domains[new-wallet_topup]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_omit",
+      "disposition": "killed",
+      "cases": 62,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_reason",
+      "disposition": "killed",
+      "cases": 62,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_alert",
+      "disposition": "killed",
+      "cases": 62,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-view]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_omit",
+      "disposition": "killed",
+      "cases": 63,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_reason",
+      "disposition": "killed",
+      "cases": 63,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_alert",
+      "disposition": "killed",
+      "cases": 63,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_composite_cancel_aliases[custom_order-dict-cancel]"
+      ]
+    },
+    {
+      "name": "delete_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "delete_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "delete_identity",
+      "disposition": "killed",
+      "cases": 115,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_legacy_cancel_aliases[custom_order-direct-None]"
+      ]
+    },
+    {
+      "name": "delete_drop_delete",
+      "disposition": "killed",
+      "cases": 115,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_legacy_cancel_aliases[custom_order-direct-None]"
+      ]
+    },
+    {
+      "name": "delete_delete_early",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_direct_cancel_stock[new-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "callback_drop_refresh",
+      "disposition": "killed",
+      "cases": 119,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_legacy_cancel_aliases[custom_order-cancel-None]"
+      ]
+    },
+    {
+      "name": "callback_refresh_before_delete",
+      "disposition": "killed",
+      "cases": 119,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_legacy_cancel_aliases[custom_order-cancel-None]"
+      ]
+    },
+    {
+      "name": "callback_swallow_failure",
+      "disposition": "killed",
+      "cases": 184,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_cancel_alias_guards::test_cancel_failure_ordering[delete]"
+      ]
+    }
+  ]
+}
