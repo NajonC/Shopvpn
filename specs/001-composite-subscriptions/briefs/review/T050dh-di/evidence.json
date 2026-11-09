@@ -1,0 +1,257 @@
+{
+  "hashes": {
+    "extra_gateway_admin.py": "0e23901c858c74bd7a66a12d1e32452a17845e4f2fdff74a3af0c3b26ccfe0c7",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_admin_domain_view_controls.py": "5e4296230b3ce708eee6c6fdc5555d8f6a8ce8f53473a60dee4977e97b063100",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 241,
+      "failed_ids": []
+    },
+    {
+      "name": "status_new",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "status_pending",
+      "disposition": "killed",
+      "cases": 127,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[pending-zarinpal]"
+      ]
+    },
+    {
+      "name": "status_completed",
+      "disposition": "killed",
+      "cases": 133,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[completed-zarinpal]"
+      ]
+    },
+    {
+      "name": "status_expired",
+      "disposition": "killed",
+      "cases": 139,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[expired-zarinpal]"
+      ]
+    },
+    {
+      "name": "status_cancelled",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[cancelled-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_amount",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-wallet_topup-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "view_reference",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-wallet_topup-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "view_owner",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-wallet_topup-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "view_identity",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_payable_equal",
+      "disposition": "killed",
+      "cases": 163,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_view_field_boundaries[equal_payable-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_payable_zero",
+      "disposition": "killed",
+      "cases": 169,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_view_field_boundaries[zero_payable-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_remote",
+      "disposition": "killed",
+      "cases": 157,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_view_field_boundaries[no_remote-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_url",
+      "disposition": "killed",
+      "cases": 151,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_view_field_boundaries[no_url-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_inactive",
+      "disposition": "killed",
+      "cases": 133,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[completed-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_no_active",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_stars_check",
+      "disposition": "killed",
+      "cases": 126,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-tgstars]"
+      ]
+    },
+    {
+      "name": "view_stars_amount",
+      "disposition": "killed",
+      "cases": 126,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-tgstars]"
+      ]
+    },
+    {
+      "name": "view_back",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_check",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_cancel",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_unknown_gateway",
+      "disposition": "killed",
+      "cases": 187,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_view_field_boundaries[unknown_gateway-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_unknown_status",
+      "disposition": "killed",
+      "cases": 175,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_view_field_boundaries[unknown_status-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_created",
+      "disposition": "killed",
+      "cases": 121,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_independent_view_status[new-zarinpal]"
+      ]
+    },
+    {
+      "name": "view_drop_view",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-wallet_topup-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_wallet_topup_wrong_order_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-wallet_topup-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_reseller_request_wrong_order_domain",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-reseller_request-zarinpal-view]"
+      ]
+    },
+    {
+      "name": "cb_view_xgw_invoice_swallow_failure",
+      "disposition": "killed",
+      "cases": 199,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_database_ui_failures[lookup-view]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_wallet_topup_wrong_order_domain",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-wallet_topup-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_reseller_request_wrong_order_domain",
+      "disposition": "killed",
+      "cases": 14,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_reference_domains[new-reseller_request-zarinpal-cancel]"
+      ]
+    },
+    {
+      "name": "cb_cancel_xgw_invoice_swallow_failure",
+      "disposition": "killed",
+      "cases": 200,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_domain_view_controls::test_admin_database_ui_failures[lookup-cancel]"
+      ]
+    }
+  ]
+}
