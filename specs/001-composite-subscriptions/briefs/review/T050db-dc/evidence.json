@@ -1,0 +1,249 @@
+{
+  "hashes": {
+    "extra_gateway_admin.py": "0e23901c858c74bd7a66a12d1e32452a17845e4f2fdff74a3af0c3b26ccfe0c7",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_admin_list_guards.py": "d6170a81d9403d42b95931ff92937eecae800b37c49415b5d88e465a12fbac6b",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_admin_guards.py": "b4436a294f108061973d7026ad4dcac178861581b5705ce218fc607cf07c0d54"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 186,
+      "failed_ids": []
+    },
+    {
+      "name": "omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "order_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "ref_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "selected_product",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "alert",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "drop_legacy",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "show_blocked",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "early_housekeeping",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "keyboard_status",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[pending-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "keyboard_stars",
+      "disposition": "killed",
+      "cases": 54,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-tgstars]"
+      ]
+    },
+    {
+      "name": "keyboard_amount",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "keyboard_reference",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "keyboard_inactive",
+      "disposition": "killed",
+      "cases": 73,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[completed-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "keyboard_back",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "sql_limit_upper",
+      "disposition": "killed",
+      "cases": 140,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_real_sql_list_contract[201-None]"
+      ]
+    },
+    {
+      "name": "sql_limit_lower",
+      "disposition": "killed",
+      "cases": 124,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_real_sql_list_contract[-1-None]"
+      ]
+    },
+    {
+      "name": "sql_default",
+      "disposition": "killed",
+      "cases": 116,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_real_sql_list_contract[None-None]"
+      ]
+    },
+    {
+      "name": "sql_gateway",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "sql_order_filtered",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "sql_order_all",
+      "disposition": "killed",
+      "cases": 116,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_real_sql_list_contract[None-None]"
+      ]
+    },
+    {
+      "name": "loader_drop_expiry",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "loader_drop_purge",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "loader_purge_age",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "loader_limit",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_legacy_rows[new-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "callback_authority",
+      "disposition": "killed",
+      "cases": 109,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_boundaries[unauthorized]"
+      ]
+    },
+    {
+      "name": "callback_unknown",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_admin_list_guards::test_list_composite_admission[new-order-dict-zarinpal]"
+      ]
+    }
+  ]
+}
