@@ -1,0 +1,272 @@
+{
+  "hashes": {
+    "extra_gateway_user.py": "ba354262bfe31338fd9a9de491c67489f4dbef21d1988948bb46f2d0b8e30de9",
+    "tests/integration/test_composite_extra_adapter_alias_guards.py": "25e3c2f0c1229e99c6fb56bdd75b567c5e2f68f61ddca82ab052d200a8cbba9e",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 849,
+      "failed_ids": []
+    },
+    {
+      "name": "pre_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-pre]"
+      ]
+    },
+    {
+      "name": "pre_target",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-renewal_target-pre]"
+      ]
+    },
+    {
+      "name": "pre_product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_product-pre]"
+      ]
+    },
+    {
+      "name": "pre_ref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-pre]"
+      ]
+    },
+    {
+      "name": "pre_custom",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_product-pre]"
+      ]
+    },
+    {
+      "name": "pre_stock",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-stock_renewal_product-pre]"
+      ]
+    },
+    {
+      "name": "pre_overstrict",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-pre]"
+      ]
+    },
+    {
+      "name": "pre_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-pre]"
+      ]
+    },
+    {
+      "name": "pre_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-pre]"
+      ]
+    },
+    {
+      "name": "success_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "success_target",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-renewal_target-success]"
+      ]
+    },
+    {
+      "name": "success_product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_product-success]"
+      ]
+    },
+    {
+      "name": "success_ref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "success_custom",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_product-success]"
+      ]
+    },
+    {
+      "name": "success_stock",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-stock_renewal_product-success]"
+      ]
+    },
+    {
+      "name": "success_overstrict",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "success_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "success_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "check_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-check]"
+      ]
+    },
+    {
+      "name": "check_target",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-renewal_target-check]"
+      ]
+    },
+    {
+      "name": "check_product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_product-check]"
+      ]
+    },
+    {
+      "name": "check_ref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-check]"
+      ]
+    },
+    {
+      "name": "check_custom",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_product-check]"
+      ]
+    },
+    {
+      "name": "check_stock",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-stock_renewal_product-check]"
+      ]
+    },
+    {
+      "name": "check_overstrict",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-check]"
+      ]
+    },
+    {
+      "name": "check_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-check]"
+      ]
+    },
+    {
+      "name": "check_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-composite-dict-custom_order-check]"
+      ]
+    },
+    {
+      "name": "pre_args_40",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-pre]"
+      ]
+    },
+    {
+      "name": "success_args_38",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "success_args_44",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-success]"
+      ]
+    },
+    {
+      "name": "check_args_37",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-check]"
+      ]
+    },
+    {
+      "name": "check_args_31",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_adapter_alias_guards::test_adapter_alias[new-None-dict-custom_order-check]"
+      ]
+    }
+  ]
+}
