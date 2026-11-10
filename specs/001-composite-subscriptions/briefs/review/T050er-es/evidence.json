@@ -1,0 +1,248 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "renewal_engine.py": "a664dabf8310e7b2fed69f127658e81cf2d36c18956e26ce33773256bbbd467a",
+    "tests/integration/test_composite_extra_pool_fulfillment.py": "9647e2c118a4dac2213444c72c641dfc56ee56dd3b38e4fb5d181fb5decdfb2b",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_gateway_pool_renewal_guards.py": "9fba787a58d7f387d55a16c54d828019b278fbd5fce1a2d154d69da0189bb15f",
+    "tests/integration/test_composite_extra_direct_fulfillment.py": "39a7926fb8e0927f1bcd76935d830e891a0693abcc83f41d3dc554944e866eed",
+    "tests/integration/test_composite_gateway_direct_guards.py": "99063679a667eeb93bb2e63ddb1b0e8b11c5945642468d571dd895a86e40b7ba",
+    "tests/integration/test_composite_gateway_stock_guards.py": "ac13e25ef64931523941bf9b5e614b66e90a54f6dfa0a7599f017f4ba9ba9597"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 163,
+      "failed_ids": []
+    },
+    {
+      "name": "caller_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_target",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-target-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_product",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_reference",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_overstrict",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_early_claim",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_composite_pool_refused_before_claim[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_notifier",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_order_ref",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_warning",
+      "disposition": "killed",
+      "cases": 85,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_failure_boundaries[extend_pool_config_expiry-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:omit_status",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:ignore_claim",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:omit_renewal",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:omit_approval",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:recipient",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:omit_send",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:omit_admin",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:wrong_result",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:wrong_error",
+      "disposition": "killed",
+      "cases": 113,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_failure_boundaries[foreign-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:omit_release",
+      "disposition": "killed",
+      "cases": 85,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_failure_boundaries[extend_pool_config_expiry-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_renewal_engine.py:wrong_days",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_renewal_engine.py:wrong_target",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_renewal_engine.py:wrong_owner",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:discard_carryover",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:expired_base",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[expired-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:no_persistence",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_success_repeat[future-time-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:foreign_owner",
+      "disposition": "killed",
+      "cases": 113,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_pool_fulfillment::test_legacy_pool_failure_boundaries[foreign-dict-zarinpal]"
+      ]
+    }
+  ]
+}

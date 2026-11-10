@@ -1,0 +1,10 @@
+{
+  "revision": "6f7ae0aaa1524cd3d325d175d64ed58a62afb2f7",
+  "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "hashes": {
+    "tests/integration/test_composite_extra_pool_fulfillment.py": "cc108cbd5d17409a5acf2ea2b8426859dec29a2c1675cc8e9fdba88176214c45",
+    "specs/001-composite-subscriptions/briefs/review/T050er-es/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811",
+    "specs/001-composite-subscriptions/briefs/review/T050er-es/verify.py": "19832faa5d21cf1e46fe062a3dd6681ae5d3fa4aa68a1334fd53bf6c0fefb42d",
+    "specs/001-composite-subscriptions/briefs/review/T050er-es/variants.py": "76d4a61c14c6430ae5001e0ac60e852a790154a26cd038c83c11a71d9d336b46"
+  }
+}
