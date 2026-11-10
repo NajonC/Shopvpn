@@ -1,0 +1,174 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+    "tests/integration/test_composite_extra_stock_alerts.py": "337f1876dd46dea39992f60ce780abb81c61748ae86bb649fdbbaad5895c395c",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_direct_fulfillment.py": "39a7926fb8e0927f1bcd76935d830e891a0693abcc83f41d3dc554944e866eed",
+    "tests/integration/test_composite_gateway_direct_guards.py": "99063679a667eeb93bb2e63ddb1b0e8b11c5945642468d571dd895a86e40b7ba",
+    "tests/integration/test_composite_extra_stock_fulfillment.py": "b81a125dd7a3862cf7596913ab9db37122bdaa3ceb2f630ad5ca8dcd7fc35eef",
+    "tests/integration/test_composite_gateway_stock_guards.py": "ac13e25ef64931523941bf9b5e614b66e90a54f6dfa0a7599f017f4ba9ba9597"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 145,
+      "failed_ids": []
+    },
+    {
+      "name": "order_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_composite_alert_refused[0-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product_guard",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_composite_alert_refused[0-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "ref_domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_composite_alert_refused[0-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_composite_alert_refused[0-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "boundary",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[1-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "dedup",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[1-1-1-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "save_latch",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reset",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[2-1-1-0-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "reset_boundary",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[1-1-1-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "wrong_product",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "count",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[1-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "fallback",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[3--0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "threshold",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[3--0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "no_alert",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "name",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "text",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "recipient",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit_send",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stock_alerts::test_stock_threshold_and_repeat[0-1-0-1-None-dict-zarinpal]"
+      ]
+    }
+  ]
+}
