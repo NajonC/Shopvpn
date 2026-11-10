@@ -1,0 +1,6 @@
+{
+  "extra_gateway_admin.py": "0e23901c858c74bd7a66a12d1e32452a17845e4f2fdff74a3af0c3b26ccfe0c7",
+  "tests/integration/test_composite_extra_admin_check_alias_guards.py": "56ccb734296de2d6deb9cab0c0939380515fa97b104829e3692e069fe339a937",
+  "specs/001-composite-subscriptions/briefs/review/T050dv-dw/variants.py": "14131d85c218a19f2aa34789c5d9ef72c777d97157007bc4aba1903fe5ab9913",
+  "specs/001-composite-subscriptions/briefs/review/T050dv-dw/verify.py": "c08125ea791ceab1934f0d4d3fa1ec6da1070a055b5fdf44655b457da2666aa2"
+}
