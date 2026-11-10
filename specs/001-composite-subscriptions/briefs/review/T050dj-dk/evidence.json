@@ -1,0 +1,169 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_poll_cache_sql_controls.py": "5e14fd30bc3f108d611c928c0ae20cc0bdff2eef34371d94d95a7fb8dd24d661",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 65,
+      "failed_ids": []
+    },
+    {
+      "name": "cache_ge",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[paid-2000]"
+      ]
+    },
+    {
+      "name": "cache_high",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[paid-2001]"
+      ]
+    },
+    {
+      "name": "cache_no_clear",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[paid-2001]"
+      ]
+    },
+    {
+      "name": "cache_clears_small",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[paid-1999]"
+      ]
+    },
+    {
+      "name": "cache_before_process",
+      "disposition": "killed",
+      "cases": 12,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[process_failure-2001]"
+      ]
+    },
+    {
+      "name": "cache_after_process",
+      "disposition": "killed",
+      "cases": 10,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[process_failure-1999]"
+      ]
+    },
+    {
+      "name": "send_failure_aborts",
+      "disposition": "killed",
+      "cases": 7,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_poll_cache_cardinality[send_failure-1999]"
+      ]
+    },
+    {
+      "name": "sql_new_only",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_pending_only",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_terminal",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_stars",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_desc",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_default",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_no_limit",
+      "disposition": "killed",
+      "cases": 14,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[0]"
+      ]
+    },
+    {
+      "name": "sql_clamp",
+      "disposition": "killed",
+      "cases": 14,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[0]"
+      ]
+    },
+    {
+      "name": "sql_kind",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_unknown_gateway",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_projection",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[None]"
+      ]
+    },
+    {
+      "name": "sql_invalid_default",
+      "disposition": "killed",
+      "cases": 14,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_poll_cache_sql_controls::test_list_open_real_sql[0]"
+      ]
+    }
+  ]
+}
