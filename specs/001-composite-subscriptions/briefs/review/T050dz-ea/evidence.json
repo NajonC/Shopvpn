@@ -1,0 +1,241 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "tests/integration/test_composite_extra_custom_fulfillment_guards.py": "ee2e345bb55ed4028d56b3072c66b0009cd05ab62713289c1a0b89ab37d12cd5",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 165,
+      "failed_ids": []
+    },
+    {
+      "name": "caller_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_composite_custom_refused_before_effects[success-order-dict]"
+      ]
+    },
+    {
+      "name": "caller_product",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_composite_custom_refused_before_effects[success-product-dict]"
+      ]
+    },
+    {
+      "name": "caller_reference",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_composite_custom_refused_before_effects[success-order-dict]"
+      ]
+    },
+    {
+      "name": "caller_custom_domain",
+      "disposition": "killed",
+      "cases": 3,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_composite_custom_refused_before_effects[success-product-dict]"
+      ]
+    },
+    {
+      "name": "caller_overstrict",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "deliver_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_composite_custom_refused_before_effects[success-order-dict]"
+      ]
+    },
+    {
+      "name": "deliver_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_composite_custom_refused_before_effects[success-order-dict]"
+      ]
+    },
+    {
+      "name": "deliver_notifier",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "deliver_order_ref",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "deliver_warning",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_failure_boundaries[missing_server-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_omit_status",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_ignore_claim",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_server",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_username",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_volume",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_duration",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_config_owner",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_config_name",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_config_link",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_config_order",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_omit_approve",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_delivery_price",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_reward_amount",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_omit_reward",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_omit_admin",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_success",
+      "disposition": "killed",
+      "cases": 31,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_success_reward_and_repeat[success-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_wrong_error",
+      "disposition": "killed",
+      "cases": 63,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_failure_boundaries[factory-None-product-dict]"
+      ]
+    },
+    {
+      "name": "dependent_omit_release",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_custom_fulfillment_guards::test_legacy_failure_boundaries[missing_server-None-product-dict]"
+      ]
+    }
+  ]
+}

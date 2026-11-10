@@ -1,0 +1,7 @@
+{
+  "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+  "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+  "tests/integration/test_composite_extra_custom_fulfillment_guards.py": "ee2e345bb55ed4028d56b3072c66b0009cd05ab62713289c1a0b89ab37d12cd5",
+  "specs/001-composite-subscriptions/briefs/review/T050dz-ea/variants.py": "58192061f6b3d82590c1527a9ae0d126f40d2d71493beda744691a0176f80c3a",
+  "specs/001-composite-subscriptions/briefs/review/T050dz-ea/verify.py": "188ee9c17e5f0e384df5150363f668a9945e50f406bc64404dadc21b46078caa"
+}
