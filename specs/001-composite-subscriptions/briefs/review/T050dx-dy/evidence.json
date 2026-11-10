@@ -1,0 +1,192 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "tests/integration/test_composite_extra_stars_alias_guards.py": "b50d60e01bd95091b1ff08a25819f9631a72314cfeec39abd809d9e9605dd73a",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 355,
+      "failed_ids": []
+    },
+    {
+      "name": "order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "target",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-renewal_target]"
+      ]
+    },
+    {
+      "name": "product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-custom_product]"
+      ]
+    },
+    {
+      "name": "wrongref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "custom",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-custom_product]"
+      ]
+    },
+    {
+      "name": "stock",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-stock_renewal_product]"
+      ]
+    },
+    {
+      "name": "domain",
+      "disposition": "killed",
+      "cases": 307,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_other_domains[new-wallet_topup]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-composite-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "owner",
+      "disposition": "killed",
+      "cases": 271,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_inline_boundaries[foreign-None-dict]"
+      ]
+    },
+    {
+      "name": "gateway",
+      "disposition": "killed",
+      "cases": 279,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_inline_boundaries[gateway-None-dict]"
+      ]
+    },
+    {
+      "name": "currency",
+      "disposition": "killed",
+      "cases": 287,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_inline_boundaries[currency-None-dict]"
+      ]
+    },
+    {
+      "name": "amount",
+      "disposition": "killed",
+      "cases": 283,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_inline_boundaries[amount-None-dict]"
+      ]
+    },
+    {
+      "name": "metadata",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "charge",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "claim",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "deliver",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "notifier",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "refresh",
+      "disposition": "killed",
+      "cases": 19,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_alias[new-None-dict-custom_order]"
+      ]
+    },
+    {
+      "name": "release",
+      "disposition": "killed",
+      "cases": 299,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_inline_boundaries[delivery_error-None-dict]"
+      ]
+    },
+    {
+      "name": "warning",
+      "disposition": "killed",
+      "cases": 271,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_stars_alias_guards::test_stars_inline_boundaries[foreign-None-dict]"
+      ]
+    }
+  ]
+}

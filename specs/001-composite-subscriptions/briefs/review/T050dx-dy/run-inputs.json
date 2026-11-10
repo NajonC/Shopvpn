@@ -1,0 +1,6 @@
+{
+  "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+  "tests/integration/test_composite_extra_stars_alias_guards.py": "b50d60e01bd95091b1ff08a25819f9631a72314cfeec39abd809d9e9605dd73a",
+  "specs/001-composite-subscriptions/briefs/review/T050dx-dy/variants.py": "dbc48e54cbc7703df6bffa61525d2eaf367ad4fe9bf6e86809540de48ed25684",
+  "specs/001-composite-subscriptions/briefs/review/T050dx-dy/verify.py": "7a9d47008adad8af878197b8aaa2eab1b5c1f8997704e444c0eb7e03e5938297"
+}
