@@ -1,0 +1,145 @@
+{
+  "hashes": {
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_reseller_direct_gateway.py": "ae20441c34086a4221d426b1027073f1faffdacbb32769fe55a55e220424937f",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_reseller_settlement.py": "ac92a4877fedcb2c9ec1c88c831be828f5b55fcd72b599c0c8eacb50b9f2a029",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 105,
+      "failed_ids": []
+    },
+    {
+      "name": "request_alias",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_composite_refusal[success-bronze-request]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_composite_refusal[success-bronze-product]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    },
+    {
+      "name": "omit_guard",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_composite_refusal[success-bronze-request]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_composite_refusal[success-bronze-request]"
+      ]
+    },
+    {
+      "name": "wrong_product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_composite_refusal[success-bronze-product]"
+      ]
+    },
+    {
+      "name": "early_write",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_composite_refusal[success-bronze-request]"
+      ]
+    },
+    {
+      "name": "status",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    },
+    {
+      "name": "tier",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    },
+    {
+      "name": "percent",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    },
+    {
+      "name": "omit_enable",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    },
+    {
+      "name": "simple",
+      "disposition": "killed",
+      "cases": 27,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-silver-None]"
+      ]
+    },
+    {
+      "name": "predicate",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    },
+    {
+      "name": "fallback",
+      "disposition": "killed",
+      "cases": 64,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_commission_fallback[None]"
+      ]
+    },
+    {
+      "name": "discount",
+      "disposition": "killed",
+      "cases": 27,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-silver-None]"
+      ]
+    },
+    {
+      "name": "repeat",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_reseller_direct_gateway::test_direct_supported_repeat[request-bronze-None]"
+      ]
+    }
+  ]
+}

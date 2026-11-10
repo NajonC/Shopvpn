@@ -1,0 +1,10 @@
+{
+  "revision": "03dda916ce800101656a62b99850424533b744b9",
+  "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "hashes": {
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_reseller_direct_gateway.py": "ae20441c34086a4221d426b1027073f1faffdacbb32769fe55a55e220424937f",
+    "specs/001-composite-subscriptions/briefs/review/T050eh-ei/variants.py": "37b63a73c9fe5d4cb3654b1a8ec78d8c011a0fa2cca9fb26dea9e955613bd948",
+    "specs/001-composite-subscriptions/briefs/review/T050eh-ei/verify.py": "5b7b3e29c4d79211530d1b4ec37a4aa5e77f4bd48493b69d285af3d132304f46"
+  }
+}
