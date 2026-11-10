@@ -1,0 +1,8 @@
+{
+  "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+  "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+  "renewal_engine.py": "a664dabf8310e7b2fed69f127658e81cf2d36c18956e26ce33773256bbbd467a",
+  "tests/integration/test_composite_extra_custom_renewal_guards.py": "1ac1addfff27fe5c73727c669e0f4cf251e421f5c4d280c81eaac56323d62b05",
+  "specs/001-composite-subscriptions/briefs/review/T050eb-ec/variants.py": "2947ad7fac448a5b35dd74bc848de53999c788fcba38cfa22dbafdb551f09e93",
+  "specs/001-composite-subscriptions/briefs/review/T050eb-ec/verify.py": "97a70de1e5d35b8b80b32bdd73441aa4e7475722f6f534f6112b80df15c2e427"
+}
