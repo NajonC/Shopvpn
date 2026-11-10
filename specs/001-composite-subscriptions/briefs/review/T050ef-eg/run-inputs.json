@@ -1,0 +1,8 @@
+{
+  "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+  "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+  "tests/integration/test_composite_extra_reseller_settlement.py": "ac92a4877fedcb2c9ec1c88c831be828f5b55fcd72b599c0c8eacb50b9f2a029",
+  "specs/001-composite-subscriptions/briefs/review/T050ef-eg/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811",
+  "specs/001-composite-subscriptions/briefs/review/T050ef-eg/verify.py": "3ef99a4b2b8cb869953b1807107291171a1002199c33e40284bfa6c62a279443",
+  "specs/001-composite-subscriptions/briefs/review/T050ef-eg/variants.py": "a38306c656ed807cb940b0cd2074dd4d62716591059d8fafe2c7b0e61afeabc9"
+}

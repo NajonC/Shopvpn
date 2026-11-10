@@ -1,0 +1,193 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_reseller_settlement.py": "ac92a4877fedcb2c9ec1c88c831be828f5b55fcd72b599c0c8eacb50b9f2a029",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 151,
+      "failed_ids": []
+    },
+    {
+      "name": "request_alias",
+      "disposition": "killed",
+      "cases": 45,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_composite_reseller_refused_before_settlement[success-request-dict-deliver]"
+      ]
+    },
+    {
+      "name": "product_alias",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_composite_reseller_refused_before_settlement[success-product-dict-deliver]"
+      ]
+    },
+    {
+      "name": "ref_domain",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_composite_reseller_refused_before_settlement[success-product-dict-deliver]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "omit_both",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_composite_reseller_refused_before_settlement[success-product-dict-deliver]"
+      ]
+    },
+    {
+      "name": "reason",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_composite_reseller_refused_before_settlement[success-product-dict-deliver]"
+      ]
+    },
+    {
+      "name": "caller_early_effect",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_composite_reseller_refused_before_settlement[success-product-dict-deliver]"
+      ]
+    },
+    {
+      "name": "lookup",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "prior",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "missing",
+      "disposition": "killed",
+      "cases": 81,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_boundaries[disappeared-dict-deliver]"
+      ]
+    },
+    {
+      "name": "commission",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "recipient",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-gold-dict-deliver]"
+      ]
+    },
+    {
+      "name": "markup",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-gold-dict-deliver]"
+      ]
+    },
+    {
+      "name": "predicate",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "status",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "tier",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "percent",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "omit_enable",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "discount",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-silver-dict-deliver]"
+      ]
+    },
+    {
+      "name": "sql_repeat",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-bronze-dict-deliver]"
+      ]
+    },
+    {
+      "name": "omit_send",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-gold-dict-deliver]"
+      ]
+    },
+    {
+      "name": "send_text",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_reseller_settlement::test_reseller_actual_success_repeat[None-gold-dict-deliver]"
+      ]
+    }
+  ]
+}
