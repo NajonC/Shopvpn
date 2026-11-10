@@ -1,0 +1,130 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_topup_settlement.py": "17e24a211355c5d7a85dec2cd71b7f932fc757b5209c622306077ed328138fc1",
+    "tests/characterization/test_wallet_helpers.py": "ace7e6f4a8f906faa4ae98dd05c5faf7fd96d2668414da651c3f5500bd850622",
+    "tests/integration/test_composite_extra_poll_guards.py": "0ae7428df57aba34786b3fde0bfa7006c53ba251babf5a62da3ab25b7becb93f"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 81,
+      "failed_ids": []
+    },
+    {
+      "name": "ref",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "domain",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "missing",
+      "disposition": "killed",
+      "cases": 43,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_boundaries[missing-dict]"
+      ]
+    },
+    {
+      "name": "repeat",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "amount",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "skip_approval",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "lookup",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "status",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "processing",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_boundaries[processing-dict]"
+      ]
+    },
+    {
+      "name": "beneficiary",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "credit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit_credit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "credit_before_status",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_topup_settlement::test_topup_actual_success_repeat[None-dict-zarinpal]"
+      ]
+    }
+  ]
+}

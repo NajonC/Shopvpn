@@ -1,0 +1,9 @@
+{
+  "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+  "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+  "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+  "tests/integration/test_composite_extra_topup_settlement.py": "17e24a211355c5d7a85dec2cd71b7f932fc757b5209c622306077ed328138fc1",
+  "specs/001-composite-subscriptions/briefs/review/T050ed-ee/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811",
+  "specs/001-composite-subscriptions/briefs/review/T050ed-ee/verify.py": "4fd60df2eecdc3de60c1c8578b0ffc33ac62adba66ab78e8db6a749868711e1d",
+  "specs/001-composite-subscriptions/briefs/review/T050ed-ee/variants.py": "cc6276cc5bb124f328ad6d0121c89d9005ba6ffff031fa8d4584ecd934b11847"
+}
