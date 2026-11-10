@@ -1,0 +1,344 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "blupal_payment.py": "193a324a443dc38ed19622a4bf02bc049eaf51ab965b2ffcb9caeb100c7a6332",
+    "noapay_payment.py": "2b2ae3df52f577a2a6ea8767e09dc03587c77cfa4d812805db2415d58f90e006",
+    "direct_panel_provision.py": "50214cabd6217a7d59053fe9fe1775cf3229f01a243b63c8d4fc2087ec62cbf3",
+    "reseller_auto_provision.py": "5eddd2e0098f879631fa2863f8c2f38b9068f63c34345e58719dcf5052972c73",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_auto_fulfillment.py": "1ebc14d595c114354a1569e9fa5d0ae842a70eb179ee122e83760783af9154d2",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_direct_fulfillment.py": "39a7926fb8e0927f1bcd76935d830e891a0693abcc83f41d3dc554944e866eed",
+    "tests/integration/test_composite_gateway_direct_guards.py": "99063679a667eeb93bb2e63ddb1b0e8b11c5945642468d571dd895a86e40b7ba",
+    "tests/integration/test_composite_gateway_stock_guards.py": "ac13e25ef64931523941bf9b5e614b66e90a54f6dfa0a7599f017f4ba9ba9597"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 191,
+      "failed_ids": []
+    },
+    {
+      "name": "caller_order",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_composite_auto_refused[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_product",
+      "disposition": "killed",
+      "cases": 5,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_composite_auto_refused[success-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_reference",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_composite_auto_refused[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "caller_overstrict",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_composite_auto_refused[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_reason",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_composite_auto_refused[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_early_claim",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_composite_auto_refused[success-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_notifier",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_order_ref",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "deliver_warning",
+      "disposition": "killed",
+      "cases": 69,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_failures[owner-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:status",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:claim",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:quantity",
+      "disposition": "killed",
+      "cases": 45,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms1-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:owner",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:approval",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:reward",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:amount",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:price",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:admin",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:recipient",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:release",
+      "disposition": "killed",
+      "cases": 69,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_failures[owner-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_abangateway_payment.py:delivery",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:volume",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:duration",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:total",
+      "disposition": "killed",
+      "cases": 45,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms1-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:rollback",
+      "disposition": "killed",
+      "cases": 93,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_failures[second-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:retry",
+      "disposition": "killed",
+      "cases": 101,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_failures[collision-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:mirror",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:persist",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:source",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:fixed_amount",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms1-None-dict-fixed_product-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:volume_amount",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:omit_consume_fixed",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-fixed_product-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:omit_consume_volume",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_reseller_auto_provision.py:overstrict_unlimited",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:history",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:linkage",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:credit_race",
+      "disposition": "killed",
+      "cases": 105,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_failures[race-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:credit_log",
+      "disposition": "killed",
+      "cases": 33,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_success_repeat[terms0-None-dict-volume_credit-zarinpal]"
+      ]
+    },
+    {
+      "name": "dependent_database.py:fixed_race",
+      "disposition": "killed",
+      "cases": 107,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_auto_fulfillment::test_legacy_auto_failures[race-fixed_product-zarinpal]"
+      ]
+    }
+  ]
+}

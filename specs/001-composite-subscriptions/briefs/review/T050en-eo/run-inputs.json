@@ -1,0 +1,13 @@
+{
+  "revision": "c77f5b64fb69c402c6d819f66a447e5007e2cac2",
+  "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "reseller_auto_provision.py": "5eddd2e0098f879631fa2863f8c2f38b9068f63c34345e58719dcf5052972c73",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_extra_auto_fulfillment.py": "1ebc14d595c114354a1569e9fa5d0ae842a70eb179ee122e83760783af9154d2",
+    "specs/001-composite-subscriptions/briefs/review/T050en-eo/variants.py": "c86a9d55e12bda243b872a7176a8719292dc964ab22d70a79d43331848ba2399",
+    "specs/001-composite-subscriptions/briefs/review/T050en-eo/verify.py": "b3cf0165fe6b22821054ff99406283b497da4b720ec4f4b899a88bbcedeb67c0"
+  }
+}
