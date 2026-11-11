@@ -1,0 +1,9 @@
+{
+  "tests/integration/test_composite_stock_alert_direct_sql.py": "14dff3a20e49874744092f19200685e0bf3fa639310fa5a777a7cf11cfc41973",
+  "specs/001-composite-subscriptions/briefs/review/T050ez-fa/variants.py": "c7006ba6f911d897251e6a69a19aaba3a880869edd39e337b09189dd49bf5b01",
+  "specs/001-composite-subscriptions/briefs/review/T050ez-fa/verify.py": "216c20ad0c9f33eeff3c87d13137a5763524959d74c32b8335530a2f9a608334",
+  "specs/001-composite-subscriptions/briefs/review/T050ez-fa/verify_v2.py": "195f9d38ccacfc49761ddad969fc760fddf76d21f73b50df10125c34a9ae9a08",
+  "specs/001-composite-subscriptions/briefs/review/T050ez-fa/production.py": "1f38254ff19d0426c000eb55a9d1da8d4d3c675e0ebc96d2e3b523218573e0f2",
+  "specs/001-composite-subscriptions/briefs/review/T050ez-fa/offline.py": "2510e49e4f8d08671ab7cb99cf5406f57a78ce9b73a86ff16dfd9932550f62d2",
+  "specs/001-composite-subscriptions/briefs/review/T050ez-fa/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811"
+}
