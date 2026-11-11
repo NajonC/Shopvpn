@@ -1,0 +1,128 @@
+[
+  {
+    "thread_id": "mcp:launch:0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "t3": "/home/nojan/.local/bin/t3",
+    "t3_base_dir": "/home/nojan/.t3",
+    "run_id": "b8245180ec9440c3885844163254d914",
+    "label": "T050ex-ey reference mutations",
+    "created_at": "2026-11-11T11:14:28.752875+00:00",
+    "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "launch_run_id": "run:thread:mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9:ordinal:1",
+    "cwd": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+    "command": [
+      ".venv/bin/python",
+      "specs/001-composite-subscriptions/briefs/review/T050ex-ey/verify.py"
+    ],
+    "timeout_seconds": 1800.0,
+    "kill_grace_seconds": 15.0,
+    "source": {
+      "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+      "revision": "0325b66582848ebf1dd41d3d1b828d33b1351981",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files_sha256": {
+        "tests/integration/test_composite_extra_open_admission.py": "7a90d9f80ccf475e02cf94454b25d56206be9f5f57ef38432817df227d447a8a",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/variants.py": "ad848246b39b0c1e047c4fb01045b0f3cfb89c9be876286f8ee20e280e1124d1",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/verify.py": "efe619c13197b1cea9e6f1d18aa75bf4bdf3d38ea0efd4f223f637048cca40a3"
+      }
+    },
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/b8245180ec9440c3885844163254d914",
+    "log_path": "/home/nojan/.local/state/shopvpn-verification/b8245180ec9440c3885844163254d914/check.log",
+    "disposition": "excluded fixture lock; canceled"
+  },
+  {
+    "thread_id": "mcp:launch:0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "t3": "/home/nojan/.local/bin/t3",
+    "t3_base_dir": "/home/nojan/.t3",
+    "run_id": "a3dce147f0fa4e9db674fa90751f38b5",
+    "label": "T050ex-ey production baseline corrected fixture",
+    "created_at": "2026-11-11T11:15:12.729763+00:00",
+    "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "launch_run_id": "run:thread:mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9:ordinal:1",
+    "cwd": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+    "command": [
+      ".venv/bin/python",
+      "specs/001-composite-subscriptions/briefs/review/T050ex-ey/production.py",
+      "/tmp/T050ex-ey-production-final.xml"
+    ],
+    "timeout_seconds": 1800.0,
+    "kill_grace_seconds": 15.0,
+    "source": {
+      "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+      "revision": "0325b66582848ebf1dd41d3d1b828d33b1351981",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files_sha256": {
+        "tests/integration/test_composite_extra_open_admission.py": "25afbc44d79c00bfdc98e49703776e08a15139cb49fb666969cdd9e4890d5187",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/production.py": "5546eaf4e8f940b766e33b4803eb73f89fbe3c4b451612d004b4d8b8d64a2c02"
+      }
+    },
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/a3dce147f0fa4e9db674fa90751f38b5",
+    "log_path": "/home/nojan/.local/state/shopvpn-verification/a3dce147f0fa4e9db674fa90751f38b5/check.log",
+    "disposition": "reviewed: 132 passes +99 exact missing-T052 assertion failures, unchanged source"
+  },
+  {
+    "thread_id": "mcp:launch:0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "t3": "/home/nojan/.local/bin/t3",
+    "t3_base_dir": "/home/nojan/.t3",
+    "run_id": "92f7ac0432f84c2f80c9a0badc0051f6",
+    "label": "T050ex-ey corrected reference mutations",
+    "created_at": "2026-11-11T11:15:21.141611+00:00",
+    "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "launch_run_id": "run:thread:mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9:ordinal:1",
+    "cwd": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+    "command": [
+      ".venv/bin/python",
+      "specs/001-composite-subscriptions/briefs/review/T050ex-ey/verify.py"
+    ],
+    "timeout_seconds": 1800.0,
+    "kill_grace_seconds": 15.0,
+    "source": {
+      "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+      "revision": "0325b66582848ebf1dd41d3d1b828d33b1351981",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files_sha256": {
+        "tests/integration/test_composite_extra_open_admission.py": "25afbc44d79c00bfdc98e49703776e08a15139cb49fb666969cdd9e4890d5187",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/variants.py": "ad848246b39b0c1e047c4fb01045b0f3cfb89c9be876286f8ee20e280e1124d1",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/verify.py": "efe619c13197b1cea9e6f1d18aa75bf4bdf3d38ea0efd4f223f637048cca40a3"
+      }
+    },
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/92f7ac0432f84c2f80c9a0badc0051f6",
+    "log_path": "/home/nojan/.local/state/shopvpn-verification/92f7ac0432f84c2f80c9a0badc0051f6/check.log",
+    "disposition": "reviewed: 296 reference passes (231 new+26 prior SQL/cache+39 characterization); 17 relevant assertion kills, no survivors/errors/skips; hashes unchanged"
+  },
+  {
+    "thread_id": "mcp:launch:0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "t3": "/home/nojan/.local/bin/t3",
+    "t3_base_dir": "/home/nojan/.t3",
+    "run_id": "dbea9a862437484d870d580a29c37045",
+    "label": "T050ex-ey full offline suite exact declared comparison",
+    "created_at": "2026-11-11T11:16:10.474043+00:00",
+    "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9",
+    "launch_run_id": "run:thread:mcp%3Alaunch%3A0689a04c8c092d034df9de3fa82af50df3e17cd04b2163db76cdb54305eae9c9:ordinal:2",
+    "cwd": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+    "command": [
+      ".venv/bin/python",
+      "specs/001-composite-subscriptions/briefs/review/T050ex-ey/offline.py",
+      "/tmp/T050ex-ey-offline.xml"
+    ],
+    "timeout_seconds": 1800.0,
+    "kill_grace_seconds": 15.0,
+    "source": {
+      "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+      "revision": "0325b66582848ebf1dd41d3d1b828d33b1351981",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files_sha256": {
+        "tests/integration/test_composite_extra_open_admission.py": "25afbc44d79c00bfdc98e49703776e08a15139cb49fb666969cdd9e4890d5187",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/offline.py": "34a7414f153b9ef92b9ba7276faddf87bb9d6895cb1e04a8628651ea772b8426",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/expected_failures.json": "6087fbde84a6854c9e00849cb28377a2be41f19a34796ce3d2a04f4d6e941515",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/variants.py": "ad848246b39b0c1e047c4fb01045b0f3cfb89c9be876286f8ee20e280e1124d1",
+        "specs/001-composite-subscriptions/briefs/review/T050ex-ey/verify.py": "efe619c13197b1cea9e6f1d18aa75bf4bdf3d38ea0efd4f223f637048cca40a3"
+      }
+    },
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/dbea9a862437484d870d580a29c37045",
+    "log_path": "/home/nojan/.local/state/shopvpn-verification/dbea9a862437484d870d580a29c37045/check.log",
+    "pytest_log": "/tmp/T050ex-ey-offline.log",
+    "pytest_xml": "/tmp/T050ex-ey-offline.xml",
+    "disposition": "reviewed: 11516 pass +3760 exact declared failures/15276, 1381.655s; all588 characterization+53 factory legacy pass, no errors/skips/regressions, protected/evidence hashes match"
+  }
+]
