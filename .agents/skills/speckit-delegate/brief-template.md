@@ -76,6 +76,7 @@ Everything from this heading onward is for the orchestrator only; exclude it fro
 - **Source review**: <authoritative sections checked independently of the brief; omissions or contradictions resolved>
 - **Reference**: <needed for test-only packets; path and supporting stand-ins, or reason not applicable>
 - **Artifacts**: <FEATURE_DIR/briefs/review/packet-id/ files owned by the orchestrator, or none>
+- **Verification runs**: <runner run IDs and absolute evidence directories; command/deadline; pending or reviewed disposition; no duplicate launches on resumption>
 
 | Source rule | Required valid/invalid behavior | Test IDs | Mutation and relevant expected failure | Final disposition/evidence |
 | --- | --- | --- | --- | --- |

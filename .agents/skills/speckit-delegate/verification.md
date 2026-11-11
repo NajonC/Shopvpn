@@ -16,23 +16,31 @@ For refusals, make every unrelated precondition valid. Otherwise a foreign key, 
 
 ## Long-running checks
 
-In T3 Code's Codex harness, run full offline suites and long mutation campaigns as bounded background commands and let completion notifications resume the thread. This workflow has been verified here; Codex does not need the Claude-only `t3_background_wait` tool.
+For T3 Code on Linux/POSIX, use [scripts/verification_runner.py](scripts/verification_runner.py) for full offline suites and long mutation campaigns. Native command-completion wake-ups have been intermittent. This runner detaches from the launching tool, saves results, then uses `t3 thread send` to continue the existing conversation. It starts no other agent and requires no Codex hook or Claude-only `t3_background_wait`. This applies to local check commands, not delegated tasks: keep following a delegate's returned `next` instruction.
 
-1. Set a real execution deadline with a short forced-kill grace, sized from observed runtime. For the current roughly ten-minute offline suite, `timeout --kill-after=15s 20m` is a suitable starting point. Tool `yield_time_ms` controls how long a call waits; it does **not** terminate a hung process.
-2. Launch through `exec_command` with a short yield (for example `yield_time_ms: 1000`) and capture output in a unique local log. Let the harness retain the command session; do not detach it with `&` or `nohup`. Keep the command's exit status intact.
-3. Save the command, session ID, log path, deadline and source revision/diff in the brief's reviewer section, with the check marked pending. Do independent work only while keeping the source/tests under examination stable; do not start a coder that could change them. On resumption, use the recorded run rather than launching a duplicate.
-4. When only the check remains, send one short pending-status message and **end the turn**. Do not poll with `write_stdin`, log reads, sleeps, watchers or scheduled wakeups, and do not send periodic "still running" messages.
-5. When the completion notification arrives, retrieve the completed command's exit status and saved summary, then continue review and acceptance. Timeout (`124`), forced termination (`137`), interruption or missing completion leaves verification incomplete; inspect the cause before deciding to rerun. Never mark a packet accepted while its required check is pending.
+1. **Prepare.** Choose the exact command, source snapshot and deadline. Use the existing offline harness and scratch rules below. Keep the reviewed source/tests stable until completion. Finish edits to the brief before capturing evidence when possible.
+2. **Launch.** Invoke the runner's `start` command through `exec_command`. It checks that the CLI can read the target thread before starting the check. `T3CODE_THREAD_ID` selects the current conversation; `--thread` is an explicit override. The runner pins `--t3-base-dir` (default `T3CODE_HOME` or `~/.t3`) and the CLI executable so a different T3 instance cannot silently receive the result. A preflight error means no check was started: fix routing rather than guessing another thread.
+3. **Record.** Save the returned run ID and absolute run directory in the brief's reviewer section, marked pending. The private run directory defaults to `~/.local/state/shopvpn-verification/<run-id>/`. It contains the exact command/cwd, target, deadline, revision and tracked-diff hash in `manifest.json`, plus output in `check.log`. Repeat `--source-file` for relevant untracked tests/review artifacts and files whose content must be pinned; Git diff does not cover untracked files. Avoid secrets in command arguments, labels and logs.
+4. **Yield.** When only the check remains, send one pending-status message and **end the turn**. The runner owns process waiting and makes at most three message-delivery attempts. Do not poll the shell session, schedule wakeups or start a coder that could change the reviewed files. On a later user message, inspect the recorded run before launching anything else.
+5. **Resume.** A `[verification-run:…]` message names the saved evidence. Read `manifest.json`, `result.json` and relevant `check.log` output; `status RUN_DIR` collects the JSON records. If `reviewed.json` already exists, ignore a duplicate callback. Otherwise review the evidence and continue only within the user's still-current authorization. A callback does not override a pause, cancellation, phase end or approval gate.
+6. **Review.** `passed` means only that the command exited zero; apply all acceptance checks below. Inspect `source_changed` and any fingerprint error before reusing evidence; a changed brief may be harmless, changed tested code is not. Timeout (exit `124`), cancellation (`130`), a negative signal exit, a launch error or missing result leaves verification incomplete. After recording the review disposition in the brief, run `acknowledge RUN_DIR --note '…'` to suppress duplicate handling. Acknowledgement is not packet acceptance.
 
-Example command from the repository root, passed to `exec_command` with the short yield above:
+Example from the repository root (20 minutes plus 15 seconds of termination grace):
 
 ```sh
-SHOPVPN_CHECK_LOG=$(mktemp /tmp/shopvpn-offline.XXXXXX.log)
-printf 'Test log: %s\n' "$SHOPVPN_CHECK_LOG"
-timeout --kill-after=15s 20m .venv/bin/python -m pytest tests/characterization tests/unit tests/contract tests/integration tests/acceptance --network=deny -q > "$SHOPVPN_CHECK_LOG" 2>&1
+python3 .agents/skills/speckit-delegate/scripts/verification_runner.py start \
+  --label 'PACKET full offline suite' --timeout 1200 --kill-grace 15 \
+  -- .venv/bin/python -m pytest tests/characterization tests/unit tests/contract \
+     tests/integration tests/acceptance --network=deny -q
 ```
 
-Outside a harness with verified completion notifications, use its documented waiting mechanism; do not promise automatic resumption without support. Background execution changes how the orchestrator waits, not the acceptance checks below.
+For mutations, use `--cwd /absolute/scratch/path --source-root /absolute/repository/path`, repeat `--source-file` for the review runner, mutation definitions and untracked tests, and pass the absolute project interpreter and scratch runner after `--`. Execute only in the scratch copy. Do not delete it before results have been reviewed and useful diagnostics preserved.
+
+`cancel RUN_DIR` requests termination of the command's process group and suppresses its completion message. Use it when the user cancels the check; stopping an agent turn alone does not stop this detached process. `notification.json` records delivered, failed or suppressed delivery. CLI acceptance is not proof the agent resumed. Retries after an ambiguous send can produce duplicate messages, hence the run ID and acknowledgement. If delivery fails, preserve the result and inspect routing before manually resuming review; never rerun an expensive check solely to obtain a notification.
+
+T3 and this machine must remain available. This runner does not recover from a reboot, a killed worker or a permanently unavailable T3 server. Missing completion remains pending, never assumed successful. On another installation, verify a harmless command can wake an ended turn before relying on unattended delivery. If the runner is unavailable, use that harness's documented waiting mechanism rather than promising a wake-up. Background execution changes waiting, not the required acceptance evidence.
+
+Runner validation: `python3 .agents/skills/speckit-delegate/scripts/test_verification_runner.py -v` exercises real detached processes with a fake T3 endpoint; it sends no live messages. On 2026-11-11, all 11 checks passed and a separate live callback successfully resumed this installation after the launching turn ended (`delivery: started`). This validates the runner and wake-up route, not project behavior or reliability across restarts.
 
 ## Acceptance by packet type
 
