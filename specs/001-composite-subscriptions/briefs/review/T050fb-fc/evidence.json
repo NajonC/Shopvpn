@@ -1,0 +1,145 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "extra_gateway_user.py": "ba354262bfe31338fd9a9de491c67489f4dbef21d1988948bb46f2d0b8e30de9",
+    "tests/integration/test_composite_telegram_payment_policies.py": "5a8ac52f1af7d7d8af724bf8c1171dab5ee78214b7a2d5d063bd7d54afaf0b9a",
+    "tests/characterization/test_buy_start.py": "d199331dc49248a6fe63550970db5d6d8527ca7189ad1d58f08b775b9b25d696",
+    "tests/characterization/test_payment_methods_legacy.py": "e56659d402561b33d5a3c366fb9ebbcfc359a016030c7b6399b3bd1404c61850"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 369,
+      "failed_ids": []
+    },
+    {
+      "name": "_order_payment_method_errorequal",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[unrestricted-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_errorskip_min",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[below-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_errorwrong_key",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[below-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_errorwrong_min_text",
+      "disposition": "killed",
+      "cases": 37,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[below-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_errorskip_product",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[denied-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_errorskip_custom",
+      "disposition": "killed",
+      "cases": 109,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_domain_precedence[False-custom-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_errorwrong_product",
+      "disposition": "killed",
+      "cases": 55,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[denied-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_order_payment_method_erroroverstrict",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_order_policy_selected_sql_readonly[unrestricted-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "_wallet_topup_method_errorequal",
+      "disposition": "killed",
+      "cases": 127,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_topup_policy_independent[unrestricted-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "_wallet_topup_method_errorskip_min",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_topup_policy_independent[below-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "_wallet_topup_method_errorwrong_key",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_topup_policy_independent[below-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "_wallet_topup_method_errorwrong_min_text",
+      "disposition": "killed",
+      "cases": 145,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_topup_policy_independent[below-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "_wallet_topup_method_errorskip_permission",
+      "disposition": "killed",
+      "cases": 154,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_topup_policy_independent[denied-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "_wallet_topup_method_erroroverstrict",
+      "disposition": "killed",
+      "cases": 127,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_topup_policy_independent[unrestricted-None-zarinpal]"
+      ]
+    },
+    {
+      "name": "make_order_handler_bypass",
+      "disposition": "killed",
+      "cases": 178,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_policy_registered_continuation[below-order-zarinpal]"
+      ]
+    },
+    {
+      "name": "make_topup_handler_bypass",
+      "disposition": "killed",
+      "cases": 181,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_payment_policies::test_actual_policy_registered_continuation[below-topup-zarinpal]"
+      ]
+    }
+  ]
+}
