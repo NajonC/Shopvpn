@@ -1,0 +1,261 @@
+{
+  "hashes": {
+    "extra_gateway_payment.py": "07c9c28495803cc2017f2cc2641f068e8b3a9b1de10db387979533e584697434",
+    "abangateway_payment.py": "e27de10b5d7c0bc681aad2addb4f04354ef798c2de9be9317e4b127faedbd7e2",
+    "tests/integration/test_composite_extra_notifications.py": "fe4eb0ced3b1a75dd66592a0e9d42433ec38e5a19f0ee369f1066da2d73bf126",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13",
+    "tests/integration/test_composite_extra_stock_alerts.py": "2afa141a5b63090f20bcd9dab548c27e96f253c8847a00136b0bc8e35986d25d",
+    "tests/integration/test_composite_extra_direct_fulfillment.py": "39a7926fb8e0927f1bcd76935d830e891a0693abcc83f41d3dc554944e866eed",
+    "tests/integration/test_composite_gateway_direct_guards.py": "99063679a667eeb93bb2e63ddb1b0e8b11c5945642468d571dd895a86e40b7ba",
+    "tests/integration/test_composite_extra_stock_fulfillment.py": "b81a125dd7a3862cf7596913ab9db37122bdaa3ceb2f630ad5ca8dcd7fc35eef",
+    "tests/integration/test_composite_gateway_stock_guards.py": "ac13e25ef64931523941bf9b5e614b66e90a54f6dfa0a7599f017f4ba9ba9597"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 207,
+      "failed_ids": []
+    },
+    {
+      "name": "order",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_composite_warning_and_registry_refused[pending-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "product",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_composite_warning_and_registry_refused[pending-product-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "ref_domain",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_composite_warning_and_registry_refused[pending-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "overstrict",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit_guard",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_composite_warning_and_registry_refused[pending-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "no_reason",
+      "disposition": "killed",
+      "cases": 57,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_composite_warning_and_registry_refused[pending-order-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit_registration",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "wrong_key",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "no_replace",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[replacement-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit_explicit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "omit_registry",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[registered-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "precedence",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[both-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "foreign_registry",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[registered-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "drop_notifier",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "recipient",
+      "disposition": "killed",
+      "cases": 89,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "text",
+      "disposition": "killed",
+      "cases": 89,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "no_send",
+      "disposition": "killed",
+      "cases": 89,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "only_first",
+      "disposition": "killed",
+      "cases": 89,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "send_propagates",
+      "disposition": "killed",
+      "cases": 105,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[send_first-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "stop_after_failure",
+      "disposition": "killed",
+      "cases": 105,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[send_first-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "warning_id",
+      "disposition": "killed",
+      "cases": 89,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "gateway_title",
+      "disposition": "killed",
+      "cases": 89,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-missing-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "warning_user",
+      "disposition": "killed",
+      "cases": 93,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-rejected-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "warning_status",
+      "disposition": "killed",
+      "cases": 93,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-rejected-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "warning_detail",
+      "disposition": "killed",
+      "cases": 101,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-shortage-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "warning_prefix",
+      "disposition": "killed",
+      "cases": 101,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_actual_admin_warnings[none-shortage-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "notifier_id",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "notifier_propagates",
+      "disposition": "killed",
+      "cases": 49,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[failure-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "notifier_omit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    },
+    {
+      "name": "notifier_before_reward",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_extra_notifications::test_registry_selection_and_repeat[explicit-None-dict-zarinpal]"
+      ]
+    }
+  ]
+}
