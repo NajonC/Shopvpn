@@ -1,0 +1,218 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_telegram_inline_stock_alerts.py": "2f64bb6c4996b3921d1e9e762d482ef106e0b57a50ef3a2677745370c75f2e80",
+    "tests/characterization/test_buy_start.py": "d199331dc49248a6fe63550970db5d6d8527ca7189ad1d58f08b775b9b25d696",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 152,
+      "failed_ids": []
+    },
+    {
+      "name": "ai_guard_omit",
+      "disposition": "killed",
+      "cases": 81,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_composite_ai_actual_execution_refuses_before_money[0-0-dict]"
+      ]
+    },
+    {
+      "name": "ai_guard_overstrict",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_repeat_is_fresh_purchase_not_recovery[dict-ai]"
+      ]
+    },
+    {
+      "name": "ai_guard_absent",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_repeat_is_fresh_purchase_not_recovery[dict-ai]"
+      ]
+    },
+    {
+      "name": "ai_guard_reason",
+      "disposition": "killed",
+      "cases": 81,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_composite_ai_actual_execution_refuses_before_money[0-0-dict]"
+      ]
+    },
+    {
+      "name": "ai_guard_leak",
+      "disposition": "killed",
+      "cases": 81,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_composite_ai_actual_execution_refuses_before_money[0-0-dict]"
+      ]
+    },
+    {
+      "name": "_buy_start_skip_alert",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_buy_start_wrong_alert_product",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_buy_start_skip_approval",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_buy_start_wrong_reward_base",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_buy_start_skip_delivery",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_buy_start_wrong_quantity",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_buy_start_credit_instead_debit",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_skip_alert",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_wrong_alert_product",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_skip_approval",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_wrong_reward_base",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_skip_delivery",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_wrong_quantity",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "_ai_finalize_wallet_purchase_credit_instead_debit",
+      "disposition": "killed",
+      "cases": 2,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ai]"
+      ]
+    },
+    {
+      "name": "no_preflight_isolation",
+      "disposition": "killed",
+      "cases": 41,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_fault_ordering[count-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "stop_send_failure",
+      "disposition": "killed",
+      "cases": 61,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_fault_ordering[send_first-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "equality",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "repeat",
+      "disposition": "killed",
+      "cases": 25,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[1-1-1-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "latch",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[0-0-0-1-None-dict-ordinary]"
+      ]
+    },
+    {
+      "name": "reset",
+      "disposition": "killed",
+      "cases": 17,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_inline_stock_threshold_success[2-1-1-0-None-dict-ordinary]"
+      ]
+    }
+  ]
+}

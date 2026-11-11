@@ -1,0 +1,10 @@
+{
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/offline.py": "b29b8c7f8bbd88c7837ad0f2c7a9e9c406e1200a9f4ffbcfc54deedb2b34b172",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/production.py": "542d04876741b72d36ec30b50b63e200b3bf1e8f191298104388608add30cbe0",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/variants.py": "a8a81d9718193e1512a52c78ae05a9e7901ee9716247cf1f67d111d34ca2d8eb",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/variants_v2.py": "6c7b63aec99e7f37118556f8d3c0065618acb4d120515238c3039337f634c6e0",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/verify.py": "095dfb03e49332deccb53e52ba5a03b8e646bcfc6c9c7834869cb28ea8b045f1",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/verify_v2.py": "bac1785c0e63e6d33dfa9a1d1958eab7ccc0cbc039e5892f93d8fc617af63f89",
+  "specs/001-composite-subscriptions/briefs/review/T050fd-fe/verify_v3.py": "149be20660bc2fed62c6111b2b97a29f5b2212fa98110a0a0bd7667fd56df864"
+}

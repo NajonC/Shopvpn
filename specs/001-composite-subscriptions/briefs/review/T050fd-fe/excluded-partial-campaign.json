@@ -1,0 +1,26 @@
+{
+  "hashes": {
+    "handlers_user.py": "611ce8a3ddab0d2298f0777187c6bf688958eaa2cce22fbabc2b3bf352182c90",
+    "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_telegram_inline_stock_alerts.py": "2f64bb6c4996b3921d1e9e762d482ef106e0b57a50ef3a2677745370c75f2e80",
+    "tests/characterization/test_buy_start.py": "d199331dc49248a6fe63550970db5d6d8527ca7189ad1d58f08b775b9b25d696",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 152,
+      "failed_ids": []
+    },
+    {
+      "name": "ai_guard_omit",
+      "disposition": "killed",
+      "cases": 81,
+      "failed_ids": [
+        "tests.integration.test_composite_telegram_inline_stock_alerts::test_composite_ai_actual_execution_refuses_before_money[0-0-dict]"
+      ]
+    }
+  ]
+}
