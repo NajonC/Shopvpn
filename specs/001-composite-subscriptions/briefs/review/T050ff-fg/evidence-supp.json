@@ -1,0 +1,71 @@
+{
+  "hashes": {
+    "handlers_admin.py": "73d8781de295b74025735702b21df2548f28e54f83c89e8e0d87210068b63648",
+    "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_admin_stock_alerts.py": "6562ec8c9934771ab07bf16ede8d196399f8b6798d7eca4b2bfa6010a41370d0",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "source_sha256": {
+        "handlers_admin.py": "44f011fc14bbbbe5258e94649b7c7720a52571eeba7cd5a76a5c4b16f91ebdd2",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [],
+      "cases": 87,
+      "failed_ids": []
+    },
+    {
+      "name": "late_after_claim",
+      "disposition": "killed",
+      "source_sha256": {
+        "handlers_admin.py": "25aa48b9ea159108f734d3fbdc4aeb725fa8bb62007f499f0c071e38bcee4d99",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: missing T052 admin STOCK admission before claim/alert\nassert (not [('claim_order', (1,))])\n +  where [('claim_order', (1,))] = namespace(db=<database.Database object at 0x7563d6d9c410>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-26/test_comp...on_server_id': 1}, trace=[('claim_order', (1,))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7563d8ae81d0>).trace"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_composite_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "omit_stock_log",
+      "disposition": "killed",
+      "source_sha256": {
+        "handlers_admin.py": "f777acf2816e6ccbc827fb6006698d533a3576cc1e595db4fc2eaae6e16c8807",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert ['claim_order...rst_purchase'] == ['claim_order...rst_purchase']\n  \n  At index 3 diff: 'check_low_stock_alert_state' != 'log_admin_action'\n  Right contains one more item: 'reward_referrer_if_first_purchase'\n  Use -v to get more diff"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_admin_recipient",
+      "disposition": "killed",
+      "source_sha256": {
+        "handlers_admin.py": "44f011fc14bbbbe5258e94649b7c7720a52571eeba7cd5a76a5c4b16f91ebdd2",
+        "stock_alerts.py": "a80e7e86ea672e1c3cf5999c777ac94c54a7799f645c4bfb9117eaeb3546e742",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert [1001, 1001] == [9001, 9002]\n  \n  At index 0 diff: 1001 != 9001\n  Use -v to get more diff"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    }
+  ]
+}

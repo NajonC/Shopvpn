@@ -1,0 +1,177 @@
+{
+  "hashes": {
+    "handlers_admin.py": "73d8781de295b74025735702b21df2548f28e54f83c89e8e0d87210068b63648",
+    "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_admin_stock_alerts.py": "6562ec8c9934771ab07bf16ede8d196399f8b6798d7eca4b2bfa6010a41370d0",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "cases": 87,
+      "failed_ids": []
+    },
+    {
+      "name": "guard_omit",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_composite_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "guard_order",
+      "disposition": "killed",
+      "cases": 23,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_composite_admin_stock_refuses_before_alert_and_claim[0-0-order-dict]"
+      ]
+    },
+    {
+      "name": "guard_product",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_composite_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "guard_overstrict",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "guard_absent",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "guard_reason",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_composite_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "guard_leak",
+      "disposition": "killed",
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_composite_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "skip_alert",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_alert",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_approval",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "reward_base",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_delivery",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "quantity",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "owner",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "preflight",
+      "disposition": "killed",
+      "cases": 29,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "send_isolation",
+      "disposition": "killed",
+      "cases": 39,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_fault_boundaries[send_first-dict]"
+      ]
+    },
+    {
+      "name": "equality",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "repeat_latch",
+      "disposition": "killed",
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[1-1-1-1-False-None-dict]"
+      ]
+    },
+    {
+      "name": "latch",
+      "disposition": "killed",
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "reset",
+      "disposition": "killed",
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_admin_stock_alerts::test_admin_stock_alert_threshold_and_repeat[2-1-1-0-False-None-dict]"
+      ]
+    }
+  ]
+}
