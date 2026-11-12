@@ -1,0 +1,109 @@
+[
+  {
+    "run_id": "70345cbac7e143dc93407ef6f9cf3586",
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/70345cbac7e143dc93407ef6f9cf3586",
+    "worker_pid": 34114,
+    "log": "/home/nojan/.local/state/shopvpn-verification/70345cbac7e143dc93407ef6f9cf3586/check.log",
+    "manifest": {
+      "thread_id": "mcp:launch:c74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899",
+      "t3": "/home/nojan/.local/bin/t3",
+      "t3_base_dir": "/home/nojan/.t3",
+      "run_id": "70345cbac7e143dc93407ef6f9cf3586",
+      "label": "T050fh-fi production baseline",
+      "created_at": "2026-11-12T00:46:02.773160+00:00",
+      "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3Ac74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899",
+      "launch_run_id": "run:thread:mcp%3Alaunch%3Ac74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899:ordinal:5",
+      "cwd": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+      "command": [
+        ".venv/bin/python",
+        "specs/001-composite-subscriptions/briefs/review/T050fh-fi/production.py",
+        "/tmp/T050fh-fi-production.xml"
+      ],
+      "timeout_seconds": 1800.0,
+      "kill_grace_seconds": 15.0,
+      "source": {
+        "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+        "revision": "af295b9ec69f42377cf5ec534169ca47e4e253af",
+        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files_sha256": {
+          "tests/integration/test_composite_web_admin_stock_alerts.py": "ddcfdce864c143d068c29542c145b6fde2d7b2449089e6221f24cdb919f18bf7",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/production.py": "4f0c6b117c3095ebcd76903ab46488ca1b84845090ec2b82610762ec53b4faf5"
+        }
+      }
+    }
+  },
+  {
+    "run_id": "0008112de2fd4a3f93e42a81158d9dda",
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/0008112de2fd4a3f93e42a81158d9dda",
+    "worker_pid": 34435,
+    "scratch": "/tmp/T050fh-fi-launch-9p4p9h7y",
+    "log": "/home/nojan/.local/state/shopvpn-verification/0008112de2fd4a3f93e42a81158d9dda/check.log",
+    "manifest": {
+      "thread_id": "mcp:launch:c74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899",
+      "t3": "/home/nojan/.local/bin/t3",
+      "t3_base_dir": "/home/nojan/.t3",
+      "run_id": "0008112de2fd4a3f93e42a81158d9dda",
+      "label": "T050fh-fi reference mutation campaign",
+      "created_at": "2026-11-12T00:46:14.643767+00:00",
+      "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3Ac74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899",
+      "launch_run_id": "run:thread:mcp%3Alaunch%3Ac74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899:ordinal:5",
+      "cwd": "/tmp/T050fh-fi-launch-9p4p9h7y",
+      "command": [
+        "/home/nojan/projects/shopvpn-develop/Shopvpn/.venv/bin/python",
+        "/home/nojan/projects/shopvpn-develop/Shopvpn/specs/001-composite-subscriptions/briefs/review/T050fh-fi/verify.py"
+      ],
+      "timeout_seconds": 1800.0,
+      "kill_grace_seconds": 15.0,
+      "source": {
+        "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+        "revision": "af295b9ec69f42377cf5ec534169ca47e4e253af",
+        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files_sha256": {
+          "/home/nojan/projects/shopvpn-develop/Shopvpn/tests/integration/test_composite_web_admin_stock_alerts.py": "ddcfdce864c143d068c29542c145b6fde2d7b2449089e6221f24cdb919f18bf7",
+          "/home/nojan/projects/shopvpn-develop/Shopvpn/tests/integration/test_composite_admin_stock_alerts.py": "6562ec8c9934771ab07bf16ede8d196399f8b6798d7eca4b2bfa6010a41370d0",
+          "/home/nojan/projects/shopvpn-develop/Shopvpn/specs/001-composite-subscriptions/briefs/review/T050fh-fi/variants.py": "8b020ed8b2731323784a2f2dfc78c4737efc2a3a5b394b515d894df05c285404",
+          "/home/nojan/projects/shopvpn-develop/Shopvpn/specs/001-composite-subscriptions/briefs/review/T050fh-fi/verify.py": "906eb4056a3164460b9f4f772ed3c7b02588b33cadb92038b7791ffd9db81d7e"
+        }
+      }
+    }
+  },
+  {
+    "run_id": "54a0364787d5438b97c0997d213e4e7b",
+    "run_dir": "/home/nojan/.local/state/shopvpn-verification/54a0364787d5438b97c0997d213e4e7b",
+    "worker_pid": 35356,
+    "log": "/home/nojan/.local/state/shopvpn-verification/54a0364787d5438b97c0997d213e4e7b/check.log",
+    "manifest": {
+      "thread_id": "mcp:launch:c74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899",
+      "t3": "/home/nojan/.local/bin/t3",
+      "t3_base_dir": "/home/nojan/.t3",
+      "run_id": "54a0364787d5438b97c0997d213e4e7b",
+      "label": "T050fh-fi full offline suite",
+      "created_at": "2026-11-12T00:46:41.864513+00:00",
+      "thread_link": "https://app.t3.codes/threads/6702b80d-8413-4716-8002-71572e618486/mcp%3Alaunch%3Ac74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899",
+      "launch_run_id": "run:thread:mcp%3Alaunch%3Ac74782114a1ff8ab4c5ca7e3314bfb0b36688f0ccd17ecd5def812d19dcb4899:ordinal:6",
+      "cwd": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+      "command": [
+        ".venv/bin/python",
+        "specs/001-composite-subscriptions/briefs/review/T050fh-fi/offline.py",
+        "/tmp/T050fh-fi-offline.xml"
+      ],
+      "timeout_seconds": 1800.0,
+      "kill_grace_seconds": 15.0,
+      "source": {
+        "root": "/home/nojan/projects/shopvpn-develop/Shopvpn",
+        "revision": "af295b9ec69f42377cf5ec534169ca47e4e253af",
+        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files_sha256": {
+          "tests/integration/test_composite_web_admin_stock_alerts.py": "ddcfdce864c143d068c29542c145b6fde2d7b2449089e6221f24cdb919f18bf7",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/variants.py": "8b020ed8b2731323784a2f2dfc78c4737efc2a3a5b394b515d894df05c285404",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/verify.py": "906eb4056a3164460b9f4f772ed3c7b02588b33cadb92038b7791ffd9db81d7e",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/offline.py": "aa1c5d424d9f9e98e02a5abdb4a3d7b944b72b81d38befd2464ee5ae8db3bea4",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/compare.py": "b168aeae920ea698dadf0dfe867cbcc775181f043ca6481e0d053926807bb811",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/expected_failures.json": "eade65a5ffd005c5e220b92c66ca8c00dd407f4a4a824ca9f6d5f28f4f4ad7e3",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/protected.json": "35aff02cae3d2a993757ad4f4ff909d83d1e2a6e8a215b505e6e6b2e132d321f",
+          "specs/001-composite-subscriptions/briefs/review/T050fh-fi/artifact-hashes.json": "e7bb9c4d4f9ee6c471c187ee7dfac43a8646ecc46fe4ac37fd05c2e12dd69b23"
+        }
+      }
+    }
+  }
+]

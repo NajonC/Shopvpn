@@ -1,0 +1,407 @@
+{
+  "hashes": {
+    "admin_panel/server.py": "ee9c2dc47c30d7c4a502e6a6f4b57ecfe93343f1468a7e601703da8c1bef7511",
+    "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+    "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011",
+    "tests/integration/test_composite_web_admin_stock_alerts.py": "ddcfdce864c143d068c29542c145b6fde2d7b2449089e6221f24cdb919f18bf7",
+    "tests/characterization/test_order_approval.py": "ddb22753d2afafdb991db3e1f21106719485313645983e1da982afac4f7a1f13"
+  },
+  "records": [
+    {
+      "name": "reference",
+      "disposition": "passed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [],
+      "cases": 89,
+      "failed_ids": []
+    },
+    {
+      "name": "guard_omit",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "ee9c2dc47c30d7c4a502e6a6f4b57ecfe93343f1468a7e601703da8c1bef7511",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: missing T052 web admin STOCK admission before claim/alert\nassert (not [('claim_order', (1,)), ('take_unused_configs', (1, 1001, 2)), ('approve_order', (1, [6, 7])), ('log_admin_action', (1...ner)', 'order', 1)), ('check_low_stock_alert_state', (1, 0, 1)), ('reward_referrer_if_first_purchase', (1001, 180000))])\n +  where [('claim_order', (1,)), ('take_unused_configs', (1, 1001, 2)), ('approve_order', (1, [6, 7])), ('log_admin_action', (1...ner)', 'order', 1)), ('check_low_stock_alert_state', (1, 0, 1)), ('reward_referrer_if_first_purchase', (1001, 180000))] = namespace(db=<database.Database object at 0x7af026667b60>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-34/test_comp...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7af0266646e0>, background_errors=[]).trace"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_composite_web_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "guard_order",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "8a15d3eecb9c856d2836529255704acf723daf09bb2a2231b99a3bc14fd7b62b",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: missing T052 web admin STOCK admission before claim/alert\nassert (not [('claim_order', (1,)), ('take_unused_configs', (1, 1001, 2)), ('approve_order', (1, [6, 7])), ('log_admin_action', (1...ner)', 'order', 1)), ('check_low_stock_alert_state', (1, 0, 1)), ('reward_referrer_if_first_purchase', (1001, 180000))])\n +  where [('claim_order', (1,)), ('take_unused_configs', (1, 1001, 2)), ('approve_order', (1, [6, 7])), ('log_admin_action', (1...ner)', 'order', 1)), ('check_low_stock_alert_state', (1, 0, 1)), ('reward_referrer_if_first_purchase', (1001, 180000))] = namespace(db=<database.Database object at 0x7eff410eae40>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-35/test_comp...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7eff3c7ca1b0>, background_errors=[]).trace"
+      ],
+      "cases": 23,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_composite_web_admin_stock_refuses_before_alert_and_claim[0-0-order-dict]"
+      ]
+    },
+    {
+      "name": "guard_product",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "605a6a4622b542a1635c76589b92475ae0fd0ab5baaf34d110bd0180c2022c44",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: missing T052 web admin STOCK admission before claim/alert\nassert (not [('claim_order', (1,)), ('take_unused_configs', (1, 1001, 2)), ('approve_order', (1, [6, 7])), ('log_admin_action', (1...ner)', 'order', 1)), ('check_low_stock_alert_state', (1, 0, 1)), ('reward_referrer_if_first_purchase', (1001, 180000))])\n +  where [('claim_order', (1,)), ('take_unused_configs', (1, 1001, 2)), ('approve_order', (1, [6, 7])), ('log_admin_action', (1...ner)', 'order', 1)), ('check_low_stock_alert_state', (1, 0, 1)), ('reward_referrer_if_first_purchase', (1001, 180000))] = namespace(db=<database.Database object at 0x759dda6a3710>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-36/test_comp...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x759ddca23d40>, background_errors=[]).trace"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_composite_web_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "guard_overstrict",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "1bbb5b1a5f5641a5a420dc6a492a92ec4f749c0257cc8afd088344bef404eaf0",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert 400 == 200\n +  where 400 = <Response [400 Bad Request]>.status_code"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "guard_absent",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "d9174e5cf0314db05cba316736aa9f47ffb081b796a74924eaffb0e6f2e64e3c",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert 400 == 200\n +  where 400 = <Response [400 Bad Request]>.status_code"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "guard_reason",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "de7a92de94e7e0f72e09dc6800449a947cd8739f60454c02c7a799dbc7ec0c12",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: missing T052 explicit web admin STOCK refusal\nassert (400 == 400 and 'composite' in '{\"detail\":\"unsupported\"}')\n +  where 400 = <Response [400 Bad Request]>.status_code\n +  and   '{\"detail\":\"unsupported\"}' = <built-in method lower of str object at 0x73448c856790>()\n +    where <built-in method lower of str object at 0x73448c856790> = '{\"detail\":\"unsupported\"}'.lower\n +      where '{\"detail\":\"unsupported\"}' = <Response [400 Bad Request]>.text"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_composite_web_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "guard_leak",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "1f7335260adae7d6da2e2a12c921dda7127db20bafbbfa18c0097f7e1c6e1ab0",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert ('Stock 30d' not in '{\"detail\":\"... Stock 30d\"}'\n  \n  'Stock 30d' is contained here:\n    {\"detail\":\"composite_unsupported Stock 30d\"}\n  ?                                  +++++++++)"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_composite_web_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "late_after_claim",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "9f31672f9655cbe84d415b6546c049d3a63c6e2a4fecc5c0ec76babe786e6262",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: missing T052 web admin STOCK admission before claim/alert\nassert (not [('claim_order', (1,))])\n +  where [('claim_order', (1,))] = namespace(db=<database.Database object at 0x7dee755ea480>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-42/test_comp...ce=[('claim_order', (1,))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7dee769afe00>, background_errors=[]).trace"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_composite_web_admin_stock_refuses_before_alert_and_claim[0-0-product-dict]"
+      ]
+    },
+    {
+      "name": "skip_alert",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "531fb58e83a8b806b222f99686e45309be04e6168f949e7f7fd40e6bcafdb40d",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert ['claim_order...rst_purchase'] == ['claim_order...rst_purchase']\n  \n  At index 4 diff: 'reward_referrer_if_first_purchase' != 'check_low_stock_alert_state'\n  Right contains one more item: 'reward_referrer_if_first_purchase'\n  Use -v to get more diff"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "wrong_alert",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "c0be7c482d4f35527cbed455e93286de083628f413cc15e68c9149e1bdf374fe",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert (0 == 0 and 0 == 1)\n +  where 0 = count_available_configs(1)\n +    where count_available_configs = <database.Database object at 0x7c363c7b5490>.count_available_configs\n +      where <database.Database object at 0x7c363c7b5490> = namespace(db=<database.Database object at 0x7c363c7b5490>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-44/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7c363c7746b0>, background_errors=[]).db\n +  and   0 = latch(namespace(db=<database.Database object at 0x7c363c7b5490>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-44/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7c363c7746b0>, background_errors=[]))"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_approval",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "804e57415b5cbe2e591a4d16cd218807f2cd2a73d25fd64a168dfc1a64bde362",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert ['claim_order...rst_purchase'] == ['claim_order...rst_purchase']\n  \n  At index 2 diff: 'log_admin_action' != 'approve_order'\n  Right contains one more item: 'reward_referrer_if_first_purchase'\n  Use -v to get more diff"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "reward_base",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "2dd24ab2da07cb3923389aafaa01cf41ee07c523da40ed6d9b3f1d352ea423d7",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert (777 == 777 and 0 == 23400)\n +  where 777 = get_wallet_credit(1001)\n +    where get_wallet_credit = <database.Database object at 0x7afa92b65070>.get_wallet_credit\n +      where <database.Database object at 0x7afa92b65070> = namespace(db=<database.Database object at 0x7afa92b65070>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-46/test_web_...rst_purchase', (1001, 1))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7afa9290e8d0>, background_errors=[]).db\n +  and   0 = get_wallet_credit(1002)\n +    where get_wallet_credit = <database.Database object at 0x7afa92b65070>.get_wallet_credit\n +      where <database.Database object at 0x7afa92b65070> = namespace(db=<database.Database object at 0x7afa92b65070>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-46/test_web_...rst_purchase', (1001, 1))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7afa9290e8d0>, background_errors=[]).db"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_delivery",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "ae72bed8d58590793aa220a906d67b650eaa2d6af17f63f9c1b397cf5f2c37e5",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert 0 == 2\n +  where 0 = len([])\n +    where [] = delivered(namespace(db=<database.Database object at 0x7a6fdab6d2b0>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-47/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7a6fdab17fe0>, background_errors=[]))"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "quantity",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "6dfcd161b988b819bde75586a3e68978a1a96c58209a2ee4bde3e2461e1494ab",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert (1 == 2)\n +  where 1 = len([(6, 1, 1001, 1)])"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "owner",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "2fc916f7c23951ecd95236bb307dba825a08a5b90c2cda968f9f4df86c02683b",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert (2 == 2 and False)\n +  where 2 = len([(6, 1, 1002, 1), (7, 1, 1002, 1)])\n +  and   False = all(<generator object test_web_admin_stock_alert_threshold_and_repeat.<locals>.<genexpr> at 0x72849b1fda80>)"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "omit_stock_log",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "db25e4988c0237591286ca315294adbf8821ddb8b273d95e5dca287f64278e56",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert ['claim_order...rst_purchase'] == ['claim_order...rst_purchase']\n  \n  At index 3 diff: 'check_low_stock_alert_state' != 'log_admin_action'\n  Right contains one more item: 'reward_referrer_if_first_purchase'\n  Use -v to get more diff"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "skip_notify",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "4ce7cdeab9de1dc673ec007b87b89edaff9975516640de42dcb47df02a41a0db",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "AssertionError: assert 0 == 1\n +  where 0 = len([])\n +    where [] = namespace(db=<database.Database object at 0x772fb590f1d0>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-51/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x772fb590d790>, background_errors=[]).background_errors\n +  and   1 = int('notify' in {'delivery', 'notify'})"
+      ],
+      "cases": 21,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_fault_boundaries[notify-dict]"
+      ]
+    },
+    {
+      "name": "preflight",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "faa75fb8ea9fce3a43c3e007ca426d520aba6ae8b406fb703636e178e982ca48",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert 500 == 200\n +  where 500 = <Response [500 Internal Server Error]>.status_code"
+      ],
+      "cases": 29,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_fault_boundaries[count-dict]"
+      ]
+    },
+    {
+      "name": "send_isolation",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "29eef73f5766e4aea1d2d9f38dae40ffb9bd454519474baf00a0876fd022659e",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert [9001] == [9001, 9002]\n  \n  Right contains one more item: 9002\n  Use -v to get more diff"
+      ],
+      "cases": 39,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_fault_boundaries[send_first-dict]"
+      ]
+    },
+    {
+      "name": "wrong_recipient",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "a80e7e86ea672e1c3cf5999c777ac94c54a7799f645c4bfb9117eaeb3546e742",
+        "database.py": "4393a59fe1bcd0d3769f19f439efe74c6d3076686a96e8858c006f88f8f60011"
+      },
+      "failure_messages": [
+        "assert [1001, 1001] == [9001, 9002]\n  \n  At index 0 diff: 1001 != 9001\n  Use -v to get more diff"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "equality",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "54d62f7d4f3ab56a228d8123d2755ad11604484eec7edf63f0f1103ad316036b"
+      },
+      "failure_messages": [
+        "AssertionError: assert (0 == 0 and 0 == 1)\n +  where 0 = count_available_configs(1)\n +    where count_available_configs = <database.Database object at 0x7c61ffbd1640>.count_available_configs\n +      where <database.Database object at 0x7c61ffbd1640> = namespace(db=<database.Database object at 0x7c61ffbd1640>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-55/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7c61ffb91b80>, background_errors=[]).db\n +  and   0 = latch(namespace(db=<database.Database object at 0x7c61ffbd1640>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-55/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7c61ffb91b80>, background_errors=[]))"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "repeat_latch",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "7672fde74ac3af2c4baa57a7f72493dea391f87cf80f720d9624cf8bf6b50cc9"
+      },
+      "failure_messages": [
+        "assert [9001, 9002] == []\n  \n  Left contains 2 more items, first extra item: 9001\n  Use -v to get more diff"
+      ],
+      "cases": 13,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[1-1-1-1-False-None-dict]"
+      ]
+    },
+    {
+      "name": "latch",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "ea0b5ca1ddaaf36b7066c569e87c87f24cea1b4bbc8d8520d8fbbd3022bbd6ba"
+      },
+      "failure_messages": [
+        "AssertionError: assert (0 == 0 and 0 == 1)\n +  where 0 = count_available_configs(1)\n +    where count_available_configs = <database.Database object at 0x7172c8ae16d0>.count_available_configs\n +      where <database.Database object at 0x7172c8ae16d0> = namespace(db=<database.Database object at 0x7172c8ae16d0>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-57/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7172c8410b30>, background_errors=[]).db\n +  and   0 = latch(namespace(db=<database.Database object at 0x7172c8ae16d0>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-57/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7172c8410b30>, background_errors=[]))"
+      ],
+      "cases": 1,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[0-0-0-1-True-None-dict]"
+      ]
+    },
+    {
+      "name": "reset",
+      "disposition": "killed",
+      "source_sha256": {
+        "admin_panel/server.py": "dcd459af39b3e1b42e7f6afedb4c3d53b94174c955b9b9755cd215cf4d6e5229",
+        "stock_alerts.py": "fe0541106a094fc984f06b08cebb31264b8e5bec2dc1ae4c4a0cf6ed26440e85",
+        "database.py": "d5405af64075ebdf5695d0533c7b1dd372020d5a544cb72240c0bff010a20fda"
+      },
+      "failure_messages": [
+        "AssertionError: assert (2 == 2 and 1 == 0)\n +  where 2 = count_available_configs(1)\n +    where count_available_configs = <database.Database object at 0x7067b365d610>.count_available_configs\n +      where <database.Database object at 0x7067b365d610> = namespace(db=<database.Database object at 0x7067b365d610>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-58/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7067b365dca0>, background_errors=[]).db\n +  and   1 = latch(namespace(db=<database.Database object at 0x7067b365d610>, db_path=PosixPath('/tmp/pytest-of-nojan/pytest-58/test_web_...urchase', (1001, 180000))], log=<tests._harness.legacy_bot.TelegramLog object at 0x7067b365dca0>, background_errors=[]))"
+      ],
+      "cases": 9,
+      "failed_ids": [
+        "tests.integration.test_composite_web_admin_stock_alerts::test_web_admin_stock_alert_threshold_and_repeat[2-1-1-0-False-None-dict]"
+      ]
+    }
+  ]
+}
